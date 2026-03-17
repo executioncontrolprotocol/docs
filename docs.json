@@ -49,17 +49,17 @@
     "links": [
       {
         "label": "Spec",
-        "href": "https://github.com/GuillaumeCleme/executioncontextprotocol/blob/main/SPEC.md"
+        "href": "https://github.com/executioncontrolprotocol/executioncontrolprotocol/blob/main/SPEC.md"
       },
       {
         "label": "GitHub",
-        "href": "https://github.com/GuillaumeCleme/executioncontextprotocol"
+        "href": "https://github.com/executioncontrolprotocol"
       }
     ]
   },
   "footer": {
     "socials": {
-      "github": "https://github.com/GuillaumeCleme/executioncontextprotocol"
+      "github": "https://github.com/executioncontrolprotocol"
     }
   }
 }
