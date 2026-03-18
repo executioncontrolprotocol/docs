@@ -7,19 +7,40 @@ This page focuses on developing and running ECP locally. It does not cover how t
 
 ## Prerequisites
 
-- **Node.js** 18+ (LTS recommended)
+- **Node.js** 22+ (required for schema generation and CI)
 - **npm** (v7+ for workspaces) or pnpm
 - For **OpenAI**: set `OPENAI_API_KEY`
 - For **Ollama**: [install Ollama](https://ollama.com/) and run it locally
 
-## Install the ECP CLI from the repo
+## Install from npm (published packages)
 
 ```bash
-npm install -g tsx
-cd packages/cli
-npm link
-cd ../..
+npm install -g @executioncontrolprotocol/cli
+ecp validate spec.yaml --input shopifyStoreId=test --input jiraProject=TEST
 ```
+
+## Build and use the CLI from the repo
+
+From the **repository root**:
+
+```bash
+npm install
+npm run build
+```
+
+Then either use the workspace binary:
+
+```bash
+npx ecp validate spec.yaml --input shopifyStoreId=test --input jiraProject=TEST
+```
+
+Or link the CLI globally:
+
+```bash
+cd packages/cli && npm link && cd ../..
+```
+
+(`ecp` runs compiled `dist/index.js` via `bin/ecp.cjs`.)
 
 ## Environment and config
 
@@ -31,9 +52,20 @@ See [SETUP.md](https://github.com/executioncontrolprotocol/executioncontrolproto
 
 ## Run examples
 
-From the repo root:
+From the repo root (after `npm run build`):
 
 ```bash
 ecp run examples/single-executor/context.yaml --enable openai -i topic="ECP"
 ecp validate examples/single-executor/context.yaml -i topic=test
 ```
+
+## Tests
+
+Unit tests expect built packages (`dist/`). From the root:
+
+```bash
+npm run build
+npm run test:unit
+```
+
+Or `npm test` (builds first, then unit + integration + e2e).
