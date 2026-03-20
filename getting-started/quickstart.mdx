@@ -42,6 +42,17 @@ Or validate a Context without running it:
 ecp validate examples/single-executor/context.yaml -i topic=test
 ```
 
+After `ecp run`, tracing is enabled by default. You can inspect the latest run with:
+
+```bash
+ecp trace list
+ecp trace <run-id>
+```
+
+Disable tracing with `--no-trace` (traces default to `~/.ecp/traces`).
+
+For every flag and option on your installed CLI, run `ecp --help` or `ecp run --help` (same pattern for `validate` and `trace`).
+
 For **Ollama** (no API key):
 
 ```bash

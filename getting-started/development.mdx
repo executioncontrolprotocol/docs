@@ -59,6 +59,10 @@ ecp run examples/single-executor/context.yaml --enable openai -i topic="ECP"
 ecp validate examples/single-executor/context.yaml -i topic=test
 ```
 
+To inspect what happened during a run, use `ecp trace` (tracing is enabled by default; disable with `--no-trace`).
+
+For the full, up-to-date flag list, run `ecp --help` or `ecp <command> --help` (for example `ecp run --help`).
+
 ## Tests
 
 Unit tests expect built packages (`dist/`). From the root:

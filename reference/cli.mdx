@@ -1,15 +1,28 @@
 ---
 title: "CLI reference"
-description: "ecp run and ecp validate"
+description: "ecp run, ecp validate, and ecp trace"
 ---
 
-The ECP CLI runs and validates Context manifests. Prefer installing the CLI once (via `npm link`) so you can use the `ecp` command from your shell.
+The ECP CLI can run Context manifests, validate them, and inspect saved execution traces.
+
+Prefer installing the CLI once (via `npm link`) so you can use the `ecp` command from your shell.
+
+## Getting help
+
+The CLI is built on [oclif](https://oclif.io/): built-in `--help` shows the authoritative list of commands and flags for your installed version.
+
+- **`ecp --help`** — Lists top-level commands (`run`, `validate`, `trace`, …).
+- **`ecp <command> --help`** — Full flags and arguments for that command, e.g. `ecp run --help`, `ecp validate --help`, `ecp trace --help`.
+
+Use these when you need details beyond this page (short flags, defaults, or newly added options).
 
 ## Commands
 
 ### run
 
-Execute a Context manifest:
+Execute a Context manifest.
+
+By default, `ecp run` enables tracing and saves traces under `~/.ecp/traces` (disable with `--no-trace`).
 
 ```bash
 ecp run <context.yaml> [options]
@@ -17,18 +30,20 @@ ecp run <context.yaml> [options]
 
 **Required:**
 
-- **context.yaml** — Path to the Context YAML file.
+- **context.yaml** — Path to the Context YAML file (also accepts `context.json`).
 
 **Common options:**
 
 | Option | Description |
 | ------ | ----------- |
-| `--enable <name>` | Enable extension by name (e.g. `openai`, `ollama`). Repeat for multiple. |
+| `--enable <name>` | Enable an extension by name (e.g. `openai`, `ollama`). Repeat for multiple. |
 | `-i`, `--input` | Set input `key=value`. Repeat for each input (e.g. `-i topic=test`). |
-| `--provider` | Model provider to use: `openai` (default) or `ollama`. |
+| `--provider <openai|ollama>` | Optional model provider. If omitted, it is inferred from the Context. |
 | `--model` | Override model name (e.g. for Ollama: `llama3.2:3b`). |
 | `--config` | Path to system config file (e.g. `ecp.config.yaml`). |
 | `--ollama-base-url` | Ollama API base URL (default `http://localhost:11434`). |
+| `-t`, `--[no-]trace` | Enable tracing (default) or disable with `--no-trace`. |
+| `--trace-dir` | Directory for trace files (default `~/.ecp/traces`). |
 | `--debug` | Enable debug logging. |
 
 **Example (OpenAI):**
@@ -54,6 +69,7 @@ ecp validate <context.yaml> [options]
 **Options:**
 
 - **-i, --input** — Provide required inputs so validation can succeed (e.g. `-i shopifyStoreId=demo -i jiraProject=DEMO` for `spec.yaml`).
+- **--skip-inputs** — Validate the Context manifest itself but skip runtime input resolution. Instead of failing, it prints which inputs are required.
 
 **Example:**
 
@@ -61,9 +77,42 @@ ecp validate <context.yaml> [options]
 ecp validate spec.yaml -i shopifyStoreId=demo -i jiraProject=DEMO
 ```
 
+### trace
+
+Display a saved execution trace from a previous `ecp run`:
+
+```bash
+ecp trace <run-id> [--output text|graph] [--trace-dir <path>]
+```
+
+| Option | Description |
+| ------ | ----------- |
+| `--output` | Render mode: `text` (human log) or `graph` (ASCII visualization). Default: `text`. |
+| `--trace-dir` | Directory for trace files (default `~/.ecp/traces`). |
+
+Examples:
+
+```bash
+ecp trace run-123...
+ecp trace run-123... --output graph
+```
+
+Notes:
+
+- `ecp graph` is a hidden alias for `ecp trace --output graph`.
+- Traces are stored as JSON files in `~/.ecp/traces`.
+
+### trace list
+
+List locally available trace IDs:
+
+```bash
+ecp trace list [--trace-dir <path>]
+```
+
 ## Environment
 
-- **OPENAI_API_KEY** — Used by the OpenAI provider when `--provider openai` (default).
+- **OPENAI_API_KEY** — Used by the OpenAI provider when `--provider openai` (or when the Context implies OpenAI).
 - **OLLAMA_BASE_URL** — Optional; overrides Ollama base URL (default `http://localhost:11434`).
 
 ## System config
@@ -74,7 +123,10 @@ The CLI loads system config from (in order):
 2. `./ecp.config.yaml`
 3. `~/.ecp/config.yaml` or `~/.ecp/ecp.config.example.yaml`
 
-Use it to allow-list extensions (`allowEnable`, `defaultEnable`) and set security options. See [SETUP.md](https://github.com/executioncontrolprotocol/executioncontrolprotocol/blob/main/SETUP.md) and `config/ecp.config.example.yaml`.
+Use it to allow-list extensions (`allowEnable`, `defaultEnable`) and set security options.
+
+This config also defines available tool servers (`toolServers:`) used by the runtime; Contexts control what tools an executor may call via `policies.toolAccess`.
+See [SETUP.md](https://github.com/executioncontrolprotocol/executioncontrolprotocol/blob/main/SETUP.md) and `config/ecp.config.example.yaml`.
 
 ## See also
 
