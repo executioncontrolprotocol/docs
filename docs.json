@@ -18,12 +18,13 @@
             "pages": [
               "index",
               "getting-started/quickstart",
-              "getting-started/development"
+              "getting-started/build-from-source"
             ]
           },
           {
             "group": "Learn",
             "pages": [
+              "learn/why-ecp",
               "learn/concepts",
               "learn/relationship-to-mcp",
               "learn/security"
@@ -50,7 +51,8 @@
             "pages": [
               "reference/schema",
               "reference/cli",
-              "reference/spec"
+              "reference/spec",
+              "reference/changelog"
             ]
           }
         ]

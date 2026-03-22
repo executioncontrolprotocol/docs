@@ -1,33 +1,27 @@
 ---
 title: "Use Windsurf with ECP"
-description: "Configure Windsurf and the ECP docs skill to accelerate Execution Control Protocol development."
+description: "Install the ECP docs skill and use Windsurf Cascade for manifests and CLI help"
 icon: "water"
 ---
 
-Use Windsurf’s Cascade assistant to work on ECP (Execution Control Protocol) manifests, examples, and CLI usage.
+Windsurf’s Cascade assistant can help with **Context** manifests and **`ecp`** usage. Install the skill first; clone the main repo only when you need files from **`examples/`** locally.
 
-## Prerequisites
-
-- Windsurf editor installed
-- Local clone of the ECP repo
-
-## Setup
-
-1. Open the ECP repository in Windsurf.
-2. Install the ECP documentation skill so Cascade can draw on the ECP docs:
+## Install the docs skill
 
 ```bash
 npm install -g skills
 skills add https://executioncontrolprotocol.io
 ```
 
-3. Use Cascade to:
+## Use Cascade
 
-- Edit Context manifests and examples under `examples/`.
-- Propose `ecp run` and `ecp validate` commands for different providers and inputs.
-- Answer questions using the public ECP docs as context.
+Open your project in Windsurf. Use Cascade to edit manifests, propose **`ecp run`** and **`ecp validate`** commands, and answer questions using the public docs.
+
+## Optional: open the ECP repository
+
+Clone **[executioncontrolprotocol](https://github.com/executioncontrolprotocol/executioncontrolprotocol)** if you are changing examples or the core implementation. Build and test flows live in [Build from source](/getting-started/build-from-source).
 
 ## Next steps
 
-- [Quickstart](/getting-started/quickstart) — first ECP Context
+- [Quickstart](/getting-started/quickstart) — first Context with the published CLI
 - [Security](/learn/security) — budgets, write controls, and policies

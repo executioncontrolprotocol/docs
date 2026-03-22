@@ -1,0 +1,48 @@
+---
+title: "Why ECP?"
+description: "What you gain with Execution Control Protocol: safe defaults, explicit control, and an architecture built to extend"
+---
+
+ECP (Execution Control Protocol) is for teams who want **repeatable, governable agent execution** without giving up the tools and models they already use.
+
+## You stay in control of behavior
+
+A **Context** manifest is a single artifact that describes what should run: **inputs**, **outputs**, **schemas**, **orchestration**, **executors**, and **policies**. You decide what the agent is allowed to do before it runs, not only after something goes wrong.
+
+The host merges that manifest with **system configuration** so operators can allow or deny **models**, **MCP tool servers**, **loggers**, **secret providers**, and **plugin extensions** per environment. Your agent spec stays portable; the host enforces the real boundary.
+
+## Security-minded by default
+
+ECP encourages **explicit** tool access, **budgets**, **write controls**, and **audit-friendly tracing** so runs are easier to reason about in production. Policies live next to execution design, not in a separate ad hoc layer you forget to update.
+
+For the full threat and policy model, read [Security](/learn/security).
+
+## Agents, models, and tools stay composable
+
+- **Executors** run work with a chosen **model** and **provider** (for example OpenAI or Ollama in the stock tooling).
+- **Mounts** bring in context (files, prompts, retrieved data) in a structured way.
+- **Tools** are **MCP**-shaped: you declare which servers and capabilities exist; the runtime wires invocation and respects allow lists.
+
+ECP does not replace MCP. It **coordinates** MCP (and related surfaces) inside a governed execution environment. See [Relationship to MCP](/learn/relationship-to-mcp).
+
+## Built to extend
+
+ECP separates **spec** (what a Context means), **runtime** (how it runs), and **CLI** (how you operate it from the shell). That split matters when you want to:
+
+- Embed the engine in your own product or platform.
+- Add **plugins** for providers, loggers, memory, tools, and more, with host-level **allow** and **deny** rules.
+- Evolve **CLI workflows** (`ecp config …`, traces, validation) without forking the core protocol.
+
+You can start with the **npm** packages (`@executioncontrolprotocol/cli`, `runtime`, `spec`, `plugins`) and grow into custom integrations as you need them.
+
+## How this compares to other stacks
+
+If you are choosing between ECP and a general agent framework, the difference is emphasis: ECP is a **runtime specification and host contract** for **execution environments**, not a single vendor SDK. Short comparisons:
+
+- [ECP vs LangChain](/alternatives/ecp-vs-langchain)
+- [ECP vs OpenClaw](/alternatives/ecp-vs-openclaw)
+- [More comparisons](/alternatives)
+
+## Try it
+
+The fastest path is the [Quickstart](/getting-started/quickstart): install **`@executioncontrolprotocol/cli`** from npm, run **`ecp config init`**, validate, and run a sample Context in minutes.

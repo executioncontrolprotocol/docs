@@ -40,16 +40,18 @@ You can inspect saved traces locally with `ecp trace` (and `ecp trace list`), op
 
 This supports compliance, debugging, and replay. Contexts are versioned and signed (roadmap) to avoid overly permissive configs being distributed by mistake.
 
-## Host system configuration and the `security` mirror (v0.5+)
+## Host system configuration and the `security` mirror
 
 The **system config** file (`ecp.config.yaml`, or path via `--config`) has two roles:
 
 1. **Configure** — Wiring and defaults: `models.providers`, `tools.servers`, `loggers.config`, `agents.endpoints`, `secrets`, optional `executors.instances`, `memory.stores`, and `plugins.installs` (where packaged plugins are recorded). Provider-specific options (for example Ollama `baseURL`) live under each entry’s `config` object.
 2. **`security`** — The **same area names**, but only **allow-lists and defaults**: what may run at all, regardless of what a Context declares.
 
+The reference CLI requires a resolvable system config for **`ecp run`** and **`ecp validate`**. If neither project-local config, user **`~/.ecp/*`**, nor **`--config <path>`** resolves, the command fails so host policy is never skipped.
+
 Typical subtrees under `security` include:
 
-- **`security.models`** — `allowProviders`, `defaultProviders` (keys must exist under `models.providers`).
+- **`security.models`** — `allowProviders`, `defaultProviders`, and **`allowedModels`** (per-provider map of model names policy permits). Wiring uses **`models.providers.<id>.supportedModels`** for what the host can run; effective use requires both **supported** and **allowed** alignment (see the protocol SPEC host section).
 - **`security.tools`** — `allowServers` (logical MCP server names under `tools.servers`).
 - **`security.plugins`** — Global extension policy (`PluginSecurityPolicy`): which **plugin kinds** may load (`allowKinds`, including `tool` for MCP-governed servers), **sources** (`allowSourceTypes` such as `builtin`), and **ids** (`allowIds` / `denyIds`). This is separate from `plugins.installs`, which is provenance and install paths—not the allow-list.
 - **`security.loggers`**, **`security.secrets`**, **`security.executors`**, **`security.memory`**, **`security.agents`** — Same pattern when those areas are used.
@@ -64,7 +66,7 @@ The file should declare **`version: "0.5"`** (schema version of the system confi
 - **Extension surface control** — `security.plugins` restricts which kinds of plugins (provider, executor, logger, memory, **tool**, …) and which ids may participate. Omitting `tool` from `allowKinds`, for example, is how implementations can refuse MCP connections governed as tool plugins when you want a read-only or model-only deployment.
 - **Auditability** — Allow-lists and defaults are plain data next to wiring. Together with traces, reviewers can answer what was configured to be possible versus what a given run attempted.
 
-Manage policy from the CLI where supported: `ecp config security get`, `ecp config security plugins update`, plus `ecp config plugins`, `ecp config models`, `ecp config tools`, and `ecp config secrets` (`ecp config --help` for the full tree).
+Manage policy from the CLI under **`ecp config security`** (run `ecp config security` with no args for the command list). Wiring uses **`ecp config add|get|update|remove --type tools|models|loggers|endpoints`**. **`ecp config plugins`** covers installs; **`ecp config secrets`** covers secret store and YAML helpers (`ecp config --help` for the full tree).
 
 **Full config specification (authoritative references)**
 

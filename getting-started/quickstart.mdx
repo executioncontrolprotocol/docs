@@ -1,78 +1,148 @@
 ---
 title: "Quickstart"
-description: "Run your first ECP Context in minutes"
+description: "Install the CLI from npm, create config, and run a sample Context in a few commands"
 ---
 
-Get an ECP Context running locally in three steps.
+This path uses the **published CLI** only. You do not need to clone the repository.
 
-## Prerequisites
+You will install the CLI, create a local system config, point the OpenAI provider at a key (or use Ollama), download a tiny sample manifest, then **validate** and **run** it.
 
-- **Node.js** 22+ (required for schema generation and full builds in this repo; see [Development](/getting-started/development))
-- **npm** (v7+ for workspaces) or pnpm
-- For **OpenAI**: set `OPENAI_API_KEY`. For **Ollama**: [install Ollama](https://ollama.com/) and run it locally.
+## Before you begin
 
-## Step 1: Clone and install
+- Install [Node.js](https://nodejs.org/) (use the current **LTS** release).
+- Pick **one** model backend:
+  - **OpenAI:** you need an API key.
+  - **Ollama:** install [Ollama](https://ollama.com/) and keep it running locally (no API key).
 
-```bash
-git clone https://github.com/executioncontrolprotocol/executioncontrolprotocol.git
-cd executioncontrolprotocol
-npm install
-```
-
-## Step 2: Run a Context
-
-Install the CLI from the repository (one-time). This gives you the `ecp` command:
+## 1. Install the CLI
 
 ```bash
-npm install -g tsx
-cd packages/cli
-npm link
-cd ../..
+npm install -g @executioncontrolprotocol/cli
 ```
 
-Then run the single-executor example with OpenAI:
+Check that `ecp` is on your `PATH`:
 
 ```bash
-ecp run examples/single-executor/context.yaml --enable openai -i topic="ECP"
+ecp --help
 ```
 
-Or validate a Context without running it:
+## 2. Create a project folder and init config
 
 ```bash
-ecp validate examples/single-executor/context.yaml -i topic=test
+mkdir ecp-demo && cd ecp-demo
+ecp config init
 ```
 
-After `ecp run`, tracing is enabled by default. You can inspect the latest run with:
+That writes **`ecp.config.yaml`** in the current directory with conservative defaults (built-in OpenAI and Ollama entries and matching allow lists). To install config in your home directory instead, use `ecp config init --global`.
+
+If a config file already exists, either edit it or run `ecp config init --force` to replace it.
+
+## 3. Provide secrets (OpenAI) or pull a model (Ollama)
+
+<Tabs>
+  <Tab title="OpenAI">
+    Set your API key in the environment for this shell session:
+
+    ```bash
+    export OPENAI_API_KEY="sk-..."
+    ```
+
+    On Windows (PowerShell):
+
+    ```powershell
+    $env:OPENAI_API_KEY = "sk-..."
+    ```
+
+    The OpenAI provider reads **`OPENAI_API_KEY`** when the key is not set in config. For keychains, `.env` files, and other stores, see [Security](/learn/security) and run `ecp config secrets --help`.
+  </Tab>
+  <Tab title="Ollama">
+    Pull a small model that matches the sample manifest (names may vary by Ollama version):
+
+    ```bash
+    ollama pull gemma3:1b
+    ```
+
+    Ensure Ollama is running (default URL `http://localhost:11434`).
+  </Tab>
+</Tabs>
+
+## 4. Download a sample Context
+
+Save the [single-executor example](https://github.com/executioncontrolprotocol/executioncontrolprotocol/blob/main/examples/single-executor/context.yaml) as **`context.yaml`** in **`ecp-demo`**.
+
+For example, with **curl**:
+
+```bash
+curl -fsSL -o context.yaml https://raw.githubusercontent.com/executioncontrolprotocol/executioncontrolprotocol/main/examples/single-executor/context.yaml
+```
+
+Or download the file from GitHub in your browser and save it as **`context.yaml`**.
+
+## 5. Validate
+
+<Tabs>
+  <Tab title="OpenAI">
+    The sample manifest defaults to Ollama in the file, so pass the provider and model you want for this run:
+
+    ```bash
+    ecp validate context.yaml --provider openai --model gpt-4o-mini -i topic=test
+    ```
+  </Tab>
+  <Tab title="Ollama">
+    ```bash
+    ecp validate context.yaml -i topic=test
+    ```
+  </Tab>
+</Tabs>
+
+To see required inputs without supplying values:
+
+```bash
+ecp validate context.yaml --skip-inputs
+```
+
+## 6. Run
+
+<Tabs>
+  <Tab title="OpenAI">
+    ```bash
+    ecp run context.yaml --provider openai --model gpt-4o-mini -i topic="Hello from ECP"
+    ```
+  </Tab>
+  <Tab title="Ollama">
+    ```bash
+    ecp run context.yaml -i topic="Hello from ECP"
+    ```
+  </Tab>
+</Tabs>
+
+Tracing is on by default. List and open traces:
 
 ```bash
 ecp trace list
 ecp trace <run-id>
 ```
 
-Disable tracing with `--no-trace` (traces default to `~/.ecp/traces`).
+Turn tracing off for a run with **`--no-trace`**.
 
-For every flag and option on your installed CLI, run `ecp --help` or `ecp run --help` (same pattern for `validate` and `trace`).
+## Command help
 
-For **Ollama** (no API key):
+The CLI is the source of truth for flags and subcommands:
 
 ```bash
-ollama pull llama3.2:3b
-ecp run examples/single-executor/context.yaml --provider ollama --enable ollama --model llama3.2:3b -i topic="Test"
+ecp --help
+ecp run --help
+ecp validate --help
+ecp config --help
 ```
 
-## Step 3: Inspect the manifest
+## What you just ran
 
-The canonical example Context is [`spec.yaml`](https://github.com/executioncontrolprotocol/executioncontrolprotocol/blob/main/spec.yaml) at the repo root. It includes:
-
-- **inputs** — parameters like `shopifyStoreId`, `jiraProject`
-- **outputs** — structured results (e.g. from a schema)
-- **schemas** — JSON Schema-like definitions for outputs
-- **triggers** — when the Context runs (e.g. schedule, webhook)
-- **orchestration** — entrypoint, strategy, delegation defaults
-- **executors** — agents with models, mounts, and policies
+The sample Context declares **inputs**, **outputs**, **schemas**, **orchestration**, and an **executor** with **policies** (for example tool access and budgets). The system config you created controls which **providers** and **models** the host allows.
 
 ## Next steps
 
-- [Development](/getting-started/development) — preview docs locally, global CLI install
+- [Why ECP?](/learn/why-ecp) — security, control, and how this fits your stack
 - [Concepts](/learn/concepts) — Context, executors, mounts, orchestration
-- [SETUP.md](https://github.com/executioncontrolprotocol/executioncontrolprotocol/blob/main/SETUP.md) — env vars, system config, Ollama details
+- [CLI reference](/reference/cli) — full command and config behavior
+- [Build from source](/getting-started/build-from-source) — only if you are developing the ECP packages themselves

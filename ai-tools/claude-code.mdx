@@ -1,38 +1,29 @@
 ---
 title: "Use Claude Code with ECP"
-description: "Configure Claude Code and the ECP docs skill to speed up Execution Control Protocol development."
+description: "Install the ECP docs skill and use Claude Code for manifests and CLI workflows"
 icon: "asterisk"
 ---
 
-Use Claude Code as an assistant when you work on ECP (Execution Control Protocol): manifests, examples, and CLI flows.
+Claude Code can help you write **Context** manifests and **`ecp`** commands. You can start with the docs skill alone; clone the repo only when you need the examples tree on disk.
 
-## Prerequisites
-
-- Claude Code installed
-- Local clone of the ECP repo
-
-## Setup
-
-1. Install Claude Code:
+## Install the docs skill
 
 ```bash
 npm install -g @anthropic-ai/claude-code
-```
-
-2. Install the ECP documentation skill so Claude Code understands the ECP docs:
-
-```bash
 npm install -g skills
 skills add https://executioncontrolprotocol.io
 ```
 
-3. Use Claude Code in the ECP repo to:
+## Use it in your project
 
-- Understand and edit Context manifests.
-- Design and refine new examples that use `ecp run` and `ecp validate`.
-- Explore how policies, mounts, and executors are modeled in the spec.
+Open the folder where you keep Context YAML (or any app repo). Ask Claude Code to draft manifests, suggest **`ecp validate`** / **`ecp run`** lines, or explain policies. When behavior must match the site, refer to the installed skill.
+
+## Optional: work inside the ECP repo
+
+Clone **[executioncontrolprotocol](https://github.com/executioncontrolprotocol/executioncontrolprotocol)** when you want to edit **`examples/`**, **`spec.yaml`**, or core packages. Then run **`npm install`**, **`npm run build`**, and use **`ecp`** via **`npx`** or **`npm link`** as described in [Build from source](/getting-started/build-from-source).
 
 ## Next steps
 
+- [Quickstart](/getting-started/quickstart) — install the CLI from npm and run a sample Context
 - [Concepts](/learn/concepts) — Contexts, orchestrators, and executors
 - [Schema reference](/reference/schema) — JSON Schema and TypeScript types

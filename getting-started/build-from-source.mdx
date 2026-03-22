@@ -1,0 +1,68 @@
+---
+title: "Build from source"
+description: "Clone the ECP monorepo, compile packages, and run tests when you are developing the protocol or runtime"
+---
+
+Use this flow when you are **changing or debugging ECP itself** (spec types, runtime, CLI). If you only want to run Contexts, follow the [Quickstart](/getting-started/quickstart) and install **`@executioncontrolprotocol/cli`** from npm instead.
+
+## Prerequisites
+
+Same as for day-to-day usage: [Node.js](https://nodejs.org/) (LTS), **npm**, and optionally **OpenAI** or **Ollama** for live runs. See the [Quickstart](/getting-started/quickstart) for provider setup.
+
+## Clone and build
+
+```bash
+git clone https://github.com/executioncontrolprotocol/executioncontrolprotocol.git
+cd executioncontrolprotocol
+npm install
+npm run build
+```
+
+`npm run build` cleans package `dist/` outputs, then compiles in workspace order. Details live in the repo root **`package.json`**.
+
+## Run the CLI from the workspace
+
+Either invoke via **npx** from the repo root (after `npm run build`):
+
+```bash
+npx ecp --help
+```
+
+Or link the CLI package once:
+
+```bash
+cd packages/cli && npm link
+cd ../..
+```
+
+Then run **`ecp`** like a globally installed binary.
+
+## Try examples
+
+From the repository root, after a build:
+
+```bash
+ecp validate examples/single-executor/context.yaml -i topic=test
+ecp run examples/single-executor/context.yaml --provider openai --model gpt-4o-mini -i topic="ECP"
+```
+
+Use **`ecp run --help`** for flags (tracing, config path, provider overrides, and more).
+
+## Tests
+
+Unit tests expect built **`dist/`** outputs:
+
+```bash
+npm run build
+npm run test:unit
+```
+
+`npm test` builds, then runs unit, integration, and e2e suites (e2e may skip if Ollama is not available).
+
+## Configuration and setup
+
+For environment variables, system config shape, and annotated examples, see **[SETUP.md](https://github.com/executioncontrolprotocol/executioncontrolprotocol/blob/main/SETUP.md)** and **`config/ecp.config.example.yaml`** in the same repository.
+
+## Changelog and releases
+
+Release notes and version history are maintained in the main repo: **[CHANGELOG.md](https://github.com/executioncontrolprotocol/executioncontrolprotocol/blob/main/CHANGELOG.md)**.
