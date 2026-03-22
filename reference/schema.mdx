@@ -26,6 +26,18 @@ npm run validate
 
 The schema covers the root `ECPContext` and all nested types: `metadata`, `inputs`, `outputs`, `schemas`, `triggers`, `orchestration`, `orchestrator`, `executors`, `plugins`, and policy/mount/schema definition shapes.
 
+## System configuration
+
+The **host system config** file is usually named **`ecp.config.yaml`** (YAML or JSON). It is **not** part of the Context JSON Schema above. It is documented in the protocol spec and enforced by the reference runtime’s loader and structural validation.
+
+**Authoritative references**
+
+- **[SPEC.md — Host system configuration (`ecp.config.yaml`)](https://github.com/executioncontrolprotocol/executioncontrolprotocol/blob/main/SPEC.md#L623)** — Full normative description: `version`, configure vs `security` mirror, MCP `tool` kind, A2A endpoints.
+- **[config/ecp.config.example.yaml](https://github.com/executioncontrolprotocol/executioncontrolprotocol/blob/main/config/ecp.config.example.yaml)** — Annotated example file (validated in CI against the enforced shape).
+- **TypeScript:** [`ECPSystemConfig`](https://github.com/executioncontrolprotocol/executioncontrolprotocol/blob/main/packages/runtime/src/engine/types.ts#L484) and [`SecurityConfig`](https://github.com/executioncontrolprotocol/executioncontrolprotocol/blob/main/packages/runtime/src/engine/types.ts#L432) in `packages/runtime/src/engine/types.ts`.
+
+There is no separate checked-in JSON Schema for system config today; implementers should treat SPEC.md plus the example file and `ECPSystemConfig` as the source of truth.
+
 ## TypeScript types
 
 The single source of truth for the schema is:
@@ -59,7 +71,7 @@ This builds the TypeDoc site into `packages/docs/dist` (when using the existing 
 A minimal valid Context in YAML:
 
 ```yaml
-apiVersion: ecp/v0.3-draft
+specVersion: ecp/v0.5-draft
 kind: Context
 metadata:
   name: hello-agent
@@ -103,5 +115,6 @@ executors:
 ## See also
 
 - [spec.yaml](https://github.com/executioncontrolprotocol/executioncontrolprotocol/blob/main/spec.yaml) — Canonical example Context
-- [SPEC.md](https://github.com/executioncontrolprotocol/executioncontrolprotocol/blob/main/SPEC.md) — Full protocol specification
+- [SPEC.md](https://github.com/executioncontrolprotocol/executioncontrolprotocol/blob/main/SPEC.md) — Full protocol specification (includes [host system configuration](https://github.com/executioncontrolprotocol/executioncontrolprotocol/blob/main/SPEC.md#L623))
 - [CLI reference](/reference/cli) — `ecp run`, `ecp validate`, and `ecp trace`
+- [Security](/learn/security) — Context policies, `security` mirror, secret namespaces

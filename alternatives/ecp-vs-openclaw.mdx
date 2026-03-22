@@ -1,6 +1,6 @@
 ---
 title: "ECP vs OpenClaw: Execution Control Protocol compared"
-description: "A technical comparison of ECP (Execution Control Protocol) and OpenClaw, focused on execution boundaries, policy enforcement, and operational risk."
+description: "A technical comparison of ECP (Execution Control Protocol) and OpenClaw: execution boundaries, host security mirror, tool gates, secret namespaces, and operational risk."
 ---
 
 # ECP (Execution Control Protocol) vs OpenClaw
@@ -44,10 +44,22 @@ ECP (Execution Control Protocol) treats execution as a first-class boundary by d
 
 ECP doesn’t try to replace an agent framework. It gives you a control layer you can put *around* the parts that actually touch the world.
 
+## Where ECP’s security model differs (and why it matters next to OpenClaw)
+
+Frameworks like OpenClaw excel at **agent behavior**: prompts, tools, memory, and planning loops. Production risk, though, usually shows up in **what the process is allowed to wire and call**, not only in what the prompt says. ECP adds a **host-level contract** that is intentionally separate from the agent runtime:
+
+- **`ecp.config.yaml` and the `security` mirror (v0.5+)** — Wiring (models, MCP servers, loggers, secrets providers, …) lives next to a parallel **`security`** tree that only contains **allow-lists and defaults**. Even if a Context or a planner “wants” a provider or server, the host can refuse to enable it. That is policy in configuration and loaders, not a suggestion the model might ignore or negotiate.
+- **Two-stage tool exposure** — Context **`policies.toolAccess`** applies default-deny and fine-grained tool allowlists **per executor**. **`security.tools.allowServers`** (and configured **`tools.servers`**) caps which MCP server **names** may exist on the machine. A portable manifest cannot conjure a server the operator never installed or allow-listed.
+- **Explicit secret namespaces** — Credentials resolve from named providers (`process.env`, `dot.env`, `os.secrets`, …). Loading a `.env` file for **`dot.env`** does **not** merge into the global process environment, which avoids the common foot-gun of “one file accidentally expanded the blast radius for every child process.”
+- **Extension surface control** — **`security.plugins`** can restrict **plugin kinds** (including **`tool`** for MCP-governed servers), **sources**, and **ids**. You can run deployments that disallow entire classes of integration without changing the agent framework.
+- **Traces as an operational artifact** — Runs can emit structured traces (`ecp trace`, optional graph view) so security and platform teams can review what was attempted, not only final natural-language output.
+
+OpenClaw (and peers) can still own **how** the agent thinks and plans; ECP is aimed at **what the execution host permits**, in a way that is reviewable, versioned, and aligned with how operators already govern services.
+
 ## Typical architecture with both
 
 - **OpenClaw**: planning, reasoning, task decomposition, agent runtime behavior
-- **ECP**: execution environment definition, constraints, policy enforcement, audit trail
+- **ECP**: execution environment definition, host allow-lists, per-executor policies, constraints, audit trail
 
 ## When to reach for ECP
 
@@ -62,4 +74,4 @@ ECP is especially useful when:
 
 - Read [Core concepts](/learn/concepts) for Contexts, mounts, and policies.
 - See how ECP complements tool calling in [Relationship to MCP](/learn/relationship-to-mcp).
-- For guardrail design, go to [Security](/learn/security).
+- For the host `security` mirror, secret namespaces, and full **`ecp.config.yaml`** spec, read [Security](/learn/security), the [Schema reference](/reference/schema#system-configuration) section on system config, and the [SPEC.md host section](https://github.com/executioncontrolprotocol/executioncontrolprotocol/blob/main/SPEC.md#L623) on GitHub.

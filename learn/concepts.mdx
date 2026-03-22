@@ -48,11 +48,13 @@ This staged hydration keeps context windows and cost under control.
 
 ## Policies
 
-Policies define **object-scoped** security:
+Policies define **object-scoped** security **in the Context manifest** (per executor):
 
 - **Tool access** — Default deny; allow only explicitly listed tools (e.g. `jira:issues.search`).
 - **Budgets** — e.g. `maxToolCalls`, `maxRuntimeSeconds`.
 - **Write controls** — `forbid`, `propose-only`, or `execute-if-allowed`; optional `requireApprovalFor` list.
+
+The **host** may still apply a separate layer: **`ecp.config.yaml`** with a top-level **`security`** mirror (allow-listed model providers, MCP server names, plugin kinds, secret providers, …). See [Security](/learn/security) and the [system configuration](/reference/schema#system-configuration) section in the Schema reference.
 
 ## Protocols
 

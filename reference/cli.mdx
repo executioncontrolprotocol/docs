@@ -45,6 +45,7 @@ ecp run <context.yaml> [options]
 | `-t`, `--[no-]trace` | Enable tracing (default) or disable with `--no-trace`. |
 | `--trace-dir` | Directory for trace files (default `~/.ecp/traces`). |
 | `--debug` | Enable debug logging. |
+| `--environment <path>` | Path to a `.env` file for the **`dot.env`** secret provider for this run only (overrides `secrets.providers.dot.env.path` in config). Does **not** merge into `process.env`. |
 
 **Example (OpenAI):**
 
@@ -70,6 +71,7 @@ ecp validate <context.yaml> [options]
 
 - **-i, --input** — Provide required inputs so validation can succeed (e.g. `-i shopifyStoreId=demo -i jiraProject=DEMO` for `spec.yaml`).
 - **--skip-inputs** — Validate the Context manifest itself but skip runtime input resolution. Instead of failing, it prints which inputs are required.
+- **`--environment <path>`** — Same semantics as `ecp run`: selects the `.env` file for the **`dot.env`** provider (future-proof for validation tooling that resolves secrets).
 
 **Example:**
 
@@ -89,6 +91,7 @@ ecp trace <run-id> [--output text|graph] [--trace-dir <path>]
 | ------ | ----------- |
 | `--output` | Render mode: `text` (human log) or `graph` (ASCII visualization). Default: `text`. |
 | `--trace-dir` | Directory for trace files (default `~/.ecp/traces`). |
+| `--environment <path>` | Optional; same as on `run` — selects the `.env` file for **`dot.env`** when trace tooling is wired to secret resolution. |
 
 Examples:
 
@@ -110,10 +113,14 @@ List locally available trace IDs:
 ecp trace list [--trace-dir <path>]
 ```
 
+Accepts **`--environment <path>`** like `ecp run` (dotenv file for **`dot.env`**; no merge into `process.env`).
+
 ## Environment
 
 - **OPENAI_API_KEY** — Used by the OpenAI provider when `--provider openai` (or when the Context implies OpenAI).
 - **OLLAMA_BASE_URL** — Optional; overrides Ollama base URL (default `http://localhost:11434`).
+
+Secret bindings in Contexts use provider ids **`process.env`**, **`dot.env`**, and **`os.secrets`** (see [Security](/learn/security)). **`--environment`** only affects the file backing **`dot.env`**, not the shell environment.
 
 ## System config
 
@@ -123,10 +130,13 @@ The CLI loads system config from (in order):
 2. `./ecp.config.yaml`
 3. `~/.ecp/config.yaml` or `~/.ecp/ecp.config.yaml`
 
-Use it to allow-list **plugins** (`plugins.allowEnable`, `plugins.defaultEnable`, `plugins.security`), configure **loggers** (`loggers`), tool servers, and model defaults. Manage with `ecp config plugins`, `ecp config loggers`, etc. (`ecp config --help`).
+**v0.5 layout:** wiring lives under **`models`**, **`tools`**, **`loggers`**, **`agents`**, **`secrets`**, optional **`executors`** / **`memory`**, and **`plugins.installs`**. **Policy** lives under the top-level **`security`** object, which **mirrors** those areas (`security.models`, `security.tools`, `security.plugins`, …). Legacy `plugins.allowEnable` / `plugins.security` keys are removed; use **`security.models.allowProviders`**, **`security.tools.allowServers`**, **`security.plugins`**, and related subtrees instead. Include **`version: "0.5"`** in the file.
 
-This config also defines available tool servers (`toolServers:`) used by the runtime; Contexts control what tools an executor may call via `policies.toolAccess`.
-See [SETUP.md](https://github.com/executioncontrolprotocol/executioncontrolprotocol/blob/main/SETUP.md) and `config/ecp.config.example.yaml`.
+Use system config to register MCP servers under **`tools.servers`**, model providers under **`models.providers`**, and to restrict what the runtime may load via **`security.*`**. Inspect or update security with `ecp config security get`, `ecp config security plugins update`, and the rest of `ecp config --help` (plugins installs, models, tools, loggers, secrets, …).
+
+Contexts control **which tools an executor may call** via **`policies.toolAccess`**; the host still decides **which server names exist and are allowed** (`security.tools.allowServers` and configured `tools.servers`).
+
+**Full spec:** [SPEC.md — Host system configuration](https://github.com/executioncontrolprotocol/executioncontrolprotocol/blob/main/SPEC.md#L623), annotated [config/ecp.config.example.yaml](https://github.com/executioncontrolprotocol/executioncontrolprotocol/blob/main/config/ecp.config.example.yaml), and TypeScript [`ECPSystemConfig`](https://github.com/executioncontrolprotocol/executioncontrolprotocol/blob/main/packages/runtime/src/engine/types.ts#L484). See [Security](/learn/security) for the security model and [SETUP.md](https://github.com/executioncontrolprotocol/executioncontrolprotocol/blob/main/SETUP.md) for setup.
 
 ## See also
 

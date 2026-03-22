@@ -23,6 +23,10 @@ The full protocol specification and architecture are maintained in the repositor
 
 Use it as the authoritative protocol document when implementing runtimes or tooling.
 
+### Host system configuration
+
+Machine- and project-local **`ecp.config.yaml`** (system config) is specified in the same document: **[Host system configuration (`ecp.config.yaml`)](https://github.com/executioncontrolprotocol/executioncontrolprotocol/blob/main/SPEC.md#L623)**. It covers the **`version`** field, the split between **configure** sections and the **`security`** mirror, MCP tool plugins, and A2A endpoint shape. The annotated example is **[config/ecp.config.example.yaml](https://github.com/executioncontrolprotocol/executioncontrolprotocol/blob/main/config/ecp.config.example.yaml)**.
+
 ## ARCHITECTURE.md
 
 **[ARCHITECTURE.md](https://github.com/executioncontrolprotocol/executioncontrolprotocol/blob/main/ARCHITECTURE.md)** documents plugin registration and architecture decisions.
@@ -41,6 +45,9 @@ See [Schema reference](/reference/schema) for details.
 | [spec.yaml](https://github.com/executioncontrolprotocol/executioncontrolprotocol/blob/main/spec.yaml) | Canonical example Context |
 | [SPEC.md](https://github.com/executioncontrolprotocol/executioncontrolprotocol/blob/main/SPEC.md) | Full protocol specification |
 | [SETUP.md](https://github.com/executioncontrolprotocol/executioncontrolprotocol/blob/main/SETUP.md) | Install, CLI, env, config |
+| [SPEC.md — Host system configuration](https://github.com/executioncontrolprotocol/executioncontrolprotocol/blob/main/SPEC.md#L623) | Full **`ecp.config.yaml`** spec (v0.5+ `security` mirror) |
+| [config/ecp.config.example.yaml](https://github.com/executioncontrolprotocol/executioncontrolprotocol/blob/main/config/ecp.config.example.yaml) | Annotated system config example (validated in repo tests) |
+| [`ECPSystemConfig` (types.ts)](https://github.com/executioncontrolprotocol/executioncontrolprotocol/blob/main/packages/runtime/src/engine/types.ts#L484) | TypeScript reference for system config |
 | [ARCHITECTURE.md](https://github.com/executioncontrolprotocol/executioncontrolprotocol/blob/main/ARCHITECTURE.md) | Plugin registration and architecture |
 | [packages/spec/](https://github.com/executioncontrolprotocol/executioncontrolprotocol/tree/main/packages/spec) | Types, JSON Schema, validators |
 | [packages/runtime/](https://github.com/executioncontrolprotocol/executioncontrolprotocol/tree/main/packages/runtime) | Execution engine |
