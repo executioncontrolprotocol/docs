@@ -1,61 +1,34 @@
 ---
-title: "Use Cursor with ECP"
-description: "ECP docs skill, Cursor Rules, and workflows for Context manifests and the CLI"
-icon: "arrow-pointer"
+title: "Cursor"
+description: "Use ECP (Execution Control Protocol) with Cursor: install the docs skill and author Fluent workflows."
 ---
 
-Cursor can help you write **Context** manifests, run **`ecp`** commands, and learn the spec. Pick the path that matches how you work.
+# Cursor
 
-## Docs skill (fastest)
+Use Cursor to author ECP (Execution Control Protocol) Fluent workflows, environments, and CLI commands.
 
-You do **not** need a clone of the ECP repo for this step.
-
-1. Install the Skills CLI:
+## Install the ECP skill
 
 ```bash
 npm install -g skills
+npx skills add https://executioncontrolprotocol.io
 ```
 
-2. Add the live documentation skill:
+The skill teaches Workflow vs Environment, Fluent authoring, and current CLI commands — not legacy YAML Context manifests.
 
-```bash
-skills add https://executioncontrolprotocol.io
-```
+## Prompt tips
 
-3. In Cursor, use the agent as usual. When something should match the public docs, ask it to follow the ECP skill.
+Ask Cursor to:
 
-This is the quickest way to get accurate answers about **CLI usage**, **concepts**, and **security** without opening the reference manually.
+- Write a `workflow(...).run([step(...).as(...)])` module
+- Bind an environment with `extension("…").with({})` after importing catalog packages
+- Use `ecp run` / `validate` / `compile` with `--env`
+- Keep secrets out of workflows
 
-## Cursor Rules (project rules)
-
-**Cursor Rules** are markdown or MDC files Cursor loads so the assistant follows your team’s conventions. ECP’s own engineering rules live in the main repository under **`.cursor/rules/`**:
-
-**[Browse `.cursor/rules` on GitHub](https://github.com/executioncontrolprotocol/executioncontrolprotocol/tree/main/.cursor/rules)**
-
-### If you contribute to the ECP core repo
-
-Clone **[executioncontrolprotocol](https://github.com/executioncontrolprotocol/executioncontrolprotocol)** and open it in Cursor. The repo already includes rules for TypeScript, the spec, CLI patterns, and tests. Use them as-is so patches match project standards.
-
-### If you only author Contexts in your app repo
-
-Create a **`.cursor/rules/`** folder in **your** project and add a short rule file (for example **`ecp-context.mdc`**) that tells the agent to:
-
-- Prefer manifests that validate with **`ecp validate`**
-- Respect **inputs**, **schemas**, **policies**, and **mounts** as described on [executioncontrolprotocol.io](https://executioncontrolprotocol.io)
-- Suggest **`ecp run`** / **`ecp validate`** command lines and to use **`ecp --help`** when unsure
-
-You can paste or summarize points from the [Quickstart](/getting-started/quickstart), [Concepts](/learn/concepts), and [Security](/learn/security) pages into that file so offline edits stay aligned with the public spec.
-
-## Day-to-day prompts
-
-- “Generate a minimal `context.yaml` with one executor, one input, and default-deny tool access.”
-- “Given this manifest, what `ecp validate` and `ecp run` commands should I use with OpenAI?”
-- “Review this Context against ECP security guidance.”
-
-When flags or defaults are unclear, prefer **`ecp --help`** and **`ecp run --help`** (and the same for other subcommands) so you match your installed CLI.
+Point it at [Fluent API](/guides/fluent-api) and [Concepts](/learn/concepts) when generating code.
 
 ## Next steps
 
-- [Quickstart](/getting-started/quickstart) — install from npm and run a sample Context
-- [CLI reference](/reference/cli) — commands and system config
-- [Why ECP?](/learn/why-ecp) — how this fits your stack
+- [Quickstart](/getting-started/quickstart)
+- [Fluent API](/guides/fluent-api)
+- [Claude Code](/ai-tools/claude-code)

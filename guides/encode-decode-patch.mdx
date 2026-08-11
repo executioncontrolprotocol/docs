@@ -1,0 +1,74 @@
+---
+title: "Encode, decode, and patch"
+description: "Transform ECP (Execution Control Protocol) documents with encode, decode, and patch — JSON, Fluent, and TOON."
+---
+
+# Encode, decode, and patch
+
+Operational transforms run on an initialized **Ecp** instance. They do not emit full run lifecycle hooks the way `run` does.
+
+## Result shape
+
+Encode / decode / patch results use protocol schemas with `success`, **`.result`**, `validation`, and `diagnostics` — not legacy `.content` / `.document` fields.
+
+## Encode
+
+```ts
+await ecp
+  .encode(source)
+  .uses("@executioncontrolprotocol/format-toon")
+  .to("@executioncontrolprotocol.workflow")
+  .with({ headers: false })
+  .process()
+```
+
+Omit `.uses(...)` for canonical JSON passthrough.
+
+| Format | How |
+| ------ | --- |
+| JSON | Canonical; default / no format extension |
+| Fluent | Core built-in encode (`--format fluent` / format-fluent id in core) |
+| TOON | `@executioncontrolprotocol/format-toon` package |
+
+CLI:
+
+```bash
+ecp encode workflow.json --format toon --env environment.ts -o workflow.toon
+ecp encode workflow.json --format fluent --env environment.ts -o workflow.generated.ts
+```
+
+## Decode
+
+```ts
+await ecp
+  .decode(input)
+  .uses("@executioncontrolprotocol/format-toon")
+  .to("@executioncontrolprotocol.patch")
+  .process()
+```
+
+Notes:
+
+- Decode input field is `input` in extension payloads.
+- Fluent **decode** is not supported — use `ecp compile` for TypeScript → JSON.
+
+```bash
+ecp decode workflow.toon --format toon --env environment.ts -o workflow.json
+ecp compile workflow.ts -o workflow.json
+```
+
+## Patch
+
+```ts
+await ecp.patch(manifest).with(patchDocOrShorthand).process()
+```
+
+Patch paths target steps by id: `steps[<stepId>].field`. Workflow builders assign unique step ids so patches stay unambiguous.
+
+Target schema: `@executioncontrolprotocol.patch` (and `@executioncontrolprotocol.patch.result` for outcomes).
+
+## Next steps
+
+- [Fluent API](/guides/fluent-api)
+- [CLI reference](/reference/cli)
+- [Schemas](/reference/schemas)

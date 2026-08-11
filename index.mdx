@@ -1,62 +1,40 @@
 ---
-title: "Execution Control Protocol"
-description: "Define and run governed agent execution environments on top of MCP"
+title: "ECP (Execution Control Protocol)"
+description: "ECP (Execution Control Protocol) is the governed execution layer for AI agents—portable Fluent workflows, environments, and a browser demo."
 ---
 
-**ECP (Execution Control Protocol)** is an open way to describe **how agents run**: what they can see, which **MCP** tools they may use, and which **policies** apply. You ship a **Context** manifest; a host loads it, enforces **security**, and runs the same spec in development or production.
+ECP (Execution Control Protocol) is an open standard and reference implementation for defining, packaging, and running **portable workflows** inside **governed environments**.
 
-- **MCP** defines how models call tools.
-- **ECP** defines how agents, tools, context, and policies execute together.
+- **MCP** standardizes how models call tools.
+- **ECP** standardizes how agents, tools, policies, and runtimes execute together.
 
-## Get running in minutes
-
-Install the CLI from npm, create a small config, and validate or run a sample Context. No clone required.
+You author workflows with a **Fluent TypeScript API**, compile them to JSON manifests, and run them with the `ecp` CLI or a host runtime (Node or browser).
 
 <CardGroup cols={2}>
   <Card title="Quickstart" icon="rocket" href="/getting-started/quickstart">
-    npm install, config init, validate, run
+    Install the CLI and run the echo workflow.
   </Card>
-  <Card title="Why ECP?" icon="sparkles" href="/learn/why-ecp">
-    Security defaults, control, and extensibility
+  <Card title="Browser demo" icon="browser" href="/getting-started/browser-demo">
+    Try the Graph Editor with Chrome AI or Ollama.
   </Card>
-  <Card title="Concepts" icon="book" href="/learn/concepts">
-    Context, executors, orchestration, mounts
+  <Card title="Fluent API" icon="code" href="/guides/fluent-api">
+    Author portable workflows with TypeScript.
   </Card>
   <Card title="CLI reference" icon="terminal" href="/reference/cli">
-    Commands, config, and flags
+    run, validate, compile, encode, decode, and ecp up.
   </Card>
 </CardGroup>
 
-## Learn more
+## What you build
 
-<CardGroup cols={2}>
-  <Card title="Relationship to MCP" icon="puzzle-piece" href="/learn/relationship-to-mcp">
-    How ECP sits above MCP
-  </Card>
-  <Card title="Security" icon="shield" href="/learn/security">
-    Allow lists, budgets, secrets, traces
-  </Card>
-  <Card title="Alternatives" icon="scale-balanced" href="/alternatives">
-    Compare ECP to other stacks
-  </Card>
-  <Card title="Changelog" icon="clock-rotate-left" href="/reference/changelog">
-    Release notes on GitHub
-  </Card>
-</CardGroup>
+| Piece | Role |
+| ----- | ---- |
+| **Workflow** | Portable graph of steps (Fluent/TS or JSON) |
+| **Environment** | Runtime + extensions + policies that can execute a workflow |
+| **Ecp** | Operational instance after `env.init()` — run, validate, encode, decode, patch, describe, search |
 
-## AI assistants
+## Next steps
 
-<CardGroup cols={2}>
-  <Card title="Cursor" icon="arrow-pointer" href="/ai-tools/cursor">
-    Docs skill and Cursor Rules
-  </Card>
-  <Card title="Claude Code" icon="asterisk" href="/ai-tools/claude-code">
-    Skill install and workflows
-  </Card>
-  <Card title="Windsurf" icon="wind" href="/ai-tools/windsurf">
-    Configure Windsurf for ECP
-  </Card>
-  <Card title="Schema reference" icon="file-code" href="/reference/schema">
-    JSON Schema and types
-  </Card>
-</CardGroup>
+- [Why ECP](/learn/why-ecp)
+- [Core concepts](/learn/concepts)
+- [Relationship to MCP](/learn/relationship-to-mcp)

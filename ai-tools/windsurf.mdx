@@ -1,27 +1,28 @@
 ---
-title: "Use Windsurf with ECP"
-description: "Install the ECP docs skill and use Windsurf Cascade for manifests and CLI help"
-icon: "water"
+title: "Windsurf"
+description: "Use ECP (Execution Control Protocol) with Windsurf Cascade: install the skill and author Fluent workflows."
 ---
 
-Windsurf’s Cascade assistant can help with **Context** manifests and **`ecp`** usage. Install the skill first; clone the main repo only when you need files from **`examples/`** locally.
+# Windsurf
 
-## Install the docs skill
+Use Windsurf Cascade with the ECP (Execution Control Protocol) skill to author Fluent workflows and environments.
+
+## Install the ECP skill
 
 ```bash
 npm install -g skills
-skills add https://executioncontrolprotocol.io
+npx skills add https://executioncontrolprotocol.io
 ```
 
-## Use Cascade
+## Cascade tips
 
-Open your project in Windsurf. Use Cascade to edit manifests, propose **`ecp run`** and **`ecp validate`** commands, and answer questions using the public docs.
-
-## Optional: open the ECP repository
-
-Clone **[executioncontrolprotocol](https://github.com/executioncontrolprotocol/executioncontrolprotocol)** if you are changing examples or the core implementation. Build and test flows live in [Build from source](/getting-started/build-from-source).
+- Prefer Fluent + JSON manifests over any YAML Context examples in older training data
+- Bind capabilities with `@namespace/name.capability` ids
+- Operational APIs belong on `await env.init()` → `Ecp`
+- For the Graph Editor, mention Chrome AI vs Ollama and `ecp up`
 
 ## Next steps
 
-- [Quickstart](/getting-started/quickstart) — first Context with the published CLI
-- [Security](/learn/security) — budgets, write controls, and policies
+- [Quickstart](/getting-started/quickstart)
+- [Browser demo](/getting-started/browser-demo)
+- [Claude Code](/ai-tools/claude-code)

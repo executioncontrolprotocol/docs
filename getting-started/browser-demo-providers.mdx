@@ -1,0 +1,93 @@
+---
+title: "Demo providers and configuration"
+description: "Configure the ECP (Execution Control Protocol) browser demo: Chrome AI vs Ollama, harness pairing, vault secrets, and app settings."
+---
+
+# Demo providers and configuration
+
+This page describes how the Graph Editor chooses **providers** and **harnesses**, what is selectable today, and how settings persist. Behavior matches the demo app — not aspirational UI.
+
+## Provider vs harness
+
+| Switch | Meaning |
+| ------ | ------- |
+| **Provider** | Which model capability generates text (`chrome-ai`, `ollama`, …) |
+| **Harness** | How the assistant structures tasks (`nano` EQL vs `coding` Fluent/TS) |
+
+They are **independent** in the runtime. The demo UI may set both from one first-run choice via `resolveDemoSession`.
+
+## Selectable providers (first-run)
+
+| Provider | When to use | Requirements | Harness pairing |
+| -------- | ----------- | ------------ | --------------- |
+| **Chrome AI** (default) | Fastest try: on-device, no local daemon | Chrome with built-in `LanguageModel` available or installable | **nano** (EQL) |
+| **Ollama** | Local models; Fluent/TS authoring path | Ollama running + `ecp up` bridge with `ollamaReachable` + a selected installed model | **coding** (Fluent/TS) |
+
+Continue is enabled only when requirements are met (Chrome supported for Chrome AI; bridge + model for Ollama).
+
+### Chrome AI
+
+Use when you want a zero-setup path in Chrome. The demo invokes `@executioncontrolprotocol/chrome-ai` for availability checks and generation. If the on-device model is not ready, follow the in-app install UI.
+
+### Ollama
+
+Use when you want stronger local coding models and Fluent/TS workflows. Prefer:
+
+```bash
+ecp up
+```
+
+so the demo opens with `?token=` and `?bridge=`. The Ollama option enables when `GET /health` reports `ollamaReachable`. Choose an installed model in Ollama settings before continuing.
+
+Manual pairing is possible if you paste a bridge URL and token; `ecp up` is the supported path.
+
+## Cloud providers (bound, not first-run selectable)
+
+The demo type system and dependencies include **OpenAI** and **Claude** (`openai`, `claude`). They map to `@executioncontrolprotocol/openai.generate` and `@executioncontrolprotocol/claude.generate`. They are **not** offered in the current first-run modal. When enabled in a future UI or custom fork, API keys belong in the encrypted **browser-secrets** vault — never in workflow manifests.
+
+## What the demo environment binds
+
+The app’s environment factory typically binds:
+
+- Format extensions: TOON, Mermaid, EQL (and Fluent encode via core)
+- Model providers used by the selected mode
+- **nano** and **coding** harnesses
+- Registry / session control (including freeze-on-run policy as configured)
+
+Chat replies go through harness `evaluate` plus the selected provider `generate` — not template-only FAQ stand-ins.
+
+## Persistence and secrets
+
+| Setting | Storage |
+| ------- | ------- |
+| Provider mode | Plain `localStorage` (demo key for provider mode) |
+| Ollama settings (model, etc.) | Demo localStorage |
+| API keys / vault secrets | Encrypted **browser-secrets** vault (passphrase) |
+
+Do not put secrets in workflows. Portable workflows use `ref()` / state — not raw credentials.
+
+## Panels and formats
+
+The Graph Editor exposes panels for:
+
+- Fluent / TypeScript source
+- Canonical JSON workflow manifest
+- TOON
+- Mermaid graph view
+- Run and validation results
+
+Encode/decode against the bound environment the same way you would with the CLI or `ecp.encode` / `ecp.decode`. See [Encode, decode, and patch](/guides/encode-decode-patch).
+
+## Hosted vs local
+
+| Surface | Notes |
+| ------- | ----- |
+| [Hosted Pages demo](https://executioncontrolprotocol.github.io/browser-demo/) | HTTPS; use Chromium for Ollama + loopback bridge |
+| Local Vite (`npm run dev`) | Default `http://localhost:5173`; pair with `ecp up --open-url …` |
+
+## Next steps
+
+- [Browser demo overview](/getting-started/browser-demo)
+- [Environments](/guides/environments)
+- [Security](/learn/security)
+- [CLI: ecp up](/reference/cli#ecp-up)

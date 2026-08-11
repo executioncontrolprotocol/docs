@@ -1,0 +1,57 @@
+---
+title: "Schemas"
+description: "ECP (Execution Control Protocol) document schemas: workflow, environment, run, patch, encode, and decode result IDs."
+---
+
+# Schemas
+
+ECP (Execution Control Protocol) documents carry a `schema` discriminator and a `version`. Workflows currently use `"version": "1.0"` with schema `@executioncontrolprotocol.workflow`.
+
+Generated JSON Schema artifacts ship from `@executioncontrolprotocol/types` (`npm run generate:schema` in the monorepo → `packages/types/dist/schemas`).
+
+## Common schema IDs
+
+| Schema | Purpose |
+| ------ | ------- |
+| `@executioncontrolprotocol.workflow` | Portable workflow manifest |
+| `@executioncontrolprotocol.environment` | Environment manifest |
+| `@executioncontrolprotocol.environment.describe` | Describe discovery payload |
+| `@executioncontrolprotocol.environment.search` | Search discovery payload |
+| `@executioncontrolprotocol.run.request` | Run request |
+| `@executioncontrolprotocol.run.result` | Run result |
+| `@executioncontrolprotocol.run.event` | Run event |
+| `@executioncontrolprotocol.validation.result` | Validation result |
+| `@executioncontrolprotocol.patch` | Patch document |
+| `@executioncontrolprotocol.patch.result` | Patch outcome |
+| `@executioncontrolprotocol.encode.result` | Encode outcome (`.result`) |
+| `@executioncontrolprotocol.decode.result` | Decode outcome (`.result`) |
+| `@executioncontrolprotocol.intent` | Harness intent artifact |
+| `@executioncontrolprotocol.harness.reply` | Harness reply artifact |
+
+## Workflow example
+
+```json
+{
+  "schema": "@executioncontrolprotocol.workflow",
+  "version": "1.0",
+  "workflow": { "id": "echo-test", "label": "Echo test" },
+  "steps": [
+    {
+      "type": "step",
+      "id": "echo",
+      "label": "Echo",
+      "uses": "@executioncontrolprotocol/test.echo",
+      "input": { "value": "hello from fluent API" },
+      "as": "echo"
+    }
+  ]
+}
+```
+
+Author with the [Fluent API](/guides/fluent-api); compile with `ecp compile`.
+
+## Next steps
+
+- [Fluent API](/guides/fluent-api)
+- [Packages](/reference/packages)
+- [CLI reference](/reference/cli)

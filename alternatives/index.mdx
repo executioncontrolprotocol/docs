@@ -1,21 +1,22 @@
 ---
-title: "Alternatives and comparisons"
-description: "How ECP (Execution Control Protocol) compares to popular agent frameworks and orchestration stacks."
+title: "Alternatives"
+description: "Compare ECP (Execution Control Protocol) to agent frameworks and other stacks."
 ---
 
-# Alternatives and comparisons
+# Alternatives
 
-If you’re evaluating **ECP (Execution Control Protocol)**, start with **[Why ECP?](/learn/why-ecp)** for the product story, then use these comparisons to place ECP next to stacks you already know.
+ECP (Execution Control Protocol) is an **execution control** layer: portable Fluent workflows and governed environments. It is not a replacement for every framework — it sits beside MCP and your agent stack.
 
-ECP is a **runtime specification** for execution environments: what an agent can access (tools, data mounts), what is allowed (policies), and how execution is orchestrated and audited. It’s meant to **integrate with** frameworks you already use, not replace them.
+<CardGroup cols={2}>
+  <Card title="ECP vs LangChain" href="/alternatives/ecp-vs-langchain">
+    Build agents with LangChain; run and govern with ECP.
+  </Card>
+  <Card title="ECP vs OpenClaw" href="/alternatives/ecp-vs-openclaw">
+    Framework UX vs portable workflows and host security.
+  </Card>
+</CardGroup>
 
-## Comparisons
+## Next steps
 
-- [ECP vs LangChain](/alternatives/ecp-vs-langchain) — where orchestration ends and execution control begins
-- [ECP vs OpenClaw](/alternatives/ecp-vs-openclaw) — host `security` mirror, tool gates, and why agent frameworks still need a hard execution boundary
-
-## Related reading
-
-- [Core concepts](/learn/concepts)
+- [Why ECP](/learn/why-ecp)
 - [Relationship to MCP](/learn/relationship-to-mcp)
-- [Security](/learn/security)

@@ -1,0 +1,74 @@
+---
+title: "Environments"
+description: "Bind ECP (Execution Control Protocol) environments: runtime, extensions, policies, harnesses, and init() to an Ecp instance."
+---
+
+# Environments
+
+An **environment** is the governed execution container for ECP (Execution Control Protocol) workflows. Workflows stay portable; environments hold host bindings.
+
+## Create and bind
+
+Node host (CLI and server apps):
+
+```ts
+import { environment, extension, policy } from "@executioncontrolprotocol/node"
+import "@executioncontrolprotocol/core/testing"
+import "@executioncontrolprotocol/format-toon"
+
+export default (await environment("echo-dev", "Echo development"))
+  .withExtensions([
+    extension("@executioncontrolprotocol/test").with({}),
+    extension("@executioncontrolprotocol/format-toon").with({}),
+  ])
+```
+
+Common builder methods:
+
+| Method | Role |
+| ------ | ---- |
+| `.withRuntime(…)` | Override or set runtime |
+| `.withExtensions([...])` | Bind cataloged extensions |
+| `.withPolicies([...])` | Bind policies |
+| `.withHarnesses([...])` | Bind harnesses (common in browser apps) |
+| `.init()` | Return operational **Ecp** |
+
+Import extension packages for side-effect catalog registration before binding by string id.
+
+## Init and operational APIs
+
+```ts
+const env = await environment("dev")
+  .withExtensions([extension("@executioncontrolprotocol/test").with({})])
+
+const ecp = await env.init()
+
+await ecp.describe()
+await ecp.search("echo")
+await ecp.validate(manifest)
+await ecp.run(manifest)
+await ecp.encode(source).uses("@executioncontrolprotocol/format-toon").to("@executioncontrolprotocol.workflow").process()
+await ecp.terminate()
+```
+
+Do not call run/encode on the environment builder — use the `Ecp` returned by `init()`.
+
+## Browser hosts
+
+`@executioncontrolprotocol/browser` provides a slim host (executor, registry, session). **Apps** bind providers and harnesses. The [browser demo](/getting-started/browser-demo) is one such app; see [Demo providers and configuration](/getting-started/browser-demo-providers).
+
+## CLI
+
+Point commands at an environment module:
+
+```bash
+ecp run workflow.ts --env environment.ts
+ecp describe --env environment.ts
+ecp search "echo" --env environment.ts
+```
+
+## Next steps
+
+- [Extensions](/guides/extensions)
+- [Security](/learn/security)
+- [Concepts](/learn/concepts)

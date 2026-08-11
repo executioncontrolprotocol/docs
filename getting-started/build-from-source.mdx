@@ -1,13 +1,16 @@
 ---
 title: "Build from source"
-description: "Clone the ECP monorepo, compile packages, and run tests when you are developing the protocol or runtime"
+description: "Clone the ECP (Execution Control Protocol) monorepo, build packages, and link the CLI for local development."
 ---
 
-Use this flow when you are **changing or debugging ECP itself** (spec types, runtime, CLI). If you only want to run Contexts, follow the [Quickstart](/getting-started/quickstart) and install **`@executioncontrolprotocol/cli`** from npm instead.
+# Build from source
+
+Use this path when you are changing ECP (Execution Control Protocol) packages themselves. Day-to-day usage should [install the CLI from npm](/getting-started/quickstart).
 
 ## Prerequisites
 
-Same as for day-to-day usage: [Node.js](https://nodejs.org/) (LTS), **npm**, and optionally **OpenAI** or **Ollama** for live runs. See the [Quickstart](/getting-started/quickstart) for provider setup.
+- Node.js 22+
+- npm (install from the **repo root**, never inside individual packages)
 
 ## Clone and build
 
@@ -18,51 +21,36 @@ npm install
 npm run build
 ```
 
-`npm run build` cleans package `dist/` outputs, then compiles in workspace order. Details live in the repo root **`package.json`**.
-
-## Run the CLI from the workspace
-
-Either invoke via **npx** from the repo root (after `npm run build`):
+Link the CLI:
 
 ```bash
-npx ecp --help
+cd packages/cli
+npm link
 ```
 
-Or link the CLI package once:
+From the monorepo root, run an example:
 
 ```bash
-cd packages/cli && npm link
-cd ../..
+ecp run examples/01-echo/workflow.ts --env examples/01-echo/environment.ts
+ecp validate examples/01-echo/workflow.ts --env examples/01-echo/environment.ts
 ```
 
-Then run **`ecp`** like a globally installed binary.
-
-## Try examples
-
-From the repository root, after a build:
+## Useful monorepo commands
 
 ```bash
-ecp validate examples/single-executor/context.yaml -i topic=test
-ecp run examples/single-executor/context.yaml --provider openai --model gpt-4o-mini -i topic="ECP"
-```
-
-Use **`ecp run --help`** for flags (tracing, config path, provider overrides, and more).
-
-## Tests
-
-Unit tests expect built **`dist/`** outputs:
-
-```bash
-npm run build
+npm run check          # build + schema + lint + tests
 npm run test:unit
+npm run generate:schema
 ```
 
-`npm test` builds, then runs unit, integration, and e2e suites (e2e may skip if Ollama is not available).
+Package map and boundaries: see the monorepo [`AGENTS.md`](https://github.com/executioncontrolprotocol/executioncontrolprotocol/blob/main/AGENTS.md) and [Packages](/reference/packages).
 
-## Configuration and setup
+## Browser demo with linked packages
 
-For environment variables, system config shape, and annotated examples, see **[SETUP.md](https://github.com/executioncontrolprotocol/executioncontrolprotocol/blob/main/SETUP.md)** and **`config/ecp.config.example.yaml`** in the same repository.
+For side-by-side work with the [browser demo](/getting-started/browser-demo), clone the demo as a sibling, rebuild monorepo `dist/`, then follow the demo README’s `npm link` procedure so the Graph Editor picks up local `@executioncontrolprotocol/*` builds.
 
-## Changelog and releases
+## Next steps
 
-Release notes and version history are maintained in the main repo: **[CHANGELOG.md](https://github.com/executioncontrolprotocol/executioncontrolprotocol/blob/main/CHANGELOG.md)**.
+- [Quickstart](/getting-started/quickstart)
+- [Fluent API](/guides/fluent-api)
+- [CLI reference](/reference/cli)

@@ -18,6 +18,8 @@
             "pages": [
               "index",
               "getting-started/quickstart",
+              "getting-started/browser-demo",
+              "getting-started/browser-demo-providers",
               "getting-started/build-from-source"
             ]
           },
@@ -28,6 +30,15 @@
               "learn/concepts",
               "learn/relationship-to-mcp",
               "learn/security"
+            ]
+          },
+          {
+            "group": "Build",
+            "pages": [
+              "guides/fluent-api",
+              "guides/environments",
+              "guides/extensions",
+              "guides/encode-decode-patch"
             ]
           },
           {
@@ -49,9 +60,9 @@
           {
             "group": "Reference",
             "pages": [
-              "reference/schema",
               "reference/cli",
-              "reference/spec",
+              "reference/schemas",
+              "reference/packages",
               "reference/changelog"
             ]
           }
@@ -66,8 +77,8 @@
   "navbar": {
     "links": [
       {
-        "label": "Spec",
-        "href": "https://github.com/executioncontrolprotocol/executioncontrolprotocol/blob/main/SPEC.md"
+        "label": "Demo",
+        "href": "https://executioncontrolprotocol.github.io/browser-demo/"
       },
       {
         "label": "GitHub",

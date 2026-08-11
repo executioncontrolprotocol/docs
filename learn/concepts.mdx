@@ -1,83 +1,93 @@
 ---
-title: "Core concepts"
-description: "Context, executors, orchestration, and mounts"
+title: "Concepts"
+description: "Core ECP (Execution Control Protocol) concepts: workflows, environments, Ecp instances, definitions, bindings, and invocations."
 ---
 
-ECP defines a **Context** as the root execution object: a portable artifact that describes a complete execution environment for one or more AI agents.
+# Concepts
 
-## Context
+ECP (Execution Control Protocol) centers on three runtime ideas: a portable **workflow**, a host **environment**, and an operational **Ecp** instance.
 
-A Context contains:
+## Workflow
 
-- **Inputs** — parameters that make the Context reusable (e.g. `shopifyStoreId`, `jiraProject`)
-- **Outputs** — declared structured results (e.g. from a schema)
-- **Schemas** — JSON Schema-like definitions referenced by executors and outputs
-- **Triggers** — events that start a run (schedule, webhook, tool-event)
-- **Orchestration** — entrypoint, strategy, and coordination defaults
-- **Orchestrator** — the top-level coordinating object (optional; legacy Contexts use a flat **executors** list)
+A workflow is a portable graph of steps. You author it with the [Fluent API](/guides/fluent-api) or as JSON.
 
-Contexts are **portable**: version them, share them, and run them on any ECP-compliant runtime.
+```ts
+import { workflow, step } from "@executioncontrolprotocol/core"
 
-## Orchestrator and executors
+export default workflow("Echo test")
+  .run([
+    step("@executioncontrolprotocol/test.echo", "Echo")
+      .with({ value: "hello" })
+      .as("echo"),
+  ])
+```
 
-- **Orchestrator** — The entry point of execution. It may contain executors and nested orchestrators, define orchestration strategy, and coordinate delegation and aggregation.
-- **Executors** — Execution roles (agents, tools, or human reviewers) that run within the orchestration. Each has its own protocols, mounts, and policies.
+Canonical manifests use:
 
-Orchestrators and executors share a common pattern for **inputs**, **outputs**, and **schema references**. Orchestrators add coordination-specific properties (child executors, delegation semantics, merge responsibilities).
+```json
+{
+  "schema": "@executioncontrolprotocol.workflow",
+  "version": "1.0"
+}
+```
 
-## Orchestration strategies
+Workflows should stay portable: no host secrets, no environment-only helpers in the graph. Use `ref()` to read prior step state.
 
-| Strategy | Description |
-| -------- | ----------- |
-| **single** | Run only the entrypoint; no delegation. |
-| **sequential** | Run children in a fixed order; outputs can feed the next. |
-| **delegate** | Orchestrator plans, delegates to specialists, then merges results. Most common for complex flows. |
-| **swarm** | Run children in parallel; aggregate or merge afterward. |
+## Environment
 
-## Mounts
+An environment binds what can run a workflow: runtime, extensions, policies, harnesses, and secrets access on the host.
 
-Mounts define how data is loaded from external systems (e.g. via MCP tools). They run in three stages:
+```ts
+import { environment, extension } from "@executioncontrolprotocol/node"
+import "@executioncontrolprotocol/core/testing"
 
-| Stage | Purpose |
-| ----- | ------- |
-| **Seed** | Metadata and references (e.g. Ref objects with id, title, snippet). |
-| **Focus** | A subset of objects selected during orchestration (bounded). |
-| **Deep** | Full documents or large payloads (used sparingly). |
+export default (await environment("dev")).withExtensions([
+  extension("@executioncontrolprotocol/test").with({}),
+])
+```
 
-This staged hydration keeps context windows and cost under control.
+Lifecycle (simplified): configure → bind extensions → `environment:ready` → runs may emit `environment:beforeRun` → `ecp.terminate()` ends the session.
 
-## Policies
+## Ecp instance
 
-Policies define **object-scoped** security **in the Context manifest** (per executor):
+Call `await env.init()` to get an **Ecp** instance. Operational APIs live here — not on the environment builder:
 
-- **Tool access** — Default deny; allow only explicitly listed tools (e.g. `jira:issues.search`).
-- **Budgets** — e.g. `maxToolCalls`, `maxRuntimeSeconds`.
-- **Write controls** — `forbid`, `propose-only`, or `execute-if-allowed`; optional `requireApprovalFor` list.
+- `run`, `validate`, `describe`, `search`
+- `encode`, `decode`, `patch`
+- `invoke` (when used by hosts/harnesses)
+- `terminate`
 
-The **host** may still apply a separate layer: **`ecp.config.yaml`** with a top-level **`security`** mirror (allow-listed model providers, MCP server names, plugin kinds, secret providers, …). See [Security](/learn/security) and the [system configuration](/reference/schema#system-configuration) section in the Schema reference.
+```ts
+const ecp = await env.init()
+await ecp.run(manifest)
+await ecp.terminate()
+```
 
-## Protocols
+## Definitions, bindings, invocations
 
-Executors declare which protocols they use, for example:
+| Concept | Example |
+| ------- | ------- |
+| **Definition** | Extension package calls `defineExtension` + `catalogExtension` on load |
+| **Binding** | `extension("@executioncontrolprotocol/format-toon").with({})` in an environment |
+| **Invocation** | `step("@executioncontrolprotocol/memory.search", "…").with({…}).as("signals")` |
 
-- **agentOrchestration** — A2A (agent-to-agent)
-- **toolInvocation** — MCP
+IDs use `@namespace/name` for extensions and `@namespace/name.capability` for capabilities.
 
-The runtime uses these to wire tool calls and delegation.
+## State and refs
 
-## Triggers
+`.as("echo")` writes step output into run state. Later steps read it with `ref("echo.field")` (stored as `$ref` paths under state). Optional `mode` controls how state is written.
 
-Triggers start a Context run. Supported types include:
+## Hosts
 
-- **schedule** — Cron-style (e.g. `0 8 * * MON` with timezone)
-- **webhook** — HTTP-triggered
-- **tool-event** — Emitted by an integration
+| Host | Typical entry |
+| ---- | ------------- |
+| Node | `@executioncontrolprotocol/node` + CLI |
+| Browser | `@executioncontrolprotocol/browser` (apps bind harnesses/providers) |
+| MCP | `@executioncontrolprotocol/mcp` adapter around an `Ecp` |
 
-## Learn more
+## Next steps
 
-- [Quickstart](/getting-started/quickstart) — Run a sample Context with the published CLI
-- [Why ECP?](/learn/why-ecp) — Security, control, and extensibility at a glance
-- [Relationship to MCP](/learn/relationship-to-mcp) — How ECP sits above MCP
-- [Security](/learn/security) — Default-deny, audit, and governance
-- [Alternatives and comparisons](/alternatives) — How ECP compares to other stacks
-- [Full spec (SPEC.md)](https://github.com/executioncontrolprotocol/executioncontrolprotocol/blob/main/SPEC.md) — Design goals, runtime behavior, executor types
+- [Fluent API](/guides/fluent-api)
+- [Environments](/guides/environments)
+- [Extensions](/guides/extensions)
+- [Security](/learn/security)

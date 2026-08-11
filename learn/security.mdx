@@ -1,105 +1,63 @@
 ---
 title: "Security"
-description: "Default-deny, host policy mirror, secret namespaces, and audit"
+description: "Secure ECP (Execution Control Protocol) runs: policies, secrets, registry control, and keeping credentials out of workflows."
 ---
 
-ECP is designed with secure-by-default principles for autonomous agent deployments. Security is split into two layers: **what a Context asks for** (portable manifest) and **what the host allows** (machine- or project-local `ecp.config.yaml`). That split is deliberate: you can share Contexts without implicitly granting every recipient the same models, MCP servers, or credential sources.
+# Security
 
-## Default-deny tool access
+ECP (Execution Control Protocol) treats execution as a governed surface: what can run, what state can change, and where secrets live.
 
-Orchestrators and executors **cannot** call tools unless explicitly allowed. Policies use an allowlist:
+## Principles
 
-```yaml
-policies:
-  toolAccess:
-    default: deny
-    allow:
-      - jira:issues.search
-      - confluence:pages.search
+- **Workflows are portable** — no API keys or host secrets in manifests
+- **Environments bind policy** — budgets, approvals, state control, registry rules
+- **Secrets stay on the host** — OS keychain (CLI) or browser vault (demo)
+
+## Policies
+
+First-party policy packages include:
+
+| Policy | Role |
+| ------ | ---- |
+| Budget | Limit spend / usage |
+| Approval | Gate sensitive actions |
+| State control | Constrain how run state is written |
+| Registry control | Authorize dynamic extension registration (`policy:pre` / registry requests) |
+
+Bind policies on the environment builder (for example `.withPolicies([...])`) before `init()`.
+
+## Secrets
+
+### Node / CLI
+
+Use the CLI secrets commands backed by the OS keychain:
+
+```bash
+ecp config secrets add MY_KEY
+ecp config secrets list
+ecp config secrets get MY_KEY
+ecp config secrets remove MY_KEY
 ```
 
-Only the listed tools are permitted for that executor.
+### Browser demo
 
-## Scoped permissions
+Cloud keys belong in the encrypted **browser-secrets** vault (passphrase). Provider mode itself is plain localStorage. See [Demo providers and configuration](/getting-started/browser-demo-providers).
 
-- **Tool access** — Per-executor allowlists (e.g. read-only tools for analysts, write tools only for the publisher).
-- **Write controls** — Modes: `forbid`, `propose-only`, `execute-if-allowed`. Optional `requireApprovalFor` for specific tools.
-- **Budgets** — `maxToolCalls`, `maxRuntimeSeconds` to cap cost and time per executor.
+## Registry freeze (browser)
 
-## Execution trace
+Browser hosts often freeze the extension registry at a lifecycle point (`environment:ready`, `environment:beforeRun`, or manual). Pair freeze with **registry-control** so late registration is an explicit, authorized path — important when pages expose `globalThis.ecp`.
 
-Every run should produce a **reproducible trace**, including:
+## Default posture
 
-- Resolved Context snapshot
-- Tool invocation log
-- Agent outputs
-- Execution timeline
-- Policy decisions
+Prefer allowlisted capabilities in the environment you ship. Validate workflows against that environment before run:
 
-You can inspect saved traces locally with `ecp trace` (and `ecp trace list`), optionally rendering the ASCII view with `--output graph`.
+```bash
+ecp validate workflow.ts --env environment.ts
+ecp run workflow.ts --env environment.ts --dry-run
+```
 
-This supports compliance, debugging, and replay. Contexts are versioned and signed (roadmap) to avoid overly permissive configs being distributed by mistake.
+## Next steps
 
-## Host system configuration and the `security` mirror
-
-The **system config** file (`ecp.config.yaml`, or path via `--config`) has two roles:
-
-1. **Configure** — Wiring and defaults: `models.providers`, `tools.servers`, `loggers.config`, `agents.endpoints`, `secrets`, optional `executors.instances`, `memory.stores`, and `plugins.installs` (where packaged plugins are recorded). Provider-specific options (for example Ollama `baseURL`) live under each entry’s `config` object.
-2. **`security`** — The **same area names**, but only **allow-lists and defaults**: what may run at all, regardless of what a Context declares.
-
-The reference CLI requires a resolvable system config for **`ecp run`** and **`ecp validate`**. If neither project-local config, user **`~/.ecp/*`**, nor **`--config <path>`** resolves, the command fails so host policy is never skipped.
-
-Typical subtrees under `security` include:
-
-- **`security.models`** — `allowProviders`, `defaultProviders`, and **`allowedModels`** (per-provider map of model names policy permits). Wiring uses **`models.providers.<id>.supportedModels`** for what the host can run; effective use requires both **supported** and **allowed** alignment (see the protocol SPEC host section).
-- **`security.tools`** — `allowServers` (logical MCP server names under `tools.servers`).
-- **`security.plugins`** — Global extension policy (`PluginSecurityPolicy`): which **plugin kinds** may load (`allowKinds`, including `tool` for MCP-governed servers), **sources** (`allowSourceTypes` such as `builtin`), and **ids** (`allowIds` / `denyIds`). This is separate from `plugins.installs`, which is provenance and install paths—not the allow-list.
-- **`security.loggers`**, **`security.secrets`**, **`security.executors`**, **`security.memory`**, **`security.agents`** — Same pattern when those areas are used.
-
-The file should declare **`version: "0.5"`** (schema version of the system config document). Runtimes may reject other values.
-
-**Why this design helps in production**
-
-- **Non-bypassable host gates** — Even if a Context lists a model provider, an MCP server, or a plugin kind, the host can refuse to wire it unless it appears under the corresponding `security.*` allow-list. That is enforcement in config and loaders, not in a system prompt the agent might drift around.
-- **Clear separation of concerns** — Contexts stay portable descriptions of orchestration and per-executor policies; the host file answers “on *this* machine, which integrations exist and which are permitted.” Operations teams can tighten `security` without forking every Context.
-- **Composable policy** — Context **`policies.toolAccess`** still does per-executor default-deny and fine-grained tool allowlists; **`security.tools.allowServers`** caps which server *names* may even connect. A malicious or over-broad manifest cannot summon a server that was never installed or allowed on the host.
-- **Extension surface control** — `security.plugins` restricts which kinds of plugins (provider, executor, logger, memory, **tool**, …) and which ids may participate. Omitting `tool` from `allowKinds`, for example, is how implementations can refuse MCP connections governed as tool plugins when you want a read-only or model-only deployment.
-- **Auditability** — Allow-lists and defaults are plain data next to wiring. Together with traces, reviewers can answer what was configured to be possible versus what a given run attempted.
-
-Manage policy from the CLI under **`ecp config security`** (run `ecp config security` with no args for the command list). Wiring uses **`ecp config add|get|update|remove --type tools|models|loggers|endpoints`**. **`ecp config plugins`** covers installs; **`ecp config secrets`** covers secret store and YAML helpers (`ecp config --help` for the full tree).
-
-**Full config specification (authoritative references)**
-
-- **[SPEC.md — Host system configuration (`ecp.config.yaml`)](https://github.com/executioncontrolprotocol/executioncontrolprotocol/blob/main/SPEC.md#L623)** — Normative description of the two roles, `version`, `security` mirror, MCP/`tool` kind, and A2A endpoint shape.
-- **[config/ecp.config.example.yaml](https://github.com/executioncontrolprotocol/executioncontrolprotocol/blob/main/config/ecp.config.example.yaml)** — Annotated example aligned with the enforced shape (also validated in repo tests).
-- **TypeScript:** [`ECPSystemConfig` and `SecurityConfig`](https://github.com/executioncontrolprotocol/executioncontrolprotocol/blob/main/packages/runtime/src/engine/types.ts) in `packages/runtime` — Programmatic reference for implementers.
-
-See also [SETUP.md](https://github.com/executioncontrolprotocol/executioncontrolprotocol/blob/main/SETUP.md) for day-to-day CLI, env, and tool server setup.
-
-## Context `plugins` block
-
-The Context manifest’s **`plugins`** section declares which model providers, executors, and auxiliary plugins (loggers, memory, …) the Context expects, with versions pinned per `PluginReference` and an optional **`plugins.security`** object for manifest-scoped plugin policy. The host still applies **`security.*`** in `ecp.config.yaml`; the Context cannot override a denied provider or server.
-
-## Secrets and tool credentials
-
-ECP resolves MCP and HTTP credentials using **explicit provider namespaces** in system config, under each server’s optional credentials block: `tools.servers.<name>.credentials.bindings[].source`:
-
-| Provider id | Role |
-| ----------- | ---- |
-| **`process.env`** | Values from the **real** process environment (shell, CI, container env). |
-| **`dot.env`** | Values from a **`.env`-style file** on disk. The default path comes from system config (`secrets.providers.dot.env.path`); `ecp run`, `ecp validate`, `ecp trace`, and related commands accept **`--environment <path>`** to override that file for one invocation. |
-| **`os.secrets`** | Values from the OS credential manager; each secret uses an `ecp://<key>` keyring target (default ref id — the provider id is not in the URI). Use `ecp config secrets` to store or rotate them. |
-
-**Design:** These are **different namespaces**, not one merged map. Loading a file for `dot.env` does **not** inject its variables into `process.env`; a binding must use `source.provider: process.env` to read the shell, and `source.provider: dot.env` to read the file. That keeps “what the agent sees in MCP env” explicit and avoids accidental leakage from a local `.env` into the global process.
-
-**Config vs runtime:** `ecp config secrets` manages persisted keys and reads `dot.env` only from `ecp.config.*` — it does not take `--environment`. Runtime-oriented commands are where the per-run file override applies.
-
-For CLI details and examples, see the [CLI reference](/reference/cli) and the [`packages/cli` README](https://github.com/executioncontrolprotocol/executioncontrolprotocol/blob/main/packages/cli/README.md). For secret defaults and policy flags in YAML, see **`ecp config secrets yaml`** (`get`, `set-default-provider`, `set-policy`).
-
-## Principles in short
-
-- Least-privilege execution per executor **and** at the host via the `security` mirror
-- Short-lived credentials and full audit logging (runtime responsibility)
-- Explicit secret namespaces so `.env` files are never silently merged into `process.env`
-- Provenance tracking of context sources
-- Contexts should make overly-permissive configurations difficult to express and distribute
+- [Environments](/guides/environments)
+- [Concepts](/learn/concepts)
+- [CLI reference](/reference/cli)

@@ -1,0 +1,114 @@
+---
+title: "Fluent API"
+description: "Author ECP (Execution Control Protocol) workflows with the Fluent TypeScript API — the public authoring spec."
+---
+
+# Fluent API
+
+The Fluent API is the **public authoring spec** for ECP (Execution Control Protocol) workflows. You write TypeScript, compile to a JSON manifest, and run that manifest in any compatible environment.
+
+Import builders from `@executioncontrolprotocol/core`.
+
+## Hello workflow
+
+```ts
+import { workflow, step } from "@executioncontrolprotocol/core"
+
+export default workflow("Echo test")
+  .run([
+    step("@executioncontrolprotocol/test.echo", "Echo")
+      .with({ value: "hello from fluent API" })
+      .as("echo"),
+  ])
+```
+
+- `workflow(label)` — create a builder
+- `step(capabilityId, label)` — invoke a capability
+- `.with({…})` — step input
+- `.as("echo")` — write output into run state under `echo`
+- `.run([...])` — ordered root steps (and flow nodes)
+
+Produce a manifest in code with `.toManifest()`, or on the CLI with `ecp compile`.
+
+## Multi-step and refs
+
+```ts
+import { workflow, step, ref } from "@executioncontrolprotocol/core"
+
+export default workflow("Weekly brief").run([
+  step("@executioncontrolprotocol/memory.search", "Collect signals")
+    .with({ query: "weekly", since: "7d" })
+    .as("signals"),
+  step("@executioncontrolprotocol/openai.generate", "Generate brief")
+    .with({
+      prompt: "Summarize",
+      context: ref("signals.results"),
+    })
+    .as("brief"),
+])
+```
+
+`ref("signals.results")` becomes a `$ref` into run state. Keep secrets out of workflows; bind credentials in the environment.
+
+## Flow control
+
+From `@executioncontrolprotocol/core`:
+
+| Builder | Role |
+| ------- | ---- |
+| `parallel([...])` | Run branches concurrently |
+| `branch(…)` | Conditional paths |
+| `loop(…)` | Iterate while a condition holds |
+
+Compose them inside `.run([...])` alongside `step(...)` nodes. Step IDs are globally unique in the compiled manifest (required for patch paths).
+
+## State write modes
+
+`.as("name")` can take an optional mode (for example create vs replace semantics). Prefer explicit `.as()` for every step whose output later steps need.
+
+## Manifest shape
+
+Compiled workflows use:
+
+```json
+{
+  "schema": "@executioncontrolprotocol.workflow",
+  "version": "1.0",
+  "workflow": { "id": "…", "label": "…" },
+  "steps": [
+    {
+      "type": "step",
+      "id": "echo",
+      "uses": "@executioncontrolprotocol/test.echo",
+      "input": { "value": "hello from fluent API" },
+      "as": "echo"
+    }
+  ]
+}
+```
+
+Field names are camelCase in JSON; capability IDs and schema literals use kebab-case segments where specified by the protocol.
+
+## Render Fluent from a manifest
+
+Core can encode a workflow back to Fluent source (encode path). There is **no** separate `@executioncontrolprotocol/format-fluent` npm package — Fluent encode is built into core. Fluent **decode** is not supported; use `ecp compile` for TS → JSON.
+
+```bash
+ecp encode workflow.json --format fluent --env environment.ts -o workflow.generated.ts
+ecp compile workflow.ts -o workflow.json
+```
+
+## Related helpers
+
+| Helper | Use |
+| ------ | --- |
+| `ref` | Portable state references in workflows |
+| `env` / `$env` | Environment setup only — not portable workflow graphs |
+| `secrets` | Host secret references at bind time |
+
+## Next steps
+
+- [Environments](/guides/environments)
+- [Encode, decode, and patch](/guides/encode-decode-patch)
+- [Schemas](/reference/schemas)
+- [Quickstart](/getting-started/quickstart)

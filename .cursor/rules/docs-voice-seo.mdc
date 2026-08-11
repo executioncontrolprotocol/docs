@@ -19,13 +19,15 @@ alwaysApply: false
 
 - **First mention on a page**: write **“ECP (Execution Control Protocol)”**.
 - **After that**: alternate naturally between **ECP**, **Execution Control Protocol**, and **the protocol** when context is clear.
+- **Prefer**: Workflow, Environment, Ecp, Fluent API.
+- **Avoid**: presenting YAML Context / `ECPContext` / `spec.yaml` as current.
 - **Avoid**: repeating “Execution Control Protocol” in every paragraph; it should read like normal technical writing.
 
 ## SEO that still reads well
 
 - **Intent-first intro**: first 2–3 sentences should answer what the page is for and who it helps.
 - **Headings**: sentence case; use clear, specific H2s that match real queries (no clickbait).
-- **Internal links**: add 2–5 relevant links to deeper docs (concepts, security, MCP relationship, spec/CLI) where helpful.
+- **Internal links**: add 2–5 relevant links to deeper docs (concepts, Fluent API, security, MCP relationship, CLI) where helpful.
 - **Comparisons**: state what ECP is and isn’t; use crisp “X is for…, ECP is for…” framing.
 - **Commands**: prefer installed CLIs over one-off runners in docs. Show the one-time install/link step, then the command.
 - **Public-only docs**: do not publish internal documentation about building or operating the docs site (Mintlify, `mint dev`, `docs.json`, contribution workflow). Pages should focus on installing, configuring, and running ECP.

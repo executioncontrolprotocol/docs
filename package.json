@@ -1,7 +1,7 @@
 {
   "name": "@executioncontrolprotocol/docs",
-  "version": "0.3.0",
-  "description": "Mintlify documentation site for the Execution Control Protocol (ECP)",
+  "version": "1.0.0",
+  "description": "Mintlify documentation site for the Execution Control Protocol (ECP) — Fluent API era",
   "private": true,
   "type": "module",
   "scripts": {

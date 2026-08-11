@@ -1,0 +1,47 @@
+---
+title: "Packages"
+description: "Map of ECP (Execution Control Protocol) npm packages: types, core, hosts, CLI, MCP, policies, extensions, and harnesses."
+---
+
+# Packages
+
+Public packages under the `@executioncontrolprotocol` scope:
+
+| Package | Role |
+| ------- | ---- |
+| `@executioncontrolprotocol/types` | Protocol types and generated JSON Schemas |
+| `@executioncontrolprotocol/core` | Fluent API, environment, in-memory engine (runtime-agnostic main entry) |
+| `@executioncontrolprotocol/node` | Node runtime host |
+| `@executioncontrolprotocol/browser` | Browser runtime host (not the demo UI) |
+| `@executioncontrolprotocol/cli` | `ecp` CLI |
+| `@executioncontrolprotocol/mcp` | MCP server adapter around an `Ecp` |
+| `@executioncontrolprotocol/policies` | Budget, approval, state-control, registry-control |
+| `@executioncontrolprotocol/format-toon` | TOON format extension |
+| `@executioncontrolprotocol/format-eql` | EQL format extension |
+| `@executioncontrolprotocol/format-mermaid` | Mermaid format extension |
+| Model / platform extensions | `chrome-ai`, `ollama`, `openai`, `claude`, memory, secrets, … |
+| `@executioncontrolprotocol/harnesses-browser-nano` | Browser nano (EQL) harness |
+| `@executioncontrolprotocol/harnesses-browser-coding` | Browser coding (Fluent/TS) harness |
+
+## Core subpaths
+
+| Subpath | Use |
+| ------- | --- |
+| `@executioncontrolprotocol/core` | Browser-safe main API |
+| `@executioncontrolprotocol/core/compile` | `compileWorkflowSource` (Node; browser condition → wasm) |
+| `@executioncontrolprotocol/core/browser` | Browser authoring + wasm compile |
+| `@executioncontrolprotocol/core/loaders` | Node file I/O for CLI |
+| `@executioncontrolprotocol/core/node` | Loaders + compile convenience |
+| `@executioncontrolprotocol/core/testing` | In-repo test extension stub |
+
+**Compile stays on core subpaths**, not on runtime hosts. Extensions and harnesses depend on `types` + `core` only — never on `node`, `browser`, `cli`, or `mcp`.
+
+## Apps vs hosts
+
+The [browser demo](/getting-started/browser-demo) is a separate app that consumes `@executioncontrolprotocol/browser` and binds harnesses/providers. Vendor extensions live in [executioncontrolprotocol-extensions](https://github.com/GuillaumeCleme/executioncontrolprotocol-extensions).
+
+## Next steps
+
+- [Extensions](/guides/extensions)
+- [Environments](/guides/environments)
+- [Build from source](/getting-started/build-from-source)

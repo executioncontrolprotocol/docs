@@ -1,148 +1,90 @@
 ---
 title: "Quickstart"
-description: "Install the CLI from npm, create config, and run a sample Context in a few commands"
+description: "Install the ECP (Execution Control Protocol) CLI and run your first Fluent workflow in a governed environment."
 ---
 
-This path uses the **published CLI** only. You do not need to clone the repository.
+# Quickstart
 
-You will install the CLI, create a local system config, point the OpenAI provider at a key (or use Ollama), download a tiny sample manifest, then **validate** and **run** it.
+Get ECP (Execution Control Protocol) running in a few minutes: install the CLI, author a Fluent workflow, bind an environment, and run.
 
-## Before you begin
+## Prerequisites
 
-- Install [Node.js](https://nodejs.org/) (use the current **LTS** release).
-- Pick **one** model backend:
-  - **OpenAI:** you need an API key.
-  - **Ollama:** install [Ollama](https://ollama.com/) and keep it running locally (no API key).
+- Node.js 22+
+- npm
 
-## 1. Install the CLI
+## Install the CLI
 
 ```bash
 npm install -g @executioncontrolprotocol/cli
 ```
 
-Check that `ecp` is on your `PATH`:
+Confirm the binary:
 
 ```bash
 ecp --help
 ```
 
-## 2. Create a project folder and init config
+For local monorepo development, see [Build from source](/getting-started/build-from-source).
+
+## Run the echo example
+
+From a checkout of the [ECP monorepo](https://github.com/executioncontrolprotocol/executioncontrolprotocol) (after `npm install` and `npm run build`):
 
 ```bash
-mkdir ecp-demo && cd ecp-demo
-ecp config init
+ecp run examples/01-echo/workflow.ts --env examples/01-echo/environment.ts
 ```
 
-That writes **`ecp.config.yaml`** in the current directory with conservative defaults (built-in OpenAI and Ollama entries and matching allow lists). To install config in your home directory instead, use `ecp config init --global`.
-
-If a config file already exists, either edit it or run `ecp config init --force` to replace it.
-
-## 3. Provide secrets (OpenAI) or pull a model (Ollama)
-
-<Tabs>
-  <Tab title="OpenAI">
-    Set your API key in the environment for this shell session:
-
-    ```bash
-    export OPENAI_API_KEY="sk-..."
-    ```
-
-    On Windows (PowerShell):
-
-    ```powershell
-    $env:OPENAI_API_KEY = "sk-..."
-    ```
-
-    The OpenAI provider reads **`OPENAI_API_KEY`** when the key is not set in config. For keychains, `.env` files, and other stores, see [Security](/learn/security) and run `ecp config secrets --help`.
-  </Tab>
-  <Tab title="Ollama">
-    Pull a small model that matches the sample manifest (names may vary by Ollama version):
-
-    ```bash
-    ollama pull gemma3:1b
-    ```
-
-    Ensure Ollama is running (default URL `http://localhost:11434`).
-  </Tab>
-</Tabs>
-
-## 4. Download a sample Context
-
-Save the [single-executor example](https://github.com/executioncontrolprotocol/executioncontrolprotocol/blob/main/examples/single-executor/context.yaml) as **`context.yaml`** in **`ecp-demo`**.
-
-For example, with **curl**:
+Validate without executing:
 
 ```bash
-curl -fsSL -o context.yaml https://raw.githubusercontent.com/executioncontrolprotocol/executioncontrolprotocol/main/examples/single-executor/context.yaml
+ecp validate examples/01-echo/workflow.ts --env examples/01-echo/environment.ts
 ```
 
-Or download the file from GitHub in your browser and save it as **`context.yaml`**.
-
-## 5. Validate
-
-<Tabs>
-  <Tab title="OpenAI">
-    The sample manifest defaults to Ollama in the file, so pass the provider and model you want for this run:
-
-    ```bash
-    ecp validate context.yaml --provider openai --model gpt-4o-mini -i topic=test
-    ```
-  </Tab>
-  <Tab title="Ollama">
-    ```bash
-    ecp validate context.yaml -i topic=test
-    ```
-  </Tab>
-</Tabs>
-
-To see required inputs without supplying values:
+Compile Fluent/TS to a portable JSON manifest:
 
 ```bash
-ecp validate context.yaml --skip-inputs
+ecp compile examples/01-echo/workflow.ts -o /tmp/workflow.json
 ```
 
-## 6. Run
+## Minimal Fluent workflow
 
-<Tabs>
-  <Tab title="OpenAI">
-    ```bash
-    ecp run context.yaml --provider openai --model gpt-4o-mini -i topic="Hello from ECP"
-    ```
-  </Tab>
-  <Tab title="Ollama">
-    ```bash
-    ecp run context.yaml -i topic="Hello from ECP"
-    ```
-  </Tab>
-</Tabs>
+```ts
+import { workflow, step } from "@executioncontrolprotocol/core"
 
-Tracing is on by default. List and open traces:
-
-```bash
-ecp trace list
-ecp trace <run-id>
+export default workflow("Echo test")
+  .run([
+    step("@executioncontrolprotocol/test.echo", "Echo")
+      .with({ value: "hello from fluent API" })
+      .as("echo"),
+  ])
 ```
 
-Turn tracing off for a run with **`--no-trace`**.
+## Minimal Node environment
 
-## Command help
+```ts
+import { environment, extension } from "@executioncontrolprotocol/node"
+import "@executioncontrolprotocol/core/testing"
 
-The CLI is the source of truth for flags and subcommands:
-
-```bash
-ecp --help
-ecp run --help
-ecp validate --help
-ecp config --help
+export default (await environment("dev")).withExtensions([
+  extension("@executioncontrolprotocol/test").with({}),
+])
 ```
 
-## What you just ran
+Operational APIs live on the instance returned by `init()`:
 
-The sample Context declares **inputs**, **outputs**, **schemas**, **orchestration**, and an **executor** with **policies** (for example tool access and budgets). The system config you created controls which **providers** and **models** the host allows.
+```ts
+const ecp = await env.init()
+await ecp.run(manifest)
+await ecp.terminate()
+```
+
+## Prefer the browser?
+
+Open the [hosted Graph Editor](https://executioncontrolprotocol.github.io/browser-demo/) or follow [Browser demo](/getting-started/browser-demo). For local Ollama, run `ecp up` so the demo can pair with a loopback bridge.
 
 ## Next steps
 
-- [Why ECP?](/learn/why-ecp) — security, control, and how this fits your stack
-- [Concepts](/learn/concepts) — Context, executors, mounts, orchestration
-- [CLI reference](/reference/cli) — full command and config behavior
-- [Build from source](/getting-started/build-from-source) — only if you are developing the ECP packages themselves
+- [Fluent API](/guides/fluent-api)
+- [Environments](/guides/environments)
+- [CLI reference](/reference/cli)
+- [Providers in the demo](/getting-started/browser-demo-providers)

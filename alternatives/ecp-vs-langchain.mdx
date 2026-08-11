@@ -1,77 +1,29 @@
 ---
-title: "ECP vs LangChain: Execution Control Protocol compared"
-description: "A technical, practical comparison of ECP (Execution Control Protocol) and LangChain, focused on execution control, policies, and production safety."
+title: "ECP vs LangChain"
+description: "Compare ECP (Execution Control Protocol) and LangChain: frameworks build agents; ECP packages and governs execution."
 ---
 
-# ECP (Execution Control Protocol) vs LangChain
+# ECP vs LangChain
 
-LangChain is great at helping you **build** LLM applications: chains, agents, memory, and tool integrations.
+| | LangChain | ECP |
+| - | --------- | --- |
+| Focus | Build agents, chains, and tool wiring | Package and run governed workflows |
+| Artifact | App code + framework graphs | Portable Fluent/JSON **workflows** + **environments** |
+| Tools | Framework integrations | MCP + extension capabilities |
+| Ops | App-specific | `validate`, `describe`, `run`, encode/decode across hosts |
 
-**ECP (Execution Control Protocol)** is about helping you **run** those systems safely: what can execute, under which constraints, with consistent policies and auditability.
+## Use both
 
-If you’ve ever thought “this agent works, but I can’t reliably control it in production,” this page is for you.
+LangChain (or similar) can own agent logic. ECP owns **how execution is declared, bound, and audited** on Node or in the browser:
 
-## What LangChain does well
+- Ship a workflow manifest between teams
+- Bind policies and secrets in an environment
+- Run the same graph via CLI or host runtime
 
-LangChain is a developer framework for composing LLM workflows. It’s especially useful for:
-
-- **Orchestration**: structuring steps, routing, and agent patterns
-- **Integration**: connecting models to tools and external APIs
-- **Iteration speed**: moving from prototype to working behavior quickly
-
-## Where production issues show up
-
-As systems become more execution-heavy (side effects, long runs, sensitive data), problems tend to cluster around **control**.
-
-### Execution is often implicit
-
-Many applications end up with “model output → tool call” as a tight loop. That can make it hard to enforce:
-
-- **Non-bypassable constraints** (what can *never* happen)
-- **Budget limits** (max tool calls, runtime ceilings)
-- **Consistent approvals** (what requires review, what can auto-execute)
-
-### Safety becomes application-specific
-
-Guardrails frequently live in many places (prompting, chain logic, wrappers, per-tool checks). That usually means:
-
-- Different teams implement “safe” differently
-- Policy changes require touching many services
-- Auditing behavior becomes messy
-
-## What ECP is (and is not)
-
-ECP (Execution Control Protocol) is a **protocol and spec** for defining and running an execution environment for one or more agents:
-
-- **Tools** (often via MCP)
-- **Mounts** (seed/focus/deep data hydration)
-- **Policies** (default-deny, budgets, write controls)
-- **Orchestration** (how executors coordinate)
-- **Traces/audit hooks** (what happened, when, and why)
-
-ECP is **not** a LangChain replacement. It’s designed to sit alongside frameworks like LangChain so you can keep your orchestration patterns while making execution more explicit and governable.
-
-## Practical way to think about the split
-
-| Question | Better answered by LangChain | Better answered by ECP |
-| --- | --- | --- |
-| “What steps should we take?” | Yes | |
-| “Which tool should we call?” | Yes | |
-| “Are we allowed to call this tool right now?” | | Yes |
-| “What constraints must apply?” | | Yes |
-| “How do we make policy enforcement consistent across services?” | | Yes |
-
-## When to use both
-
-Use **LangChain + ECP** when you want fast iteration *and* predictable execution:
-
-- You’re integrating many tools and need a consistent policy layer.
-- You want default-deny tool access and explicit allowlists.
-- You need auditability for compliance, security reviews, or incident response.
-- You want guardrails that don’t depend on prompts behaving perfectly.
+ECP does not try to replace LangChain’s ecosystem. It standardizes the execution layer those apps often reinvent.
 
 ## Next steps
 
-- Start with [Core concepts](/learn/concepts) to see how Contexts, mounts, and policies fit together.
-- If you already use MCP tooling, read [Relationship to MCP](/learn/relationship-to-mcp).
-- For guardrails, see [Security](/learn/security).
+- [Why ECP](/learn/why-ecp)
+- [Concepts](/learn/concepts)
+- [Fluent API](/guides/fluent-api)

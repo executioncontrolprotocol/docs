@@ -1,141 +1,102 @@
 ---
 title: "CLI reference"
-description: "ecp run, ecp validate, and ecp trace"
+description: "ECP (Execution Control Protocol) CLI: run, validate, compile, describe, search, encode, decode, up, and secrets."
 ---
 
-The ECP CLI can run Context manifests, validate them, and inspect saved execution traces.
+# CLI reference
 
-Prefer installing the CLI once (via `npm link`) so you can use the `ecp` command from your shell.
+The `ecp` CLI runs **workflows** in configured **environments** on Node.js.
 
-## Getting help
+## Install
 
-The CLI is built on [oclif](https://oclif.io/): built-in `--help` shows the authoritative list of commands and flags for your installed version.
+```bash
+npm install -g @executioncontrolprotocol/cli
+```
 
-- **`ecp --help`** — Lists top-level commands (`run`, `validate`, `trace`, …).
-- **`ecp <command> --help`** — Full flags and arguments for that command, e.g. `ecp run --help`, `ecp validate --help`, `ecp trace --help`.
-
-Use these when you need details beyond this page (short flags, defaults, or newly added options).
+From a monorepo build: `npm link` inside `packages/cli` after `npm run build`. See [Build from source](/getting-started/build-from-source).
 
 ## Commands
 
-### run
-
-Execute a Context manifest.
-
-By default, `ecp run` enables tracing and saves traces under `~/.ecp/traces` (disable with `--no-trace`).
+### `ecp run`
 
 ```bash
-ecp run <context.yaml> [options]
+ecp run examples/01-echo/workflow.ts --env examples/01-echo/environment.ts
+ecp run workflow.json --env environment.ts --input input.json
+ecp run workflow.ts --env environment.ts --dry-run
 ```
 
-**Required:**
+| Flag | Role |
+| ---- | ---- |
+| `--env` | Environment module (default export) |
+| `--input` | JSON input file |
+| `--dry-run` | Validate/plan without invoking capabilities |
 
-- **context.yaml** — Path to the Context YAML file (also accepts `context.json`).
-
-**Common options:**
-
-| Option | Description |
-| ------ | ----------- |
-| `--enable <name>` | Enable a plugin by ID (e.g. model providers `openai`, `ollama`). Repeat for multiple. |
-| `-i`, `--input` | Set input `key=value`. Repeat for each input (e.g. `-i topic=test`). |
-| `--provider` | Optional model provider: `openai` or `ollama`. If omitted, it is inferred from the Context. |
-| `--model` | Override model name (e.g. for Ollama: `llama3.2:3b`). |
-| `--config` | Path to system config file (e.g. `ecp.config.yaml`). |
-| `--ollama-base-url` | Ollama API base URL (default `http://localhost:11434`). |
-| `-t`, `--[no-]trace` | Enable tracing (default) or disable with `--no-trace`. |
-| `--trace-dir` | Directory for trace files (default `~/.ecp/traces`). |
-| `--debug` | Enable debug logging. |
-| `--environment <path>` | Path to a `.env` file for the **`dot.env`** secret provider for this run only (overrides `secrets.providers.dot.env.path` in config). Does **not** merge into `process.env`. |
-
-**Example (OpenAI):**
+### `ecp validate`
 
 ```bash
-ecp run examples/single-executor/context.yaml --enable openai -i topic="ECP"
+ecp validate examples/01-echo/workflow.ts --env examples/01-echo/environment.ts
 ```
 
-**Example (Ollama):**
+### `ecp compile`
+
+Compile Fluent/TS (or JS) workflow source to portable JSON. No `--env` required.
 
 ```bash
-ecp run examples/single-executor/context.yaml --provider ollama --enable ollama --model llama3.2:3b -i topic="Test"
+ecp compile examples/01-echo/workflow.ts -o dist/workflow.json
 ```
 
-### validate
-
-Validate a Context manifest without running it:
+### `ecp describe` / `ecp search`
 
 ```bash
-ecp validate <context.yaml> [options]
+ecp describe --env examples/01-echo/environment.ts
+ecp search "echo" --env examples/01-echo/environment.ts
 ```
 
-**Options:**
+Optional `--query` on describe where supported by your CLI build.
 
-- **-i, --input** — Provide required inputs so validation can succeed (e.g. `-i shopifyStoreId=demo -i jiraProject=DEMO` for `spec.yaml`).
-- **--skip-inputs** — Validate the Context manifest itself but skip runtime input resolution. Instead of failing, it prints which inputs are required.
-- **`--environment <path>`** — Same semantics as `ecp run`: selects the `.env` file for the **`dot.env`** provider (future-proof for validation tooling that resolves secrets).
+### `ecp encode` / `ecp decode`
 
-**Example:**
+Require an environment that binds the format extension you use.
 
 ```bash
-ecp validate spec.yaml -i shopifyStoreId=demo -i jiraProject=DEMO
+ecp encode workflow.json --format toon --env environment.ts -o workflow.toon
+ecp encode workflow.json --format fluent --env environment.ts -o workflow.generated.ts
+ecp decode workflow.toon --format toon --env environment.ts -o workflow.json
 ```
 
-### trace
+Fluent decode is not supported — use `ecp compile` instead. JSON is the canonical manifest format.
 
-Display a saved execution trace from a previous `ecp run`:
+### `ecp up`
+
+Start a loopback HTTP daemon that bridges Ollama for the [browser demo](/getting-started/browser-demo) (CORS + Private Network Access), then open the demo with a pairing token:
 
 ```bash
-ecp trace <run-id> [--output text|graph] [--trace-dir <path>]
+ecp up
+# Opens https://executioncontrolprotocol.github.io/browser-demo/?token=<uuid>&bridge=http://127.0.0.1:3090
+
+ecp up --open-url http://localhost:5173/
+ecp up --no-open
 ```
 
-| Option | Description |
-| ------ | ----------- |
-| `--output` | Render mode: `text` (human log) or `graph` (ASCII visualization). Default: `text`. |
-| `--trace-dir` | Directory for trace files (default `~/.ecp/traces`). |
-| `--environment <path>` | Optional; same as on `run` — selects the `.env` file for **`dot.env`** when trace tooling is wired to secret resolution. |
+- Default port **3090**
+- `GET /health` — `{ ok, version, ollamaReachable }` (no auth)
+- `POST /v1/invoke` — Bearer token; body `{ capability, input?, provider? }`
 
-Examples:
+Hosted HTTPS demos need Chromium for Private Network Access. Add origins with `--cors-origin` when needed.
+
+### `ecp config secrets`
+
+OS keychain helpers:
 
 ```bash
-ecp trace run-123...
-ecp trace run-123... --output graph
+ecp config secrets add KEY
+ecp config secrets list
+ecp config secrets get KEY
+ecp config secrets remove KEY
 ```
 
-Notes:
+## Next steps
 
-- `ecp graph` is a hidden alias for `ecp trace --output graph`.
-- Traces are stored as JSON files in `~/.ecp/traces`.
-
-### trace list
-
-List locally available trace IDs:
-
-```bash
-ecp trace list [--trace-dir <path>]
-```
-
-Accepts **`--environment <path>`** like `ecp run` (dotenv file for **`dot.env`**; no merge into `process.env`).
-
-## Environment
-
-- **OPENAI_API_KEY** — Used by the OpenAI provider when `--provider openai` (or when the Context implies OpenAI).
-- **OLLAMA_BASE_URL** — Optional; overrides Ollama base URL (default `http://localhost:11434`).
-
-Secret bindings in Contexts use provider ids **`process.env`**, **`dot.env`**, and **`os.secrets`** (see [Security](/learn/security)). **`--environment`** only affects the file backing **`dot.env`**, not the shell environment.
-
-## System config
-
-**`ecp run`** and **`ecp validate`** require a system config on disk. If **`--config <path>`** is set, that single file is loaded (no merge). Otherwise the CLI resolves project-local **`./ecp.config.yaml`** / **`./ecp.config.json`** and user **`~/.ecp/`** paths; when **both** exist, it **merges** them (global overrides local on overlapping keys). If **no** file is found, the command exits with an error.
-
-**Layout:** wiring lives under **`models`** (per-provider **`supportedModels`** under **`models.providers`**), **`tools`**, **`loggers`**, **`agents`**, **`secrets`**, optional **`executors`** / **`memory`**, and **`plugins.installs`**. **Policy** lives under the top-level **`security`** object, which **mirrors** those areas (`security.models`, `security.tools`, `security.plugins`, …). For models, **`security.models.allowedModels`** is a per-provider map of model names policy permits (non-empty for each id in **`security.models.allowProviders`**). Include a top-level **`version`** field that matches the schema expected by your CLI (see the annotated example below). Release-to-release changes are summarized in the project [changelog](/reference/changelog).
-
-Use system config to register MCP servers under **`tools.servers`**, model providers under **`models.providers`**, and to restrict what the runtime may load via **`security.*`**. Remove config files with **`ecp config reset`** (project scope), **`ecp config reset --global`**, or **`ecp config reset --config <path>`**. Inspect or update security with `ecp config security get`, `ecp config security models allowed-models …`, `ecp config security plugins update`, and the rest of `ecp config --help` (plugins installs, models, tools, loggers, secrets, …).
-
-Contexts control **which tools an executor may call** via **`policies.toolAccess`**; the host still decides **which server names exist and are allowed** (`security.tools.allowServers` and configured `tools.servers`).
-
-**Full spec:** [SPEC.md — Host system configuration](https://github.com/executioncontrolprotocol/executioncontrolprotocol/blob/main/SPEC.md#L623), annotated [config/ecp.config.example.yaml](https://github.com/executioncontrolprotocol/executioncontrolprotocol/blob/main/config/ecp.config.example.yaml), and TypeScript [`ECPSystemConfig`](https://github.com/executioncontrolprotocol/executioncontrolprotocol/blob/main/packages/runtime/src/engine/types.ts#L484). See [Security](/learn/security) for the security model and [SETUP.md](https://github.com/executioncontrolprotocol/executioncontrolprotocol/blob/main/SETUP.md) for setup.
-
-## See also
-
-- [Quickstart](/getting-started/quickstart) — Install from npm and first run
-- [Build from source](/getting-started/build-from-source) — Clone and compile the monorepo
-- [SETUP.md](https://github.com/executioncontrolprotocol/executioncontrolprotocol/blob/main/SETUP.md) — Full setup guide
+- [Quickstart](/getting-started/quickstart)
+- [Encode, decode, and patch](/guides/encode-decode-patch)
+- [Demo providers](/getting-started/browser-demo-providers)

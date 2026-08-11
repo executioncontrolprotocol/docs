@@ -1,29 +1,30 @@
 ---
-title: "Use Claude Code with ECP"
-description: "Install the ECP docs skill and use Claude Code for manifests and CLI workflows"
-icon: "asterisk"
+title: "Claude Code"
+description: "Use ECP (Execution Control Protocol) with Claude Code: install the skill and generate Fluent workflows."
 ---
 
-Claude Code can help you write **Context** manifests and **`ecp`** commands. You can start with the docs skill alone; clone the repo only when you need the examples tree on disk.
+# Claude Code
 
-## Install the docs skill
+Use Claude Code to scaffold ECP (Execution Control Protocol) workflows and environments.
+
+## Install the ECP skill
 
 ```bash
-npm install -g @anthropic-ai/claude-code
 npm install -g skills
-skills add https://executioncontrolprotocol.io
+npx skills add https://executioncontrolprotocol.io
 ```
 
-## Use it in your project
+## What to ask for
 
-Open the folder where you keep Context YAML (or any app repo). Ask Claude Code to draft manifests, suggest **`ecp validate`** / **`ecp run`** lines, or explain policies. When behavior must match the site, refer to the installed skill.
+- Fluent workflow modules exporting `workflow(...).run([...])`
+- Node environment modules using `@executioncontrolprotocol/node`
+- CLI invocations: `ecp run`, `ecp validate`, `ecp compile`, `ecp up` for the browser demo
+- Extension catalog imports before string bindings
 
-## Optional: work inside the ECP repo
-
-Clone **[executioncontrolprotocol](https://github.com/executioncontrolprotocol/executioncontrolprotocol)** when you want to edit **`examples/`**, **`spec.yaml`**, or core packages. Then run **`npm install`**, **`npm run build`**, and use **`ecp`** via **`npx`** or **`npm link`** as described in [Build from source](/getting-started/build-from-source).
+Avoid requesting YAML `Context` / `spec.yaml` — that surface is retired.
 
 ## Next steps
 
-- [Quickstart](/getting-started/quickstart) — install the CLI from npm and run a sample Context
-- [Concepts](/learn/concepts) — Contexts, orchestrators, and executors
-- [Schema reference](/reference/schema) — JSON Schema and TypeScript types
+- [Fluent API](/guides/fluent-api)
+- [Extensions](/guides/extensions)
+- [Cursor](/ai-tools/cursor)

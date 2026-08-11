@@ -32,6 +32,7 @@ This file is the guide for **previewing and validating this documentation site**
 - **Follow project voice and SEO rules**: see `AGENTS.md` and `.cursor/rules/docs-voice-seo.mdc`
 - **No emojis**: do not use emoji characters in docs
 - **Match the right path**: quickstarts should use **`npm install -g @executioncontrolprotocol/cli`**; reserve clone-and-build steps for **[Build from source](https://executioncontrolprotocol.io/getting-started/build-from-source)**
+- **Authoring surface**: Fluent Workflow + Environment — not YAML Context
 - **Use active voice**: “Run the command” not “The command should be run”
 - **Address the reader directly**: use “you”
 - **Keep sentences concise**: one idea per sentence when possible
@@ -43,5 +44,5 @@ This file is the guide for **previewing and validating this documentation site**
 From the repo root:
 
 ```bash
-mint broken-links
+npm run validate
 ```

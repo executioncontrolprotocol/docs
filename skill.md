@@ -1,43 +1,58 @@
 ---
-name: execution-control-protocol-docs
+name: execution-control-protocol
 description: >-
-  Use this skill when you need to understand or write documentation for ECP
-  (Execution Control Protocol): concepts, manifests (Contexts), security and
-  policies, CLI usage, and comparisons to other stacks.
+  Builds and runs ECP (Execution Control Protocol) Fluent workflows and
+  environments. Use when authoring workflow/step Fluent TypeScript, binding
+  environments, using the ecp CLI, extensions, or the browser demo (Chrome AI,
+  Ollama, ecp up).
 ---
 
-# ECP (Execution Control Protocol) documentation skill
+# ECP (Execution Control Protocol)
 
-## What ECP is
+ECP is the governed execution layer for AI agents. Author **Fluent workflows**, bind **environments**, and operate via an **Ecp** instance after `init()`.
 
-ECP (Execution Control Protocol) is an open standard for defining, packaging, versioning, and running execution environments for AI agents. ECP is designed to embrace and extend MCP (Model Context Protocol), not replace it.
+MCP standardizes tools. ECP standardizes how execution runs under policy.
 
-## When to use this skill
+## Quick start
 
-- You are writing or editing ECP docs (MDX) and want consistent terminology and tone.
-- You need to explain where ECP fits in the agent stack (MCP, frameworks, execution control).
-- You are adding new pages or updating navigation and internal links.
-- You are improving docs for first-time users (quickstarts, examples, and common workflows).
+```ts
+import { workflow, step } from "@executioncontrolprotocol/core"
+import { environment, extension } from "@executioncontrolprotocol/node"
+import "@executioncontrolprotocol/core/testing"
 
-## Key pages to reference
+const manifest = workflow("Echo")
+  .run([step("@executioncontrolprotocol/test.echo", "Echo").with({ value: "hi" }).as("echo")])
+  .toManifest()
 
-- Homepage: `/`
-- Quickstart: `/getting-started/quickstart`
-- Concepts: `/learn/concepts`
-- Relationship to MCP: `/learn/relationship-to-mcp`
-- Security: `/learn/security`
-- CLI reference: `/reference/cli`
-- Alternatives and comparisons: `/alternatives`
+const ecp = await (await environment("dev"))
+  .withExtensions([extension("@executioncontrolprotocol/test").with({})])
+  .init()
 
-## Writing and publishing rules
+await ecp.run(manifest)
+```
 
-- Use a technically friendly but light voice. Keep it forward-moving: goal, concept, next step.
-- No emojis in docs.
-- First mention on a page: write "ECP (Execution Control Protocol)". After that, vary naturally.
-- Prefer installed CLIs over one-off runners. Show one-time install/link steps, then commands.
-- Add helpful internal links (2 to 5) to keep readers moving.
+```bash
+npm install -g @executioncontrolprotocol/cli
+ecp run examples/01-echo/workflow.ts --env examples/01-echo/environment.ts
+ecp compile workflow.ts -o workflow.json
+ecp up   # browser demo + Ollama bridge
+```
 
-## How to contribute safely
+## Rules for agents
 
-- Preview locally with `mint dev` from the docs repo root (where `docs.json` lives).
-- Check links before shipping with `mint broken-links`.
+- No YAML Context / `spec.yaml` / `ECPContext`
+- APIs on `Ecp` after `init()`, not on the environment builder
+- No secrets in workflows; catalog extensions on import
+- Extensions never import node/browser/cli/mcp hosts
+- Demo: https://executioncontrolprotocol.github.io/browser-demo/ — Chrome AI (nano) or Ollama via `ecp up` (coding)
+
+## Docs map
+
+- Fluent API: `/guides/fluent-api`
+- Environments: `/guides/environments`
+- Extensions: `/guides/extensions`
+- CLI: `/reference/cli`
+- Browser demo: `/getting-started/browser-demo`
+- Providers: `/getting-started/browser-demo-providers`
+
+For a fuller Cursor-style skill pack, see `.mintlify/skills/ecp/SKILL.md` on the docs repository.

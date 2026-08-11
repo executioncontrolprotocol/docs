@@ -1,0 +1,60 @@
+---
+title: "Extensions"
+description: "Author and bind ECP (Execution Control Protocol) extensions: catalog on import, string bindings, and package boundaries."
+---
+
+# Extensions
+
+Extensions add capabilities to an ECP (Execution Control Protocol) environment: model providers, formats, memory, secrets, and more.
+
+## Catalog and bind
+
+Extension packages should call `catalogExtension(def)` at module load so string ids resolve:
+
+```ts
+import "@executioncontrolprotocol/format-toon"
+import { extension } from "@executioncontrolprotocol/node"
+
+extension("@executioncontrolprotocol/format-toon").with({})
+```
+
+Prefer **npm package name === extension id** (for example `@executioncontrolprotocol/format-toon`).
+
+`ensureBoundExtensionsRegistered()` runs automatically before encode, decode, describe, and run when using the core environment path — you typically do not need a separate register step for cataloged packages.
+
+## Definitions vs invocations
+
+| Layer | API |
+| ----- | --- |
+| Define | `defineExtension(ns, name).withCapabilities([...]).build()` |
+| Catalog | `catalogExtension(def)` on package load |
+| Bind | `extension("@scope/name").with({…})` in an environment |
+| Invoke | `step("@scope/name.capability", "Label").with({…})` |
+
+## Package boundaries
+
+Extensions depend on `@executioncontrolprotocol/types` and `@executioncontrolprotocol/core` (plus focused third-party libs). They must **not** import:
+
+- `@executioncontrolprotocol/node`
+- `@executioncontrolprotocol/browser`
+- `@executioncontrolprotocol/cli`
+- `@executioncontrolprotocol/mcp`
+
+Hosts wrap core; extensions stay portable.
+
+## First-party and vendor
+
+Protocol/platform extensions live in the ECP monorepo (formats, providers such as Ollama and Chrome AI, memory, secrets, …). Vendor integrations (fal, Slack, image-sharp, Adobe, …) ship from the sibling [executioncontrolprotocol-extensions](https://github.com/GuillaumeCleme/executioncontrolprotocol-extensions) repository.
+
+In-repo testing stub:
+
+```ts
+import "@executioncontrolprotocol/core/testing"
+extension("@executioncontrolprotocol/test").with({})
+```
+
+## Next steps
+
+- [Environments](/guides/environments)
+- [Fluent API](/guides/fluent-api)
+- [Packages](/reference/packages)
