@@ -1,5 +1,5 @@
-# Validate Mintlify docs on every change to main (and on PRs). Same as `npm run validate`
-# locally / Husky (structural `mintlify validate` + `mintlify broken-links`).
+# Lint / validate Mintlify docs on every change to main (and on PRs). Same as `npm run lint`
+# locally / Husky (`mintlify validate` + `mintlify broken-links`).
 #
 # The Mintlify GitHub App may still deploy on push unless you enable **Blocking** CI checks
 # in the Mintlify dashboard (Add-ons). See `.github/README.md`.
@@ -63,5 +63,5 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Validate Mintlify docs (same as pre-commit)
-        run: npm run validate
+      - name: Lint Mintlify docs (same as pre-commit)
+        run: npm run lint

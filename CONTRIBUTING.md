@@ -22,7 +22,7 @@ Thanks for helping improve the ECP (Execution Control Protocol) docs. This guide
    ```
 
 5. Preview at `http://localhost:3000`
-6. Run `npm install` once, then `npm run validate` before opening a PR (matches CI and the Husky pre-commit hook)
+6. Run `npm install` once, then `npm run lint` before opening a PR (matches CI and the Husky pre-commit hook)
 7. Commit your changes and submit a pull request
 
 This file is the guide for **previewing and validating this documentation site**. For building the **ECP engine and CLI** from source, see **[Build from source](https://executioncontrolprotocol.io/getting-started/build-from-source)** on the docs site (or clone the [main repository](https://github.com/executioncontrolprotocol/executioncontrolprotocol)).

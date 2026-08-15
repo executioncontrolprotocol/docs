@@ -9,6 +9,7 @@
     "build:typedoc": "typedoc",
     "broken-links": "mintlify broken-links",
     "validate": "mintlify validate && mintlify broken-links",
+    "lint": "npm run validate",
     "secrets:scan": "secretlint \"**/*\"",
     "clean": "node scripts/clean-dist.mjs",
     "clean:coverage": "node scripts/clean-dist.mjs coverage",

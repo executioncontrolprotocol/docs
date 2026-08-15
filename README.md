@@ -31,8 +31,10 @@ From the repo root:
 
 ```bash
 npm install
-npm run validate
+npm run lint
 ```
+
+(`npm run validate` is an alias for the same Mintlify checks.)
 
 ## AI-assisted writing (optional)
 
