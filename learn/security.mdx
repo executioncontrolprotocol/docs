@@ -30,14 +30,32 @@ Bind policies on the environment builder (for example `.withPolicies([...])`) be
 
 ### Node / CLI
 
-Use the CLI secrets commands backed by the OS keychain:
+Store values in the OS keychain:
 
 ```bash
-ecp config secrets add MY_KEY
+ecp config secrets add openai/api-key
 ecp config secrets list
-ecp config secrets get MY_KEY
-ecp config secrets remove MY_KEY
+ecp config secrets get openai/api-key
+ecp config secrets remove openai/api-key
 ```
+
+Ref form: `ecp://<key>` (for example `ecp://openai/api-key`).
+
+Bind secrets into **extension config** at environment setup — not into workflow manifests:
+
+```ts
+import "@executioncontrolprotocol/secrets"
+import { environment, extension, secrets } from "@executioncontrolprotocol/node"
+
+export default (await environment("demo")).withExtensions([
+  extension("@executioncontrolprotocol/secrets").with({}),
+  extension("@executioncontrolprotocol/openai").with({
+    apiKey: secrets("openai/api-key"),
+  }),
+])
+```
+
+`secrets("key")` resolves via the keychain when the environment initializes. Prefer this over hardcoding keys or inventing ad-hoc `.env` loaders for extension config.
 
 ### Browser demo
 

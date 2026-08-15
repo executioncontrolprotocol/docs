@@ -14,7 +14,14 @@ npm install -g skills
 npx skills add https://executioncontrolprotocol.io
 ```
 
-The skill teaches Workflow vs Environment, Fluent authoring, and current CLI commands — not legacy YAML Context manifests.
+The skill teaches Workflow vs Environment, secrets bind, Fluent authoring, and the full CLI (including `ecp test`) — not legacy YAML Context manifests.
+
+For core monorepo or vendor extension work:
+
+```bash
+npx skills add executioncontrolprotocol/executioncontrolprotocol --skill ecp-core -y
+npx skills add executioncontrolprotocol/extensions --skill ecp-extensions -y
+```
 
 ## Prompt tips
 
@@ -22,8 +29,10 @@ Ask Cursor to:
 
 - Write a `workflow(...).run([step(...).as(...)])` module
 - Bind an environment with `extension("…").with({})` after importing catalog packages
-- Use `ecp run` / `validate` / `compile` with `--env`
-- Keep secrets out of workflows
+- Store credentials with `ecp config secrets` and bind via `secrets("…")` — never in workflows
+- Use `ecp run` / `validate` / `compile` / `invoke` / `test start|run|rerun|status` with `--env`
+- Prefer [GitHub examples](https://github.com/executioncontrolprotocol/executioncontrolprotocol/tree/main/examples) over inventing APIs
+- Author a custom extension with `capabilityFor(...).withHandler(...)`
 
 Point it at [Fluent API](/guides/fluent-api) and [Concepts](/learn/concepts) when generating code.
 

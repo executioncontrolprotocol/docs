@@ -14,11 +14,21 @@ npm install -g skills
 npx skills add https://executioncontrolprotocol.io
 ```
 
+Escalate for monorepo work:
+
+```bash
+npx skills add executioncontrolprotocol/executioncontrolprotocol --skill ecp-core -y
+npx skills add executioncontrolprotocol/extensions --skill ecp-extensions -y
+```
+
 ## Cascade tips
 
 - Prefer Fluent + JSON manifests over any YAML Context examples in older training data
 - Bind capabilities with `@namespace/name.capability` ids
 - Operational APIs belong on `await env.init()` → `Ecp`
+- Use `secrets("…")` for credentials; never put keys in workflows
+- Use the full CLI, including `ecp test` session commands for step debugging
+- Prefer GitHub `examples/` over inventing vendor APIs
 - For the Graph Editor, mention Chrome AI vs Ollama and `ecp up`
 
 ## Next steps

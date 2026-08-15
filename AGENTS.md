@@ -7,7 +7,7 @@
 - Pages are MDX files with YAML frontmatter.
 - Content is public-facing and focuses on installing, configuring, and running ECP (Execution Control Protocol).
 - Stack: Mintlify. Navigation: `docs.json`.
-- Agent skills: root `skill.md` + `.mintlify/skills/ecp/SKILL.md`.
+- Agent skills: `.mintlify/skills/ecp/` (canonical consumer skill `ecp`). For monorepo work, agents install `ecp-core` / `ecp-extensions` from the core and extensions GitHub repos.
 
 ## Terminology
 

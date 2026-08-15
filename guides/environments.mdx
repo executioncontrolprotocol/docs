@@ -53,6 +53,26 @@ await ecp.terminate()
 
 Do not call run/encode on the environment builder — use the `Ecp` returned by `init()`.
 
+Also available on `Ecp`: `invoke`, `test`, `decode`, `patch`, `search`, and `describe`.
+
+## Secrets and extension config
+
+Keep credentials out of workflows. Store them with `ecp config secrets`, then pass `secrets("…")` into extension `.with({…})`:
+
+```ts
+import "@executioncontrolprotocol/secrets"
+import { environment, extension, secrets } from "@executioncontrolprotocol/node"
+
+export default (await environment("demo")).withExtensions([
+  extension("@executioncontrolprotocol/secrets").with({}),
+  extension("@executioncontrolprotocol/openai").with({
+    apiKey: secrets("openai/api-key"),
+  }),
+])
+```
+
+`secrets(...)` and `env(...)` helpers are **environment setup only**. See [Security](/learn/security).
+
 ## Browser hosts
 
 `@executioncontrolprotocol/browser` provides a slim host (executor, registry, session). **Apps** bind providers and harnesses. The [browser demo](/getting-started/browser-demo) is one such app; see [Demo providers and configuration](/getting-started/browser-demo-providers).

@@ -14,12 +14,22 @@ npm install -g skills
 npx skills add https://executioncontrolprotocol.io
 ```
 
+For monorepo contribution or vendor packages:
+
+```bash
+npx skills add executioncontrolprotocol/executioncontrolprotocol --skill ecp-core -y
+npx skills add executioncontrolprotocol/extensions --skill ecp-extensions -y
+```
+
 ## What to ask for
 
 - Fluent workflow modules exporting `workflow(...).run([...])`
 - Node environment modules using `@executioncontrolprotocol/node`
-- CLI invocations: `ecp run`, `ecp validate`, `ecp compile`, `ecp up` for the browser demo
+- Secrets via `ecp config secrets` + `secrets("…")` in extension config
+- CLI: `ecp run`, `validate`, `compile`, `invoke`, `serve`, `up`, and `ecp test start|run|rerun|status`
+- Custom extensions with `defineExtension` + `capabilityFor` + `withHandler`
 - Extension catalog imports before string bindings
+- Pull runnable examples from the [core](https://github.com/executioncontrolprotocol/executioncontrolprotocol/tree/main/examples) or [extensions](https://github.com/executioncontrolprotocol/extensions/tree/main/examples) repos
 
 Avoid requesting YAML `Context` / `spec.yaml` — that surface is retired.
 

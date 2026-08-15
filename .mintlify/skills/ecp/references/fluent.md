@@ -20,7 +20,8 @@ workflow("Label")
 
 - `.as("name")` writes step output into run state
 - `ref("name.field")` → `$ref` under state
-- No secrets in workflow input; no `env()` helpers inside portable graphs
+- Optional mode on `.as("name", { mode: "create" | … })`
+- No secrets in workflow input; no `env()` / `secrets()` helpers inside portable graphs
 
 ## Manifest fields
 
@@ -36,3 +37,5 @@ workflow("Label")
 | JSON | Canonical |
 | Fluent | Encode in core; decode via `ecp compile` only |
 | TOON | `@executioncontrolprotocol/format-toon` |
+
+Public guide: https://executioncontrolprotocol.io/guides/fluent-api

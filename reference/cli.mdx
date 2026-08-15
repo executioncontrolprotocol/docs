@@ -1,6 +1,6 @@
 ---
 title: "CLI reference"
-description: "ECP (Execution Control Protocol) CLI: run, validate, compile, describe, search, encode, decode, up, and secrets."
+description: "ECP (Execution Control Protocol) CLI: run, validate, compile, describe, search, encode, decode, invoke, serve, up, test sessions, and secrets."
 ---
 
 # CLI reference
@@ -52,8 +52,6 @@ ecp describe --env examples/01-echo/environment.ts
 ecp search "echo" --env examples/01-echo/environment.ts
 ```
 
-Optional `--query` on describe where supported by your CLI build.
-
 ### `ecp encode` / `ecp decode`
 
 Require an environment that binds the format extension you use.
@@ -65,6 +63,32 @@ ecp decode workflow.toon --format toon --env environment.ts -o workflow.json
 ```
 
 Fluent decode is not supported — use `ecp compile` instead. JSON is the canonical manifest format.
+
+### `ecp invoke`
+
+Call a single capability outside a workflow run:
+
+```bash
+ecp invoke @executioncontrolprotocol/test.echo --env examples/01-echo/environment.ts --input input.json
+ecp invoke @executioncontrolprotocol/harness-browser-nano.evaluate --env environment.ts --input in.json --uses @executioncontrolprotocol/ollama.generate
+```
+
+| Flag | Role |
+| ---- | ---- |
+| `--env` | Environment module |
+| `--input` | JSON capability input |
+| `--uses` | Optional provider capability override (harness `.uses`) |
+
+### `ecp serve`
+
+Serve a bound environment over loopback HTTP (`POST /v1/invoke`, no auth). For the Ollama browser demo bridge with pairing, use `ecp up` instead.
+
+```bash
+ecp serve --env examples/01-echo/environment.ts
+ecp serve --env environment.ts --port 3090 --cors-origin http://localhost:5173
+```
+
+Default host `127.0.0.1`, port **3090**.
 
 ### `ecp up`
 
@@ -84,19 +108,41 @@ ecp up --no-open
 
 Hosted HTTPS demos need Chromium for Private Network Access. Add origins with `--cors-origin` when needed.
 
+### `ecp test`
+
+Drive a workflow with a **persistent test session** that freezes state between operations. This is distinct from monorepo unit tests (`npm run test:unit`) or harness eval matrices.
+
+```bash
+ecp test start examples/01-echo/workflow.ts --env examples/01-echo/environment.ts -o session.json
+ecp test run --to echo --env examples/01-echo/environment.ts --session session.json
+ecp test rerun echo --env examples/01-echo/environment.ts --session session.json
+ecp test status --session session.json
+```
+
+| Subcommand | Role |
+| ---------- | ---- |
+| `start` | Create an idle session snapshot (`-o` / `--output` required; optional `--input`) |
+| `run --to <step-id>` | Inclusive run-through; skip completed prior steps; rewrite `--session` |
+| `rerun <step-id>` | Rerun one step; clear downstream history and `.as` state |
+| `status` | Print session snapshot summary |
+
 ### `ecp config secrets`
 
 OS keychain helpers:
 
 ```bash
 ecp config secrets add KEY
+ecp config secrets add KEY --value …
 ecp config secrets list
 ecp config secrets get KEY
 ecp config secrets remove KEY
 ```
+
+Bind stored secrets into environments with `secrets("KEY")` — see [Security](/learn/security) and [Environments](/guides/environments).
 
 ## Next steps
 
 - [Quickstart](/getting-started/quickstart)
 - [Encode, decode, and patch](/guides/encode-decode-patch)
 - [Demo providers](/getting-started/browser-demo-providers)
+- [Examples on GitHub](https://github.com/executioncontrolprotocol/executioncontrolprotocol/tree/main/examples)
