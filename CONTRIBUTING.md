@@ -30,6 +30,7 @@ This file is the guide for **previewing and validating this documentation site**
 ## Writing guidelines
 
 - **Follow project voice and SEO rules**: see `AGENTS.md` and `.cursor/rules/docs-voice-seo.mdc`
+- **Public-only content**: no internal ops (analytics, prompt-logging backends, private `.env` catalogs). Browser demo pages: hosted URL + `ecp up`; point to the browser-demo GitHub repo for local/source setup
 - **No emojis**: do not use emoji characters in docs
 - **Match the right path**: quickstarts should use **`npm install -g @executioncontrolprotocol/cli`**; reserve clone-and-build steps for **[Build from source](https://executioncontrolprotocol.io/getting-started/build-from-source)**
 - **Authoring surface**: Fluent Workflow + Environment — not YAML Context

@@ -31,9 +31,12 @@ alwaysApply: false
 - **Comparisons**: state what ECP is and isn’t; use crisp “X is for…, ECP is for…” framing.
 - **Commands**: prefer installed CLIs over one-off runners in docs. Show the one-time install/link step, then the command.
 - **Public-only docs**: do not publish internal documentation about building or operating the docs site (Mintlify, `mint dev`, `docs.json`, contribution workflow). Pages should focus on installing, configuring, and running ECP.
+- **Do not leak internal ops**: never document analytics backends, prompt/telemetry logging vendors or pipelines (e.g. Supabase prompt logging), private env var catalogs, feature flags, or unpublished roadmap/UI details on public MDX or in `.mintlify/skills/`.
+- **Browser demo**: public pages emphasize https://executioncontrolprotocol.github.io/browser-demo/ and `ecp up` for Ollama. Defer clone/dev/link procedures to https://github.com/executioncontrolprotocol/browser-demo rather than embedding maintainer-only setup.
 
 ## Content checks before publishing
 
 - Title + description include **ECP** and **Execution Control Protocol** at least once (naturally).
 - H1 is unique and matches the title’s intent.
 - A “Next steps” or “Related reading” section exists when appropriate.
+- No internal vendor/ops names or private env setup unless they are part of the public product API users must configure themselves (e.g. `ecp config secrets`).

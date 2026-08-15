@@ -54,6 +54,7 @@ Operational APIs (`run`, `validate`, `encode`, `decode`, `patch`, `describe`, `s
 - Prefer **repo examples** over inventing APIs — see `references/examples.md`
 - Extensions never import `node` / `browser` / `cli` / `mcp` hosts
 - Call `ecp` after `init()` — not `env.run()`
+- Browser demo: public URL https://executioncontrolprotocol.github.io/browser-demo/ ; source https://github.com/executioncontrolprotocol/browser-demo — do not document internal demo ops (analytics, prompt logging, private env catalogs)
 
 ## Progressive disclosure
 

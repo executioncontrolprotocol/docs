@@ -35,9 +35,11 @@
 
 ## Content boundaries
 
-- Public pages: install, configure, run, Fluent authoring, CLI, browser demo providers.
+- Public pages: install, configure, run, Fluent authoring, CLI, browser demo (public URL + how to use it).
 - Do not publish Mintlify/`docs.json`/contribution workflow on public MDX pages (keep that in README/CONTRIBUTING).
 - Do not deep-dive monorepo-only eval matrices on public pages.
+- **No internal product ops on public pages or in the consumer skill:** analytics backends, prompt/telemetry logging vendors (e.g. Supabase), private `.env` / feature-flag wiring, unpublished roadmaps, or demo app implementation details that only maintainers need.
+- **Browser demo docs:** lead with the [hosted demo URL](https://executioncontrolprotocol.github.io/browser-demo/). For clone, `npm run dev`, linking packages, or contributor setup, **point at the [browser-demo GitHub repo](https://github.com/executioncontrolprotocol/browser-demo)** (and its README) instead of duplicating internal app setup here.
 
 ## Cursor rules
 

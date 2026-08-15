@@ -5,33 +5,23 @@ description: "Try the ECP (Execution Control Protocol) Graph Editor in the brows
 
 # Browser demo
 
-The **ECP Graph Editor** is a standalone Vite/React app that composes the browser runtime host with harnesses and model providers. It is a reference **application**, not the runtime package itself.
+Try ECP (Execution Control Protocol) in the browser with the **Graph Editor** — a reference app that runs Fluent workflows with on-device or local models.
 
 **Live demo:** [https://executioncontrolprotocol.github.io/browser-demo/](https://executioncontrolprotocol.github.io/browser-demo/)
 
-Source: [browser-demo](https://github.com/executioncontrolprotocol/browser-demo)
-
-## Three layers
-
-| Layer | Package / app | Owns |
-| ----- | ------------- | ---- |
-| Compile | `@executioncontrolprotocol/core/browser` | Fluent/TS compile in the page |
-| Runtime host | `@executioncontrolprotocol/browser` | Executor, registry, session — **no harnesses** |
-| Demo app | Graph Editor | Formats, providers, nano + coding harnesses, UI |
-
-Apps bind providers and harnesses. Do not put demo UI types (such as provider mode) into the runtime host package.
+Source and local setup: [github.com/executioncontrolprotocol/browser-demo](https://github.com/executioncontrolprotocol/browser-demo)
 
 ## Try the hosted demo
 
-1. Open [https://executioncontrolprotocol.github.io/browser-demo/](https://executioncontrolprotocol.github.io/browser-demo/) in **Chrome** (recommended).
+1. Open the [live demo](https://executioncontrolprotocol.github.io/browser-demo/) in **Chrome** (recommended).
 2. Complete the first-run provider modal.
-3. Chat with the assistant; use the panels for Fluent, JSON, TOON, Mermaid, run, and validation.
+3. Chat with the assistant and use the panels for Fluent, JSON, run, and validation.
 
-Default path: **Chrome AI** + **nano** (EQL) harness — on-device, no local daemon.
+Default path: **Chrome AI** + the nano harness — on-device, no local daemon.
 
 ## Ollama with `ecp up`
 
-For local models and the **coding** (Fluent/TS) harness:
+For local models and the coding (Fluent/TS) path:
 
 1. Install and start [Ollama](https://ollama.com/); pull a model (for example `qwen2.5-coder:1.5b`).
 2. Install the [ECP CLI](/getting-started/quickstart), then:
@@ -40,36 +30,21 @@ For local models and the **coding** (Fluent/TS) harness:
 ecp up
 ```
 
-`ecp up` starts a loopback daemon (default `http://127.0.0.1:3090`) and opens the hosted demo with `?token=` and `?bridge=` so pairing is automatic.
+`ecp up` starts a loopback bridge and opens the hosted demo with pairing query params. Hosted HTTPS pages need **Chromium** (Chrome/Edge) for Private Network Access to the loopback bridge.
 
 ```bash
-ecp up --open-url http://localhost:5173/   # local Vite
-ecp up --no-open                           # daemon only
+ecp up --no-open
 ```
 
-Hosted HTTPS pages need **Chromium** (Chrome/Edge) for Private Network Access to the loopback bridge. Local Vite works in more browsers.
+For flags and daemon details, see [CLI: ecp up](/reference/cli#ecp-up). For running or linking the demo from source, use the [browser-demo repository](https://github.com/executioncontrolprotocol/browser-demo).
 
-## Run the demo locally
+## Providers and settings
 
-```bash
-git clone https://github.com/executioncontrolprotocol/browser-demo.git
-cd browser-demo
-npm install
-npm run dev
-```
-
-Open the URL Vite prints (default `http://localhost:5173`). Optional: copy `.env.example` to `.env` for Supabase prompt logging.
-
-## What you see in the UI
-
-- Docked **chat** driven by harness `evaluate` + provider `generate`
-- Manifest / code panels: Fluent, JSON, TOON, Mermaid
-- Run and validation against the demo environment
-
-Provider choice, harness pairing, vault secrets, and persistence are covered in [Demo providers and configuration](/getting-started/browser-demo-providers).
+Chrome AI vs Ollama, harness pairing, and where secrets belong are covered in [Demo providers and configuration](/getting-started/browser-demo-providers).
 
 ## Next steps
 
 - [Demo providers and configuration](/getting-started/browser-demo-providers)
 - [Fluent API](/guides/fluent-api)
 - [CLI: ecp up](/reference/cli#ecp-up)
+- [browser-demo on GitHub](https://github.com/executioncontrolprotocol/browser-demo)

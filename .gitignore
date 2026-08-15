@@ -1,1 +1,22 @@
 node_modules
+
+# Vitest / V8 coverage (never commit)
+coverage/
+coverage-tmp/
+.coverage
+@coverage/
+v8-cov/
+*.lcov
+
+# Secrets / local credentials (never commit)
+.env
+.env.*
+!.env.example
+!.env.*.example
+*.pem
+id_rsa
+id_ed25519
+*.p12
+*.pfx
+credentials.json
+service-account*.json
