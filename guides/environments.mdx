@@ -46,12 +46,14 @@ const ecp = await env.init()
 await ecp.describe()
 await ecp.search("echo")
 await ecp.validate(manifest)
-await ecp.run(manifest)
+await ecp.run(manifest, { input: { value: "hello" } })
 await ecp.encode(source).uses("@executioncontrolprotocol/format-toon").to("@executioncontrolprotocol.workflow").process()
 await ecp.terminate()
 ```
 
 Do not call run/encode on the environment builder — use the `Ecp` returned by `init()`.
+
+`ecp.validate()` / `ecp validate` check the graph and environment only. Run input is validated against `workflow.accepts` on `ecp.run` (and `--dry-run`), not on validate.
 
 Also available on `Ecp`: `invoke`, `test`, `decode`, `patch`, `search`, and `describe`.
 
@@ -82,7 +84,7 @@ export default (await environment("demo")).withExtensions([
 Point commands at an environment module:
 
 ```bash
-ecp run workflow.ts --env environment.ts
+ecp run workflow.ts --env environment.ts --input input.json
 ecp describe --env environment.ts
 ecp search "echo" --env environment.ts
 ```

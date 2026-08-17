@@ -33,6 +33,8 @@ export default workflow("Echo test")
   ])
 ```
 
+`.accepts()` / `.returns()` declare the workflow contract (run input / public output). Same verbs on JSON `workflow.accepts` / `workflow.returns`. `ecp.run(..., { input })` validates `accepts` before execute (throws `Workflow accepts validation failed`); `result.output` picks `returns` keys. `ecp.validate()` is graph/environment only.
+
 ```ts
 import { environment, extension } from "@executioncontrolprotocol/node"
 import "@executioncontrolprotocol/core/testing"

@@ -21,6 +21,7 @@ From a monorepo build: `npm link` inside `packages/cli` after `npm run build`. S
 
 ```bash
 ecp run examples/01-echo/workflow.ts --env examples/01-echo/environment.ts
+ecp run examples/07-accepts-returns/workflow.ts --env examples/07-accepts-returns/environment.ts --input examples/07-accepts-returns/input.json
 ecp run workflow.json --env environment.ts --input input.json
 ecp run workflow.ts --env environment.ts --dry-run
 ```
@@ -28,10 +29,14 @@ ecp run workflow.ts --env environment.ts --dry-run
 | Flag | Role |
 | ---- | ---- |
 | `--env` | Environment module (default export) |
-| `--input` | JSON input file |
-| `--dry-run` | Validate/plan without invoking capabilities |
+| `--input` | JSON object validated against `workflow.accepts` before execute |
+| `--dry-run` | Same accepts gate, then complete without invoking capabilities |
+
+Invalid `--input` exits non-zero with `Workflow accepts validation failed` (including `--dry-run`). Extra unused keys on a valid object are allowed.
 
 ### `ecp validate`
+
+Checks the workflow graph and environment (bound capabilities). It does **not** check run input against `workflow.accepts` — use `ecp run` or `--dry-run` for that.
 
 ```bash
 ecp validate examples/01-echo/workflow.ts --env examples/01-echo/environment.ts
@@ -143,6 +148,8 @@ Bind stored secrets into environments with `secrets("KEY")` — see [Security](/
 ## Next steps
 
 - [Quickstart](/getting-started/quickstart)
+- [Fluent API](/guides/fluent-api)
+- [Schemas](/reference/schemas)
 - [Encode, decode, and patch](/guides/encode-decode-patch)
 - [Demo providers](/getting-started/browser-demo-providers)
 - [Examples on GitHub](https://github.com/executioncontrolprotocol/executioncontrolprotocol/tree/main/examples)

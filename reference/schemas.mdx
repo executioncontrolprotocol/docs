@@ -1,13 +1,13 @@
 ---
 title: "Schemas"
-description: "ECP (Execution Control Protocol) document schemas: workflow, environment, run, patch, encode, and decode result IDs."
+description: "ECP (Execution Control Protocol) document schemas: workflow accepts and returns, run output, environment, patch, encode, and decode result IDs."
 ---
 
 # Schemas
 
 ECP (Execution Control Protocol) documents carry a `schema` discriminator and a `version`. Workflows currently use `"version": "1.0"` with schema `@executioncontrolprotocol.workflow`.
 
-Generated JSON Schema artifacts ship from `@executioncontrolprotocol/types` (`npm run generate:schema` in the monorepo → `packages/types/dist/schemas`).
+Generated JSON Schema artifacts ship from `@executioncontrolprotocol/types` (`npm run generate:schema` in the monorepo → `packages/types/dist/schemas`). The files that describe the workflow contract and run I/O are `workflow.manifest.json`, `run.request.json` (`input`, `dryRun`), and `run.result.json` (`output`).
 
 ## Common schema IDs
 
@@ -28,27 +28,52 @@ Generated JSON Schema artifacts ship from `@executioncontrolprotocol/types` (`np
 | `@executioncontrolprotocol.intent` | Harness intent artifact |
 | `@executioncontrolprotocol.harness.reply` | Harness reply artifact |
 
+## Workflow contract
+
+`workflow.accepts` and `workflow.returns` are JSON Schema **objects**. They use the same verbs as Fluent `.accepts()` / `.returns()`.
+
+| Field | Role |
+| ----- | ---- |
+| `workflow.accepts` | JSON Schema for run input (`ecp.run(..., { input })`). Property names seed workflow state; read them with `ref("name")`. |
+| `workflow.returns` | JSON Schema for public output. Property names are top-level state keys (typically a step `.as()`). |
+| `RunResult.output` | Object picked from those `returns` keys after a run. Present when the workflow declares `returns`. |
+
+Extra unused keys on a valid input object are allowed (the validator does not set `additionalProperties: false`). Empty object schemas are omitted from the compiled manifest.
+
 ## Workflow example
 
 ```json
 {
   "schema": "@executioncontrolprotocol.workflow",
   "version": "1.0",
-  "workflow": { "id": "echo-test", "label": "Echo test" },
+  "workflow": {
+    "id": "echo-from-input",
+    "label": "Echo from input",
+    "accepts": {
+      "type": "object",
+      "properties": { "value": { "type": "string" } },
+      "required": ["value"]
+    },
+    "returns": {
+      "type": "object",
+      "properties": { "echo": { "type": "object" } },
+      "required": ["echo"]
+    }
+  },
   "steps": [
     {
       "type": "step",
       "id": "echo",
       "label": "Echo",
       "uses": "@executioncontrolprotocol/test.echo",
-      "input": { "value": "hello from fluent API" },
+      "input": { "value": { "$ref": "state.value" } },
       "as": "echo"
     }
   ]
 }
 ```
 
-Author with the [Fluent API](/guides/fluent-api); compile with `ecp compile`.
+Author with the [Fluent API](/guides/fluent-api); compile with `ecp compile`. Runnable pair: [07-accepts-returns](https://github.com/executioncontrolprotocol/executioncontrolprotocol/tree/main/examples/07-accepts-returns).
 
 ## Next steps
 

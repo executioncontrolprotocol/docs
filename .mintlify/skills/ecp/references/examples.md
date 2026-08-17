@@ -14,6 +14,7 @@ Repo: https://github.com/executioncontrolprotocol/executioncontrolprotocol/tree/
 | `04-encode-decode` | TOON / fluent encode round-trip |
 | `05-test-session` | `ecp test start` / `run --to` / `rerun` / `status` |
 | `06-invoke` | `ecp invoke` (and optional `serve`) outside a workflow |
+| `07-accepts-returns` | `.accepts()` / `.returns()` + `ecp run --input` |
 
 Index: https://github.com/executioncontrolprotocol/executioncontrolprotocol/blob/main/examples/README.md
 

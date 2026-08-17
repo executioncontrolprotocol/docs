@@ -33,6 +33,17 @@ Canonical manifests use:
 
 Workflows should stay portable: no host secrets, no environment-only helpers in the graph. Use `ref()` to read prior step state.
 
+## Workflow contract
+
+The contract is separate from steps. Same verbs in Fluent and JSON:
+
+| Field | Role |
+| ----- | ---- |
+| `.accepts()` / `workflow.accepts` | JSON Schema for run input. Property names seed state (`ref("prompt")`). |
+| `.returns()` / `workflow.returns` | JSON Schema for public output (`result.output`). Property names are top-level state keys (typically a step `.as()`). |
+
+`ecp.run(..., { input })` validates `accepts` before execute. The Graph Editor shows Inputs / Outputs from those schemas — they are projections, not dummy capabilities. See [Fluent API](/guides/fluent-api) and [Schemas](/reference/schemas).
+
 ## Environment
 
 An environment binds what can run a workflow: runtime, extensions, policies, harnesses, and secrets access on the host.
@@ -90,4 +101,5 @@ IDs use `@namespace/name` for extensions and `@namespace/name.capability` for ca
 - [Fluent API](/guides/fluent-api)
 - [Environments](/guides/environments)
 - [Extensions](/guides/extensions)
+- [Schemas](/reference/schemas)
 - [Security](/learn/security)

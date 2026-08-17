@@ -67,12 +67,14 @@ Browser hosts often freeze the extension registry at a lifecycle point (`environ
 
 ## Default posture
 
-Prefer allowlisted capabilities in the environment you ship. Validate workflows against that environment before run:
+Prefer allowlisted capabilities in the environment you ship. Check the graph and environment, then optionally check run input without invoking capabilities:
 
 ```bash
 ecp validate workflow.ts --env environment.ts
 ecp run workflow.ts --env environment.ts --dry-run
 ```
+
+`ecp validate` is graph and environment only. `--dry-run` also validates `workflow.accepts` when the workflow declares it.
 
 ## Next steps
 

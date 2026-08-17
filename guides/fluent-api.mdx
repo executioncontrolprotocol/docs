@@ -23,6 +23,7 @@ export default workflow("Echo test")
 ```
 
 - `workflow(label)` — create a builder
+- `.accepts(schema)` / `.returns(schema)` — JSON Schema (or Zod) for run input / public output
 - `step(capabilityId, label)` — invoke a capability
 - `.with({…})` — step input
 - `.as("echo")` — write output into run state under `echo`
@@ -50,6 +51,44 @@ export default workflow("Weekly brief").run([
 
 `ref("signals.results")` becomes a `$ref` into run state. Keep secrets out of workflows; bind credentials in the environment.
 
+## Workflow input and output
+
+`.accepts()` and `.returns()` are the same verbs in Fluent and JSON. They describe the workflow contract — not dummy steps. Fluent render and browser compile emit **JSON Schema literals** (no `zod` import). Zod objects are an authoring convenience that serialize to the same JSON.
+
+```ts
+import { workflow, step, ref } from "@executioncontrolprotocol/core"
+
+export default workflow("Echo from input")
+  .id("echo-from-input")
+  .accepts({
+    type: "object",
+    properties: { value: { type: "string" } },
+    required: ["value"],
+  })
+  .returns({
+    type: "object",
+    properties: { echo: { type: "object" } },
+    required: ["echo"],
+  })
+  .run([
+    step("@executioncontrolprotocol/test.echo", "Echo")
+      .with({ value: ref("value") })
+      .as("echo"),
+  ])
+```
+
+- `accepts` property names seed `ecp.run(..., { input })` and are read with `ref("value")`.
+- `returns` property names are top-level state keys (typically a step `.as()`). After a successful run, `result.output` picks those keys.
+- Omit either field (or pass an empty object schema) when the workflow has no public I/O.
+
+`ecp.run` (and `--dry-run`) validates input against `accepts` **before** steps execute. Invalid input throws `Workflow accepts validation failed` — including when `dryRun: true`. Extra unused keys on a valid object succeed. `ecp.validate()` still checks the graph and environment only.
+
+If a **required** `returns` key is missing from state, the run finishes with `run.status === "failed"` and assembled `output`. Optional `returns` keys may be absent without failing the run.
+
+The Workflow canvas shows Inputs / Outputs from these schemas. They are projections of the contract, not capabilities in `steps[]`.
+
+Runnable example: [07-accepts-returns](https://github.com/executioncontrolprotocol/executioncontrolprotocol/tree/main/examples/07-accepts-returns).
+
 ## Flow control
 
 From `@executioncontrolprotocol/core`:
@@ -74,7 +113,7 @@ Compiled workflows use:
 {
   "schema": "@executioncontrolprotocol.workflow",
   "version": "1.0",
-  "workflow": { "id": "…", "label": "…" },
+  "workflow": { "id": "…", "label": "…", "accepts": { "type": "object" }, "returns": { "type": "object" } },
   "steps": [
     {
       "type": "step",

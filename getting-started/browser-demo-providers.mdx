@@ -41,6 +41,8 @@ See [CLI: ecp up](/reference/cli#ecp-up) for flags.
 
 Keep API keys out of workflow manifests. In the demo, store cloud credentials in the app’s encrypted secrets vault when prompted — never paste keys into Fluent/JSON workflows. Portable workflows use `ref()` / run state for data, not raw credentials.
 
+Cloud vendor steps such as **FAL** use the real `@fal-ai/client` in the browser. Bind `apiKey` with `browser("FAL_KEY")` (or your vault key name) so the extension resolves the secret at runtime. Native **image-sharp** remains Node-only; author those steps in the demo, then run the same workflow on a Node host.
+
 See [Security](/learn/security).
 
 ## Next steps

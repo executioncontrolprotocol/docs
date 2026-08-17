@@ -32,12 +32,14 @@ const ecp = await env.init()
 await ecp.describe()
 await ecp.search("echo")
 await ecp.validate(manifest)
-await ecp.run(manifest)
+await ecp.run(manifest, { input: { value: "hello" } })
 await ecp.invoke("@executioncontrolprotocol/test.echo").with({ value: "hi" }).process()
 await ecp.test(manifest).with({ input: {} }).start()
 await ecp.encode(source).uses("@executioncontrolprotocol/format-toon").to("@executioncontrolprotocol.workflow").process()
 await ecp.terminate()
 ```
+
+`ecp.validate()` is graph and environment only. Run input is checked against `workflow.accepts` on `ecp.run` (and `--dry-run`).
 
 Encode / decode / patch results use `.result` (not `.content` / `.document`).
 

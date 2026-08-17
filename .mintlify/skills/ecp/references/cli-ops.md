@@ -10,8 +10,8 @@ npm install -g @executioncontrolprotocol/cli
 
 | Command | Notes |
 | ------- | ----- |
-| `ecp run <workflow> --env <env>` | `--input`, `--dry-run` |
-| `ecp validate <workflow> --env <env>` | Capability checks |
+| `ecp run <workflow> --env <env>` | `--input` validated against `workflow.accepts` before execute; `--dry-run` still gates, no capabilities |
+| `ecp validate <workflow> --env <env>` | Graph and environment only — does **not** check run input |
 | `ecp compile <workflow> -o out.json` | No `--env` |
 | `ecp describe --env <env>` | Discovery |
 | `ecp search <query> --env <env>` | Capability search |
