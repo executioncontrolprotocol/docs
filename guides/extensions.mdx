@@ -69,6 +69,35 @@ Extensions depend on `@executioncontrolprotocol/types` and `@executioncontrolpro
 
 Hosts wrap core; extensions stay portable.
 
+## Browser vs Node package graphs
+
+Capability execution (`local` | `host` | `mixed`) is **not** a bundler export name. Those names describe where a step runs after dispatch.
+
+If the Node implementation imports native modules or Node-only SDKs (`sharp`, `@azure/storage-blob`, `node:fs`), ship a standard [`exports`](https://nodejs.org/api/packages.html#conditional-exports) condition so web bundlers never see that graph:
+
+```json
+".": {
+  "types": "./dist/index.d.ts",
+  "browser": "./dist/index.browser.js",
+  "node": "./dist/index.js",
+  "import": "./dist/index.js"
+}
+```
+
+`browser` and `node` are **bundler/Node conditions** (Vite, webpack, Rollup, Node). Apps import the package root only:
+
+```ts
+import "@executioncontrolprotocol/image-sharp"
+```
+
+Do not import `index.browser` by path. Vite selects `exports["."].browser` automatically.
+
+| Execution | Browser graph |
+| --------- | ------------- |
+| `host` | Catalog (ids, schemas, execution). Handlers may throw; dispatch hops to `ecp up`. |
+| `mixed` | Catalog plus tab-safe handlers (for example Azure PUT). No native SDK. |
+| `local` | Full handlers that are safe in the tab (formats, Chrome AI, HTTP+secrets). |
+
 ## First-party and vendor
 
 Protocol/platform extensions live in the ECP monorepo (formats, providers such as Ollama and Chrome AI, memory, secrets, …). Vendor integrations (fal, Slack, image-sharp, Adobe, …) ship from the sibling [extensions](https://github.com/executioncontrolprotocol/extensions) repository.

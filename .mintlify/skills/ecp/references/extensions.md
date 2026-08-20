@@ -44,6 +44,14 @@ Depend on `@executioncontrolprotocol/types` + `@executioncontrolprotocol/core` (
 
 Never import `@executioncontrolprotocol/node`, `browser`, `cli`, or `mcp` from an extension package.
 
+## Browser vs Node package graphs
+
+Execution is `local` | `host` | `mixed` (dispatch). Bundler conditions are `browser` | `node` | `import` (package.json `exports`). Do not rename one to match the other.
+
+If Node code imports native/SDK deps, add `exports["."].browser` pointing at a catalog entry (`index.browser.ts`) with **no** `sharp` / Azure SDK / `node:fs`. Consumers import the package name only; Vite picks `browser`.
+
+Host caps: catalog in the tab, hop at run. Mixed: tab-safe handler + nested host hops.
+
 ## Test stub
 
 ```ts
