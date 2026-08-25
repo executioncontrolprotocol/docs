@@ -1,32 +1,58 @@
 ---
 title: "Why ECP"
-description: "Why ECP (Execution Control Protocol) exists: a portable execution layer for AI agents on top of MCP."
+description: "Why ECP (Execution Control Protocol) exists: reason about an approach once, then run it deterministically — a governed execution layer that complements model reasoning."
 ---
 
 # Why ECP
 
-ECP (Execution Control Protocol) fills the **execution layer** between tool calling and production agent systems.
+Reasoning is the most powerful thing an AI system does, and the most expensive. Every reasoned step costs latency and tokens, and returns a slightly different answer each time. Some tasks are worth that cost. Most, once you have worked them out, are not.
 
-| Layer | Standard |
-| ----- | -------- |
-| Models | Provider APIs |
-| Tools | MCP |
-| Agents | Frameworks |
-| Execution | **ECP** |
+ECP (Execution Control Protocol) is built on a simple belief: **reason once, run many times, iterate fast.** Once you have reasoned about how a task should be done, you can capture that approach and run it deterministically — without paying to re-derive it on every run.
 
-If MCP standardizes how AI systems **call tools**, ECP standardizes how AI systems **run**: portable workflows, governed environments, policies, and host runtimes.
+## Reason once, run many times
 
-## The problem
+People already work this way. You reason hard about how to drive a car exactly once. After that you drive without re-deriving it, and your deliberate attention is free for the road's genuine novelty. Deliberate thought becomes practiced execution.
 
-As agents move from prototypes to production:
+Agents should work the same way. The reasoning that designs an approach is valuable. Repeating that reasoning on every run — for steps whose answer no longer changes — is waste, and it reintroduces non-determinism exactly where you do not want it. ECP is the layer where a reasoned approach becomes a captured, executable workflow.
 
-- Tool permissions become unclear
-- Actions are hard to audit
-- Context and mounts are inconsistent
-- Execution environments are not reproducible
-- Governance is bolted on after the fact
+## Two kinds of reasoning
 
-Teams solve this with one-off orchestration code. There is no shared way to package “how this agent runs here.”
+ECP separates when you reason from when you run.
+
+| Mode | When | What it produces |
+| ---- | ---- | ---------------- |
+| **Author-time reasoning** | Ahead of time, once | A portable workflow: the approach, captured |
+| **Runtime reasoning** | During a run, only where needed | Judgment on the parts that are genuinely novel |
+
+Author-time reasoning does the design work up front. Runtime reasoning is reserved for the steps that actually need a model in the loop. Everything else runs deterministically.
+
+## The determinism spectrum
+
+Steps are not all-or-nothing. ECP lets you place each one deliberately on a spectrum:
+
+| Kind | Behavior | Use for |
+| ---- | -------- | ------- |
+| **Deterministic** | Same input, same output, every time | Fixed transforms, validated tool calls, glue |
+| **Semi-deterministic** | A model call constrained by schema and policy | Bounded judgment with a predictable shape |
+| **Reasoned** | Full model reasoning | Genuine novelty and open-ended decisions |
+
+The default in most agent stacks is to reason everywhere. ECP makes the other end of the spectrum a first-class choice, so you spend reasoning where it earns its cost and lean on determinism where it does not.
+
+## Iterate fast
+
+A captured workflow is an artifact, not an ephemeral chain of thought — so changing it is cheap and surgical. You adjust a step, [patch](/guides/encode-decode-patch) a manifest, or re-encode between Fluent, JSON, and TOON, then re-run against the same governed environment. You refine the approach without re-reasoning it from scratch.
+
+## What this fixes
+
+Capturing execution this way addresses what tends to break as agents move from prototype to production:
+
+- Tool permissions become explicit instead of implicit
+- Actions are auditable, because the workflow is the record
+- Context and mounts stay consistent across runs
+- Execution environments are reproducible
+- Governance is part of the environment, not bolted on afterward
+
+Teams usually solve these with one-off orchestration code. There is no shared way to package "how this agent runs here" — so ECP provides one.
 
 ## What ECP gives you
 
@@ -36,7 +62,7 @@ Teams solve this with one-off orchestration code. There is no shared way to pack
 - **Hosts** — Node CLI, browser runtime, MCP adapter
 - **Composability** — same operational APIs after `env.init()`, regardless of host
 
-ECP is not another agent framework or chat UI. It is infrastructure for governed execution.
+ECP is not another agent framework or chat UI. It is infrastructure for governed execution — the place where reasoning becomes something you can run, audit, and change with confidence.
 
 ## Next steps
 
