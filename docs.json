@@ -3,9 +3,18 @@
   "theme": "mint",
   "name": "Execution Control Protocol",
   "colors": {
-    "primary": "#0F766E",
-    "light": "#14B8A6",
-    "dark": "#0D9488"
+    "primary": "#39485A",
+    "light": "#DAE2FD",
+    "dark": "#FACC15"
+  },
+  "appearance": {
+    "default": "dark"
+  },
+  "background": {
+    "color": {
+      "light": "#EEF1FB",
+      "dark": "#0B1326"
+    }
   },
   "favicon": "/favicon.svg",
   "navigation": {
