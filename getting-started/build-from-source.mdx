@@ -10,22 +10,22 @@ Use this path when you are changing ECP (Execution Control Protocol) packages th
 ## Prerequisites
 
 - Node.js 22+
-- npm (install from the **repo root**, never inside individual packages)
+- pnpm (install from the **repo root**, never inside individual packages)
 
 ## Clone and build
 
 ```bash
 git clone https://github.com/executioncontrolprotocol/executioncontrolprotocol.git
 cd executioncontrolprotocol
-npm install
-npm run build
+pnpm install
+pnpm run build
 ```
 
 Link the CLI:
 
 ```bash
 cd packages/cli
-npm link
+pnpm link --global
 ```
 
 From the monorepo root, run an example:
@@ -38,16 +38,16 @@ ecp validate examples/01-echo/workflow.ts --env examples/01-echo/environment.ts
 ## Useful monorepo commands
 
 ```bash
-npm run check          # build + schema + lint + tests
-npm run test:unit
-npm run generate:schema
+pnpm run check          # build + schema + lint + tests
+pnpm run test:unit
+pnpm run generate:schema
 ```
 
 Package map and boundaries: see the monorepo [`AGENTS.md`](https://github.com/executioncontrolprotocol/executioncontrolprotocol/blob/main/AGENTS.md) and [Packages](/reference/packages).
 
 ## Browser demo with linked packages
 
-For side-by-side work with the Graph Editor, follow the [browser-demo repository](https://github.com/executioncontrolprotocol/browser-demo) README (clone as a sibling, rebuild monorepo `dist/`, then `npm link` as documented there). Public try-out: [hosted demo](https://demo.executioncontrolprotocol.io/).
+For side-by-side work with the Graph Editor, follow the [browser-demo repository README](https://github.com/executioncontrolprotocol/browser-demo) (`pnpm run dev:linked`, `pnpm run link:ecp`, sibling layout). Public try-out: [hosted demo](https://demo.executioncontrolprotocol.io/).
 
 ## Next steps
 

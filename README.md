@@ -30,11 +30,11 @@ Then open `http://localhost:3000`.
 From the repo root:
 
 ```bash
-npm install
-npm run lint
+pnpm install
+pnpm run lint
 ```
 
-(`npm run validate` is an alias for the same Mintlify checks.)
+(`pnpm run validate` is an alias for the same Mintlify checks.)
 
 ## AI-assisted writing (optional)
 
