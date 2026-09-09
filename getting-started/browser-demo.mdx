@@ -21,6 +21,8 @@ Default path: **Chrome AI** + the nano harness — on-device, no local daemon.
 
 The canvas **Inputs** / **Outputs** nodes come from the workflow contract (`accepts` / `returns`). They are projections of that schema, not dummy steps. See [Fluent API](/guides/fluent-api).
 
+Chat can also drive a **discover-then-finish** loop: when the assistant offers a probe, confirm to inspect live structure, pick options in follow-up messages, then complete and run the workflow.
+
 ## Ollama with `ecp up`
 
 For local models and the coding (Fluent/TS) path:
