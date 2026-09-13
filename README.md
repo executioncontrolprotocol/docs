@@ -2,6 +2,8 @@
 
 This repository contains the documentation site for **ECP (Execution Control Protocol)**, built with [Mintlify](https://mintlify.com).
 
+**Live site:** https://executioncontrolprotocol.io/
+
 ## What’s in here
 
 - **Site config**: `docs.json`

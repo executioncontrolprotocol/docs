@@ -40,7 +40,19 @@ ecp up
 ecp up --no-open
 ```
 
-For flags and daemon details, see [CLI: ecp up](/reference/cli#ecp-up). For running or linking the demo from source, use the [browser-demo repository](https://github.com/executioncontrolprotocol/browser-demo).
+For flags and daemon details, see [CLI: ecp up](/reference/cli#ecp-up).
+
+## Run from source
+
+Clone [browser-demo](https://github.com/executioncontrolprotocol/browser-demo), then:
+
+```bash
+corepack enable
+pnpm install
+pnpm run dev
+```
+
+Open the URL Vite prints (default `http://localhost:5173`). No core monorepo clone or `.env` is required for the default Chrome AI path. For linking unpublished packages (`pnpm run link:ecp`, `pnpm run dev:linked`), see the [browser-demo README](https://github.com/executioncontrolprotocol/browser-demo/blob/main/README.md).
 
 ## Providers and settings
 
