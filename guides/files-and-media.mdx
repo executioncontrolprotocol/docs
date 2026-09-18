@@ -57,14 +57,20 @@ When a step writes media through `writeMediaArtifact` (Sharp, Azure download, an
 | ------ | --------- | -------- | --- |
 | Temp (default) | `~/.ecp/temp/…` | Until the next `ecp up` start | Default `writeMediaArtifact` |
 | Durable | `~/.ecp/artifacts/…` | Until you delete it | `store: "durable"` |
-| Workflows (reserved) | `~/.ecp/workflows/` | Durable | Upcoming save-workflow feature |
+| Workflows | `~/.ecp/workflows/…` | Durable | Browser demo **Save** / `storage.workflow-*` |
 
-URI shapes:
+URI shapes for media:
 
 - Temp: `ecp://storage/temp/<key>`
 - Durable: `ecp://storage/artifacts/<key>`
 
-`ecp up` creates the home layout and **wipes only `~/.ecp/temp`**. It binds storage so the browser demo can hop write/read and preview via `GET /v1/artifacts`. For large cloud-to-cloud flows, prefer Azure SAS URLs so bytes never enter the host.
+Workflow files on the host are Fluent TypeScript (`.workflow.ts`). Download can export Fluent or a plain workflow manifest JSON. In the [browser demo](/getting-started/browser-demo):
+
+- **Save** (paired with `ecp up`) writes Fluent to `~/.ecp/workflows/<id>.workflow.ts`
+- **Download** asks TypeScript (default) or JSON — one representation only
+- **Open** lists host-saved workflows and compiles Fluent back into the editor; drag a `.workflow.ts` or `.workflow.json` onto the canvas to reload
+
+`ecp up` creates the home layout and **wipes only `~/.ecp/temp`**. It binds storage so the browser demo can hop write/read, save workflows, and preview via `GET /v1/artifacts`. For large cloud-to-cloud flows, prefer Azure SAS URLs so bytes never enter the host.
 
 Override the home directory with `ECP_HOME` when needed.
 
