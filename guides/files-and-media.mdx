@@ -1,0 +1,130 @@
+---
+title: "Files and media"
+description: "How ECP (Execution Control Protocol) passes file tickets (FileRef) instead of bytes, and how browser uploads reach Azure Blob Storage."
+---
+
+# Files and media
+
+ECP (Execution Control Protocol) does not shove file bytes through the workflow graph. Steps pass a **ticket** (`FileRef`) that says where the bytes live. When a capability needs the file, it turns that ticket into bytes with `resolveFile`.
+
+Think coat check: the workflow carries the stub; the coat stays in a locker until someone needs it.
+
+## FileRef kinds
+
+| Kind | Plain English |
+| ---- | ------------- |
+| `file` | On disk, or still in the browser under a locator |
+| `artifact` | A previous step parked bytes in run memory or storage |
+| `url` | Fetch from the network (only when allowed) |
+| `buffer` | Base64 bytes (tests and hop transport — not the happy path for uploads) |
+
+A browser upload usually becomes:
+
+```ts
+{
+  kind: "file",
+  path: "ecp://browser/<uuid>",
+  mediaType: "image/png",
+}
+```
+
+`ecp://browser/...` is not Azure and not a filesystem path. It is a private locker id in the run-scoped blob map (`ctx.blobs`).
+
+## Resolve and write
+
+Extensions should not invent their own fs / fetch / artifact maps. Use core:
+
+```ts
+import { resolveFile, writeMediaArtifact } from "@executioncontrolprotocol/core"
+
+const { bytes, mediaType } = await resolveFile(input.image, ctx)
+// …domain work (resize, upload, generate)…
+return {
+  image: await writeMediaArtifact(outBytes, {
+    mediaType,
+    prefix: "artifacts/images",
+  }, ctx),
+}
+```
+
+`file.path` may be a Node path or an `ecp://browser/<id>` locator. `artifact.uri` may point at run artifacts, `ecp://storage/…`, or the same browser locator shape when bytes live in `ctx.blobs`.
+
+## Host disk storage (`~/.ecp`)
+
+When a step writes media through `writeMediaArtifact` (Sharp, Azure download, and similar), bytes go through `@executioncontrolprotocol/storage` on the host:
+
+| Target | Disk path | Lifetime | How |
+| ------ | --------- | -------- | --- |
+| Temp (default) | `~/.ecp/temp/…` | Until the next `ecp up` start | Default `writeMediaArtifact` |
+| Durable | `~/.ecp/artifacts/…` | Until you delete it | `store: "durable"` |
+| Workflows (reserved) | `~/.ecp/workflows/` | Durable | Upcoming save-workflow feature |
+
+URI shapes:
+
+- Temp: `ecp://storage/temp/<key>`
+- Durable: `ecp://storage/artifacts/<key>`
+
+`ecp up` creates the home layout and **wipes only `~/.ecp/temp`**. It binds storage so the browser demo can hop write/read and preview via `GET /v1/artifacts`. For large cloud-to-cloud flows, prefer Azure SAS URLs so bytes never enter the host.
+
+Override the home directory with `ECP_HOME` when needed.
+
+## Browser upload to Azure
+
+[`@executioncontrolprotocol/azure-blob-storage`](https://github.com/executioncontrolprotocol/extensions/tree/main/packages/azure-blob-storage) uploads with a **mixed** capability: some work stays in the tab, and signing hops to a trusted host.
+
+```
+You pick a file
+        │
+        ├─ stash File in ctx.blobs
+        └─ put FileRef ticket in workflow input
+                    │
+                    ▼
+         azure-blob-storage.upload (mixed)
+                    │
+         1) look up File by ecp://browser/…
+         2) hop create-sas-url to ecp up (host)
+         3) host returns a short-lived write SAS
+         4) browser PUT bytes straight to Azure
+         5) optional read SAS for the next step
+```
+
+### 1. Pick a file
+
+The UI (or your app) creates `ecp://browser/<id>`, stashes the real `File` in a blob map, and puts **only the ticket** into workflow input — not base64 in the form.
+
+### 2. Run mixed upload
+
+On the browser graph, `upload` reads the stashed file, then calls `create-sas-url` with write permissions (`c` + `w`).
+
+### 3. Keys stay on the host
+
+`create-sas-url` is **host** execution. From the browser that call goes to `ecp up`, which holds the Azure connection string or account key and mints a temporary SAS URL. The tab never sees the account key.
+
+### 4. Browser talks to Azure
+
+With the write SAS, the browser `PUT`s bytes straight to Azure Blob Storage. Bytes go **browser → Azure**, not browser → ECP host → Azure.
+
+Container CORS must allow your origin for `PUT`, expose `ETag`, and allow `x-ms-blob-type` and `Content-Type`.
+
+### 5. Optional read link
+
+If `createReadSas` is set, the host mints a **read** SAS. Downstream steps (for example Firefly or Photoshop) get an HTTPS URL they can fetch — still without Azure keys in the browser.
+
+## Why this design
+
+- **Workflows stay portable** — JSON and Fluent carry tickets, not giant payloads.
+- **The browser stays safer** — account keys never leave the host.
+- **Large files stay efficient** — upload goes client → cloud; the host only signs.
+- **One media language** — Sharp, model providers, Azure, and other extensions all use `resolveFile` / `writeMediaArtifact`.
+
+## One-sentence model
+
+You upload a file → ECP gives the workflow a coat-check stub (`ecp://browser/…`) → Azure upload asks the trusted host for a temporary door key (SAS) → the browser opens Azure’s door and hangs the coat itself.
+
+## Related reading
+
+- [Extensions](/guides/extensions) — `local` / `host` / `mixed` execution and package graphs
+- [Environments](/guides/environments) — bind extensions and secrets on the host
+- [Security](/learn/security) — secrets stay out of workflows
+- [Browser demo](/getting-started/browser-demo) — try uploads in the hosted demo
+- [Azure Blob Storage extension](https://github.com/executioncontrolprotocol/extensions/tree/main/packages/azure-blob-storage) — bind config and capability details

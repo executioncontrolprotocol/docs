@@ -47,6 +47,7 @@
               "guides/fluent-api",
               "guides/environments",
               "guides/extensions",
+              "guides/files-and-media",
               "guides/encode-decode-patch"
             ]
           },

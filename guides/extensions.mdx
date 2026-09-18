@@ -100,7 +100,7 @@ Do not import `index.browser` by path. Vite selects `exports["."].browser` autom
 
 ## Media refs (images and binaries)
 
-Workflows pass portable `ImageRef` values (`buffer` | `file` | `url` | `artifact`), not raw bytes. Extensions resolve and write through core:
+Workflows pass portable `FileRef` values (`buffer` | `file` | `url` | `artifact`), not raw bytes. Extensions resolve and write through core:
 
 ```ts
 import { resolveFile, writeMediaArtifact } from "@executioncontrolprotocol/core"
@@ -111,6 +111,8 @@ return { image: await writeMediaArtifact(outBytes, { mediaType, prefix: "artifac
 ```
 
 `file.path` may be a Node path or an `ecp://browser/<id>` locator in `ctx.blobs`. Do not reimplement fs/fetch/artifact maps inside the extension.
+
+For the coat-check model and browser → Azure mixed upload, see [Files and media](/guides/files-and-media).
 
 ## First-party and vendor
 
@@ -125,6 +127,7 @@ extension("@executioncontrolprotocol/test").with({})
 
 ## Next steps
 
+- [Files and media](/guides/files-and-media)
 - [Environments](/guides/environments)
 - [Fluent API](/guides/fluent-api)
 - [Packages](/reference/packages)
