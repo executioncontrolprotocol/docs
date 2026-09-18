@@ -52,8 +52,12 @@ ecp compile examples/01-echo/workflow.ts -o dist/workflow.json
 
 ### `ecp describe` / `ecp search`
 
+Bare `ecp describe` returns a light inventory (id, label, summary). Pass `--capability` or `--extension` with an exact id for full metadata and JSON Schema I/O. Search returns ranked ids; follow up with describe for detail.
+
 ```bash
 ecp describe --env examples/01-echo/environment.ts
+ecp describe --env examples/01-echo/environment.ts --capability @executioncontrolprotocol/test.echo
+ecp describe --env examples/01-echo/environment.ts --extension @executioncontrolprotocol/test
 ecp search "echo" --env examples/01-echo/environment.ts
 ```
 

@@ -13,8 +13,9 @@ npm install -g @executioncontrolprotocol/cli
 | `ecp run <workflow> --env <env>` | `--input` validated against `workflow.accepts` before execute; `--dry-run` still gates, no capabilities |
 | `ecp validate <workflow> --env <env>` | Graph and environment only — does **not** check run input |
 | `ecp compile <workflow> -o out.json` | No `--env` |
-| `ecp describe --env <env>` | Discovery |
-| `ecp search <query> --env <env>` | Capability search |
+| `ecp describe --env ENV` | Light inventory (id + summary) |
+| `ecp describe --env ENV --capability\|--extension ID` | Exact-id detail (metadata + JSON Schema) |
+| `ecp search QUERY --env ENV` | Ranked ids; follow up with describe for detail |
 | `ecp encode … --format json\|toon\|fluent --env …` | Format extensions |
 | `ecp decode … --format toon --env …` | No Fluent decode — use `compile` |
 | `ecp invoke <capability-id> --env <env>` | Outside a workflow; `--input`, `--uses` |

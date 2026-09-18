@@ -86,8 +86,11 @@ Point commands at an environment module:
 ```bash
 ecp run workflow.ts --env environment.ts --input input.json
 ecp describe --env environment.ts
+ecp describe --env environment.ts --capability @executioncontrolprotocol/test.echo
 ecp search "echo" --env environment.ts
 ```
+
+Bare `describe` is a light inventory. Pass `--capability` or `--extension` with an exact id for full metadata and JSON Schema.
 
 ## Next steps
 
