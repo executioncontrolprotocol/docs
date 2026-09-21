@@ -32,7 +32,7 @@ alwaysApply: false
 - **Commands**: prefer installed CLIs over one-off runners in docs. Show the one-time install/link step, then the command.
 - **Public-only docs**: do not publish internal documentation about building or operating the docs site (Mintlify, `mint dev`, `docs.json`, contribution workflow). Pages should focus on installing, configuring, and running ECP.
 - **Do not leak internal ops**: never document analytics backends, prompt/telemetry logging vendors or pipelines (e.g. Supabase prompt logging), private env var catalogs, feature flags, or unpublished roadmap/UI details on public MDX or in `.mintlify/skills/`.
-- **Browser demo**: public pages emphasize https://demo.executioncontrolprotocol.io/ and `ecp up` for Ollama. Defer clone/dev/link procedures to https://github.com/executioncontrolprotocol/browser-demo rather than embedding maintainer-only setup.
+- **Browser demo**: public pages emphasize https://demo.executioncontrolprotocol.io/ and `ecp up` for Ollama. Local source is the ECP monorepo `apps/browser-demo` (`pnpm run dev:demo`). Do not document sibling `link:ecp` setups.
 
 ## Content checks before publishing
 

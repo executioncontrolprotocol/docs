@@ -41,6 +41,6 @@ export default (await environment("demo")).withExtensions([
 
 ## Browser demo
 
-Cloud keys belong in the demo’s encrypted secrets vault when prompted. Live: https://demo.executioncontrolprotocol.io/ — source: https://github.com/executioncontrolprotocol/browser-demo
+Cloud keys belong in the demo’s encrypted secrets vault when prompted. Live: https://demo.executioncontrolprotocol.io/ — source: `apps/browser-demo` in the ECP monorepo.
 
 Public security guide: https://executioncontrolprotocol.io/learn/security

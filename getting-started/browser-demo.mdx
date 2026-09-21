@@ -9,7 +9,7 @@ Try ECP (Execution Control Protocol) in the browser with the **Graph Editor** â€
 
 **Live demo:** [https://demo.executioncontrolprotocol.io/](https://demo.executioncontrolprotocol.io/)
 
-Source and local setup: [github.com/executioncontrolprotocol/browser-demo](https://github.com/executioncontrolprotocol/browser-demo)
+Source and local setup: [`apps/browser-demo`](https://github.com/executioncontrolprotocol/executioncontrolprotocol/tree/main/apps/browser-demo) in the ECP monorepo.
 
 ## Try the hosted demo
 
@@ -44,15 +44,15 @@ For flags and daemon details, see [CLI: ecp up](/reference/cli#ecp-up).
 
 ## Run from source
 
-Clone [browser-demo](https://github.com/executioncontrolprotocol/browser-demo), then:
+From a clone of the [ECP monorepo](https://github.com/executioncontrolprotocol/executioncontrolprotocol):
 
 ```bash
-corepack enable
 pnpm install
-pnpm run dev
+pnpm run build
+pnpm run dev:demo
 ```
 
-Open the URL Vite prints (default `http://localhost:5173`). No core monorepo clone or `.env` is required for the default Chrome AI path. For linking unpublished packages (`pnpm run link:ecp`, `pnpm run dev:linked`), see the [browser-demo README](https://github.com/executioncontrolprotocol/browser-demo/blob/main/README.md).
+Open the URL Vite prints (default `http://localhost:5173`). You do not need a separate demo repository.
 
 ## Providers and settings
 
@@ -63,4 +63,4 @@ Chrome AI vs Ollama, harness pairing, and where secrets belong are covered in [D
 - [Demo providers and configuration](/getting-started/browser-demo-providers)
 - [Fluent API](/guides/fluent-api)
 - [CLI: ecp up](/reference/cli#ecp-up)
-- [browser-demo on GitHub](https://github.com/executioncontrolprotocol/browser-demo)
+- [Build from source](/getting-started/build-from-source)

@@ -45,7 +45,7 @@ Encode / decode / patch results use `.result` (not `.content` / `.document`).
 
 ## Browser hosts
 
-`@executioncontrolprotocol/browser` is a slim host (executor, registry, session). Apps bind providers and harnesses. Public demo: https://demo.executioncontrolprotocol.io/ — source: https://github.com/executioncontrolprotocol/browser-demo
+`@executioncontrolprotocol/browser` is a slim host (executor, registry, session). Apps bind providers and harnesses. Public demo: https://demo.executioncontrolprotocol.io/ — source: `apps/browser-demo` in the ECP monorepo. Vendor extensions: `packages/vendor` in that repo.
 
 ## Secrets
 

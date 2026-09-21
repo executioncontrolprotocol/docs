@@ -39,7 +39,7 @@
 - Do not publish Mintlify/`docs.json`/contribution workflow on public MDX pages (keep that in README/CONTRIBUTING).
 - Do not deep-dive monorepo-only eval matrices on public pages.
 - **No internal product ops on public pages or in the consumer skill:** analytics backends, prompt/telemetry logging vendors (e.g. Supabase), private `.env` / feature-flag wiring, unpublished roadmaps, or demo app implementation details that only maintainers need.
-- **Browser demo docs:** lead with the [hosted demo URL](https://demo.executioncontrolprotocol.io/). For clone, local dev, linking packages, or contributor setup, **point at the [browser-demo README](https://github.com/executioncontrolprotocol/browser-demo/blob/main/README.md)** instead of duplicating internal app setup here.
+- **Browser demo docs:** lead with the [hosted demo URL](https://demo.executioncontrolprotocol.io/). For clone and local dev, point at the ECP monorepo (`apps/browser-demo`, `pnpm run dev:demo`) instead of a separate demo repository.
 
 ## Cursor rules
 

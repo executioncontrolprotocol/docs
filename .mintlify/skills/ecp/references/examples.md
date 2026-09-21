@@ -20,7 +20,7 @@ Index: https://github.com/executioncontrolprotocol/executioncontrolprotocol/blob
 
 ## Vendor extension examples
 
-Repo: https://github.com/executioncontrolprotocol/extensions/tree/main/examples
+Repo: https://github.com/executioncontrolprotocol/executioncontrolprotocol/tree/main/examples/vendor
 
 | Folder | Teaches |
 | ------ | ------- |
@@ -29,8 +29,6 @@ Repo: https://github.com/executioncontrolprotocol/extensions/tree/main/examples
 | `04-image-prep` | image-sharp inspect/normalize/derive |
 | `adobe-firefly-smoke` | Adobe Firefly |
 | `azure-adobe-assets` | Azure blob + Firefly |
-
-Index: https://github.com/executioncontrolprotocol/extensions/blob/main/examples/README.md
 
 ## How to pull
 

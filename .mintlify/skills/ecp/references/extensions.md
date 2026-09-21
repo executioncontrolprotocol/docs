@@ -61,6 +61,6 @@ extension("@executioncontrolprotocol/test").with({})
 
 ## Vendor packages
 
-Vendor integrations live in https://github.com/executioncontrolprotocol/extensions — install skill `ecp-extensions` for monorepo authoring.
+Vendor integrations live in `packages/vendor` in the ECP monorepo.
 
 Public guide: https://executioncontrolprotocol.io/guides/extensions
