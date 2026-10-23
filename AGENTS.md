@@ -7,7 +7,7 @@ Docs should contain public information only: installing, configuring, and runnin
 - Pages are MDX files with YAML frontmatter.
 - Content is public-facing and focuses on installing, configuring, and running ECP (Execution Control Protocol).
 - Stack: Mintlify. Navigation: `docs.json`.
-- Agent skills: `.mintlify/skills/ecp/` (canonical consumer skill `ecp`; Phase 6 PR 3 moves it to `skills/ecp/` so `npx skills add executioncontrolprotocol/docs` finds it). For monorepo work, agents install `ecp-core` from the core GitHub repo.
+- Agent skills: `skills/ecp/` (canonical consumer skill `ecp`; `npx skills add executioncontrolprotocol/docs`). `.mintlify/skills/ecp/` is a pointer only. For monorepo work, agents install `ecp-core` from the core GitHub repo.
 
 ## Terminology
 

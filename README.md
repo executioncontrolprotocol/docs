@@ -10,7 +10,7 @@ The CLI reset rewrite lives on `feat/cli-reset-docs`. Do not merge to `main` unt
 
 - **Site config**: `docs.json`
 - **Pages**: `**/*.mdx` (workflow files, environments, CLI, plugins)
-- **Agent skills**: `.mintlify/skills/ecp/` (consumer skill `ecp`; moving to `skills/ecp/` so `npx skills add executioncontrolprotocol/docs` finds it)
+- **Agent skills**: `skills/ecp/` (consumer skill `ecp`; `npx skills add executioncontrolprotocol/docs`). `.mintlify/skills/ecp/` is a pointer only.
 - **Project writing rules**: `AGENTS.md` and `.cursor/rules/docs-voice-seo.mdc`
 
 This repo uses **npm** (`package-lock.json`, `npm ci` in CI). Do not switch to pnpm here.
