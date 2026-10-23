@@ -54,3 +54,11 @@ From the repo root:
 npm run lint
 npm run secrets:scan
 ```
+
+CLI and plugin reference pages are generated. From a sibling ECP checkout:
+
+```bash
+npm run generate:reference -- --ecp-root ../executioncontrolprotocol
+```
+
+Do not hand-edit `reference/cli.mdx`, `reference/plugins.mdx`, or `llms.txt`. CI regenerates them from `milestone/cli-reset` and fails if they are stale.

@@ -11,6 +11,7 @@
     "validate": "mintlify validate && mintlify broken-links",
     "lint": "npm run validate",
     "secrets:scan": "secretlint \"**/*\"",
+    "generate:reference": "node scripts/generate-reference.mjs",
     "clean": "node scripts/clean-dist.mjs",
     "clean:coverage": "node scripts/clean-dist.mjs coverage",
     "clean:dist": "node scripts/clean-dist.mjs dist",
