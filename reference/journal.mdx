@@ -1,0 +1,35 @@
+---
+title: "Journal"
+description: "Run journals for ECP (Execution Control Protocol): schema, layout, and CLI commands."
+---
+
+# Journal
+
+Each run writes a journal under `.ecp/runs/<runId>/` (override with `ECP_RUNS_DIR`). The document uses `schema: "@executioncontrolprotocol.run.journal"` and `journalVersion: 1`.
+
+## Layout
+
+```
+.ecp/runs/<runId>/
+  journal.json
+  events.jsonl
+  artifacts/
+```
+
+The journal records workflow identity, step statuses, inputs/outputs (including file refs), policy pauses, and the terminal error if the run failed.
+
+## CLI
+
+```bash
+ecp runs list
+ecp runs show <runId>
+ecp runs resume <runId>
+ecp runs rerun <runId> --from <step>
+```
+
+`resume` continues a paused run (`ECP_RUN_PAUSED`). `rerun --from` starts a new run from a named step when the graph is still compatible (`ECP_RERUN_INCOMPATIBLE` otherwise).
+
+## Next steps
+
+- [The agent loop](/guides/agent-loop)
+- [Error codes](/reference/error-codes)

@@ -1,20 +1,20 @@
 ---
 title: "Alternatives"
-description: "Compare ECP (Execution Control Protocol) to agent frameworks and other stacks."
+description: "How ECP (Execution Control Protocol) compares with agent frameworks and MCP-only stacks."
 ---
 
 # Alternatives
 
-ECP (Execution Control Protocol) is an **execution control** layer: portable Fluent workflows and governed environments. It is not a replacement for every framework — it sits beside MCP and your agent stack.
+ECP (Execution Control Protocol) is a **deterministic delegation** layer. It is not a full agent harness and not a replacement for MCP.
 
-<CardGroup cols={2}>
-  <Card title="ECP vs LangChain" href="/alternatives/ecp-vs-langchain">
-    Build agents with LangChain; run and govern with ECP.
-  </Card>
-  <Card title="ECP vs OpenClaw" href="/alternatives/ecp-vs-openclaw">
-    Framework UX vs portable workflows and host security.
-  </Card>
-</CardGroup>
+Pick ECP when you need a portable workflow graph, structured errors, journals, and plugins you can install from npm. Pick a framework when you want batteries-included chains, memory, and UI as one product.
+
+| Need | Reach for |
+| ---- | --------- |
+| Governed, repairable graphs an agent authors | ECP |
+| Model-to-tool RPC | MCP |
+| Opinionated chains and RAG in one library | [LangChain](/alternatives/ecp-vs-langchain) |
+| Personal-agent product with connectors | [OpenClaw](/alternatives/ecp-vs-openclaw) |
 
 ## Next steps
 

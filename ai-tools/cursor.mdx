@@ -1,43 +1,23 @@
 ---
 title: "Cursor"
-description: "Use ECP (Execution Control Protocol) with Cursor: install the docs skill and author Fluent workflows."
+description: "Use ECP (Execution Control Protocol) from Cursor with the consumer skill."
 ---
 
 # Cursor
 
-Use Cursor to author ECP (Execution Control Protocol) Fluent workflows, environments, and CLI commands.
-
-## Install the ECP skill
+Install the consumer skill so Cursor can author and repair ECP (Execution Control Protocol) workflow files:
 
 ```bash
-npm install -g skills
-npx skills add https://executioncontrolprotocol.io
+npx skills add executioncontrolprotocol/docs
 ```
 
-The skill teaches Workflow vs Environment, secrets bind, Fluent authoring, and the full CLI (including `ecp test`) — not legacy YAML Context manifests.
+The skill lives at `skills/ecp/` in this docs repository. After install, ask the agent to search capabilities, write a `*.ecp.ts` file, validate with `--json`, and run.
 
-For core monorepo or vendor extension work:
+`--env` is optional. Do not put secret values in the workflow file. Learn flags from `ecp <command> --help`.
 
-```bash
-npx skills add executioncontrolprotocol/executioncontrolprotocol --skill ecp-core -y
-npx skills add executioncontrolprotocol/extensions --skill ecp-extensions -y
-```
-
-## Prompt tips
-
-Ask Cursor to:
-
-- Write a `workflow(...).run([step(...).as(...)])` module
-- Bind an environment with `extension("…").with({})` after importing catalog packages
-- Store credentials with `ecp config secrets` and bind via `secrets("…")` — never in workflows
-- Use `ecp run` / `validate` / `compile` / `invoke` / `test start|run|rerun|status` with `--env`
-- Prefer [GitHub examples](https://github.com/executioncontrolprotocol/executioncontrolprotocol/tree/main/examples) over inventing APIs
-- Author a custom extension with `capabilityFor(...).withHandler(...)`
-
-Point it at [Fluent API](/guides/fluent-api) and [Concepts](/learn/concepts) when generating code.
+MCP (`ecp mcp serve`) is coming in Phase 7. Until then, drive ECP from the CLI.
 
 ## Next steps
 
+- [The agent loop](/guides/agent-loop)
 - [Quickstart](/getting-started/quickstart)
-- [Fluent API](/guides/fluent-api)
-- [Claude Code](/ai-tools/claude-code)

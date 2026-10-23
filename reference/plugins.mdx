@@ -1,0 +1,20 @@
+---
+title: "Plugins"
+description: "First-party ECP (Execution Control Protocol) plugin catalogue. Generated in a follow-up from the monorepo."
+---
+
+# Plugins
+
+This page is a stub. The catalogue is generated from `plugins/plugin-*` in the ECP checkout (and, when any exist, third-party packages with keyword `ecosystem:ecp-plugin`).
+
+Until that generator lands, install from the CLI:
+
+```bash
+ecp plugins install jsonata
+ecp plugins install anthropic
+ecp plugins install format-toon
+```
+
+First-party plugins live under `plugins/` in the [monorepo](https://github.com/executioncontrolprotocol/executioncontrolprotocol). Package name is `plugin-` plus the extension or policy name; protocol ids are unchanged.
+
+See [Writing a plugin](/guides/writing-a-plugin).

@@ -1,0 +1,34 @@
+---
+title: "Error codes"
+description: "ECP_* catalogue returned by the ECP (Execution Control Protocol) CLI and engine."
+---
+
+# Error codes
+
+Every structured failure uses an `ECP_*` code. `--json` prints it on the error envelope: `{ ok: false, error: { code, message, path, suggestions } }`.
+
+Source of truth in the monorepo: `packages/core/src/types/errors.ts`.
+
+| Code | When |
+| ---- | ---- |
+| `ECP_WORKFLOW_LOAD` | The workflow file could not be loaded or compiled |
+| `ECP_PLUGINS_MISSING` | A required plugin (or `--format` plugin) is not installed |
+| `ECP_CAPABILITY_UNKNOWN` | A step id is not in the registry |
+| `ECP_INPUT_INVALID` | Step input failed schema validation (wrong `ref()`, bad payload) |
+| `ECP_REF_UNRESOLVED` | A `ref()` target does not exist |
+| `ECP_BINDING_INVALID` | An extension or policy binding is malformed |
+| `ECP_ENVIRONMENT_UNSUPPORTED` | A definition's `.supports()` excludes this host |
+| `ECP_SECRET_MISSING` | `secrets("key")` has no resolved value |
+| `ECP_POLICY_DENIED` | A policy rejected the step |
+| `ECP_RUN_PAUSED` | The run is waiting (for example approval). Resume with `ecp runs resume` |
+| `ECP_STEP_FAILED` | The capability threw or returned a failure |
+| `ECP_OUTPUT_INVALID` | Step output failed schema validation |
+| `ECP_PLUGIN_DENIED` | You declined a third-party plugin install |
+| `ECP_RERUN_INCOMPATIBLE` | `runs rerun --from` cannot apply because the graph changed |
+
+Process exits: `0` success, `1` failed run, `2` usage, `3` validation, `4` plugin/environment load.
+
+## Next steps
+
+- [The agent loop](/guides/agent-loop)
+- [Journal](/reference/journal)

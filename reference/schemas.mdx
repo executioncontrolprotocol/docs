@@ -1,82 +1,26 @@
 ---
 title: "Schemas"
-description: "ECP (Execution Control Protocol) document schemas: workflow accepts and returns, run output, environment, patch, encode, and decode result IDs."
+description: "JSON Schema documents shipped with ECP (Execution Control Protocol)."
 ---
 
 # Schemas
 
-ECP (Execution Control Protocol) documents carry a `schema` discriminator and a `version`. Workflows currently use `"version": "1.0"` with schema `@executioncontrolprotocol.workflow`.
+ECP (Execution Control Protocol) publishes JSON Schema for the documents you persist.
 
-Generated JSON Schema artifacts ship from `@executioncontrolprotocol/types` (`npm run generate:schema` in the monorepo → `packages/types/dist/schemas`). The files that describe the workflow contract and run I/O are `workflow.manifest.json`, `run.request.json` (`input`, `dryRun`), and `run.result.json` (`output`).
+Generate them from the monorepo with `pnpm run generate:schema`. Output: `packages/core/dist/schemas`.
 
-## Common schema IDs
+| Schema | Document |
+| ------ | -------- |
+| `@executioncontrolprotocol.workflow` | Portable workflow manifest (`version: "1.0"`) |
+| `@executioncontrolprotocol.requirements` | Workflow-file bindings (never merged into the manifest) |
+| `@executioncontrolprotocol.run.journal` | Run journal (`journalVersion: 1`) |
+| `@executioncontrolprotocol.environment` | Environment overlay |
 
-| Schema | Purpose |
-| ------ | ------- |
-| `@executioncontrolprotocol.workflow` | Portable workflow manifest |
-| `@executioncontrolprotocol.environment` | Environment manifest |
-| `@executioncontrolprotocol.environment.describe` | Describe discovery payload |
-| `@executioncontrolprotocol.environment.search` | Search discovery payload |
-| `@executioncontrolprotocol.run.request` | Run request |
-| `@executioncontrolprotocol.run.result` | Run result |
-| `@executioncontrolprotocol.run.event` | Run event |
-| `@executioncontrolprotocol.validation.result` | Validation result |
-| `@executioncontrolprotocol.patch` | Patch document |
-| `@executioncontrolprotocol.patch.result` | Patch outcome |
-| `@executioncontrolprotocol.encode.result` | Encode outcome (`.result`) |
-| `@executioncontrolprotocol.decode.result` | Decode outcome (`.result`) |
-| `@executioncontrolprotocol.intent` | Harness intent artifact |
-| `@executioncontrolprotocol.harness.reply` | Harness reply artifact |
+Validation issues carry `code`, `message`, `path`, `suggestions`, and `severity`. New codes join the `ECP_*` catalogue in [Error codes](/reference/error-codes).
 
-## Workflow contract
-
-`workflow.accepts` and `workflow.returns` are JSON Schema **objects**. They use the same verbs as Fluent `.accepts()` / `.returns()`.
-
-| Field | Role |
-| ----- | ---- |
-| `workflow.accepts` | JSON Schema for run input (`ecp.run(..., { input })`). Property names seed workflow state; read them with `ref("name")`. |
-| `workflow.returns` | JSON Schema for public output. Property names are top-level state keys (typically a step `.as()`). |
-| `RunResult.output` | Object picked from those `returns` keys after a run. Present when the workflow declares `returns`. |
-
-Extra unused keys on a valid input object are allowed (the validator does not set `additionalProperties: false`). Empty object schemas are omitted from the compiled manifest.
-
-## Workflow example
-
-```json
-{
-  "schema": "@executioncontrolprotocol.workflow",
-  "version": "1.0",
-  "workflow": {
-    "id": "echo-from-input",
-    "label": "Echo from input",
-    "accepts": {
-      "type": "object",
-      "properties": { "value": { "type": "string" } },
-      "required": ["value"]
-    },
-    "returns": {
-      "type": "object",
-      "properties": { "echo": { "type": "object" } },
-      "required": ["echo"]
-    }
-  },
-  "steps": [
-    {
-      "type": "step",
-      "id": "echo",
-      "label": "Echo",
-      "uses": "@executioncontrolprotocol/test.echo",
-      "input": { "value": { "$ref": "state.value" } },
-      "as": "echo"
-    }
-  ]
-}
-```
-
-Author with the [Fluent API](/guides/fluent-api); compile with `ecp compile`. Runnable pair: [07-accepts-returns](https://github.com/executioncontrolprotocol/executioncontrolprotocol/tree/main/examples/07-accepts-returns).
+Do not use the removed v0.5 YAML Context / `spec.yaml` model.
 
 ## Next steps
 
-- [Fluent API](/guides/fluent-api)
+- [Workflow files](/guides/workflow-files)
 - [Packages](/reference/packages)
-- [CLI reference](/reference/cli)

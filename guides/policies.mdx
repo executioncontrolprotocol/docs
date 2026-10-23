@@ -1,0 +1,47 @@
+---
+title: "Policies"
+description: "Govern ECP (Execution Control Protocol) runs with budget, approval, state-control, and registry-control."
+---
+
+# Policies
+
+Policies wrap steps. They pause or fail a run instead of letting cost, mutation, or unknown ids go unchecked.
+
+## Bind
+
+```ts
+import { workflow, policy } from "@executioncontrolprotocol/core"
+import budget from "@executioncontrolprotocol/plugin-budget"
+
+export default workflow("capped")
+  .with([policy(budget, { maxCostUsd: 1 })])
+  .run([/* steps */])
+```
+
+Hosts can attach always-on policies. The CLI host always loads **registry-control** so unknown plugins cannot register.
+
+## First-party policies
+
+| Package | Job |
+| ------- | --- |
+| `@executioncontrolprotocol/plugin-budget` | Cap spend; fail with `ECP_POLICY_DENIED` when exceeded |
+| `@executioncontrolprotocol/plugin-approval` | Pause for human approval (`ECP_RUN_PAUSED`) |
+| `@executioncontrolprotocol/plugin-state-control` | Constrain mutations |
+| `registry-control` (core, always on in the CLI) | Pin which extension ids may load |
+
+Install with `ecp plugins install budget` (and the same pattern for approval / state-control).
+
+## Failures
+
+| Code | Meaning |
+| ---- | ------- |
+| `ECP_POLICY_DENIED` | A policy rejected the step |
+| `ECP_RUN_PAUSED` | The run is waiting (approval). `ecp runs resume` |
+| `ECP_PLUGIN_DENIED` | You declined a third-party plugin install |
+
+See [Error codes](/reference/error-codes) and [Security](/learn/security).
+
+## Next steps
+
+- [Writing a plugin](/guides/writing-a-plugin)
+- [The agent loop](/guides/agent-loop)

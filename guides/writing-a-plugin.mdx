@@ -1,0 +1,69 @@
+---
+title: "Writing a plugin"
+description: "Define an ECP (Execution Control Protocol) plugin with defineExtension, metadata, and generated CLI commands."
+---
+
+# Writing a plugin
+
+A plugin packages an extension or policy as an npm package. The CLI loads it, registers the definition, and generates commands from metadata.
+
+## Scaffold
+
+```bash
+ecp plugins new jsonata
+ecp plugins link plugins/plugin-jsonata
+ecp plugins build
+```
+
+Package name is `plugin-` plus the extension or policy name. The protocol **id** (for example `@executioncontrolprotocol/jsonata`) stays unchanged.
+
+## Definition
+
+```ts
+import { defineExtension, capabilityFor } from "@executioncontrolprotocol/core"
+import { z } from "zod"
+
+export default defineExtension({
+  id: "@executioncontrolprotocol/jsonata",
+  name: "jsonata",
+})
+  .withMetadata({
+    summary: "Evaluate JSONata expressions over JSON payloads.",
+    description: "Pure JS transform. Runs in Node and browser.",
+    useCases: ["Reshape a payload before a later step"],
+    projections: {
+      mermaid: { kind: "transform" },
+    },
+    topicAlias: "jsonata",
+  })
+  .capability(
+    capabilityFor("@executioncontrolprotocol/jsonata.transform")
+      .input(z.object({ expression: z.string(), payload: z.unknown() }))
+      .output(z.object({ result: z.unknown() }))
+  )
+```
+
+- Import zod from `"zod"` directly.
+- Write product prose in `.withMetadata({ summary, description, useCases, projections })`. Projections are required.
+- `.supports(environmentId, range?)` when the plugin is host-specific.
+- Use `resolveFile` / `writeMediaArtifact` for binary I/O.
+
+Hosts register the default-exported definition with `registry.registerExtension(definition)` or `registerPolicy`. Plugins never import `@executioncontrolprotocol/node`, `browser`, `cli`, or `mcp`.
+
+## Commands
+
+`ecp plugins build` generates oclif files via `toCommands` from `@executioncontrolprotocol/plugin-sdk`. Capability metadata becomes `ecp <topic> <capability>` (for example `ecp jsonata transform`). Optional `metadata.topicAlias` shortens the topic (Adobe Firefly uses `firefly`).
+
+## Install
+
+```bash
+ecp plugins install jsonata
+ecp jsonata transform --expression '$.a' --input payload.json --json
+```
+
+See the [plugin catalogue](/reference/plugins) for first-party packages.
+
+## Next steps
+
+- [Formats and converters](/guides/formats)
+- [Plugin catalogue](/reference/plugins)

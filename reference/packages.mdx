@@ -1,48 +1,40 @@
 ---
 title: "Packages"
-description: "Map of ECP (Execution Control Protocol) npm packages: types, core, hosts, CLI, MCP, policies, extensions, and harnesses."
+description: "Published and in-repo packages for ECP (Execution Control Protocol)."
 ---
 
 # Packages
 
-Public packages under the `@executioncontrolprotocol` scope:
+Scope: `@executioncontrolprotocol/*`. During the CLI reset, first-party npm is unpublished; versions below are the monorepo `package.json` values on `milestone/cli-reset`.
 
-| Package | Role |
-| ------- | ---- |
-| `@executioncontrolprotocol/types` | Protocol types and generated JSON Schemas |
-| `@executioncontrolprotocol/core` | Fluent API, environment, in-memory engine (runtime-agnostic main entry) |
-| `@executioncontrolprotocol/node` | Node runtime host |
-| `@executioncontrolprotocol/browser` | Browser runtime host (not the demo UI) |
-| `@executioncontrolprotocol/cli` | `ecp` CLI |
-| `@executioncontrolprotocol/mcp` | MCP server adapter around an `Ecp` |
-| `@executioncontrolprotocol/policies` | Budget, approval, state-control, registry-control |
-| `@executioncontrolprotocol/format-toon` | TOON format extension |
-| `@executioncontrolprotocol/format-eql` | EQL format extension |
-| `@executioncontrolprotocol/format-mermaid` | Mermaid format extension |
-| `@executioncontrolprotocol/format-reactflow` | Encode-only canvas JSON; projected Inputs/Outputs from `accepts` / `returns` |
-| Model / platform extensions | `chrome-ai`, `ollama`, `openai`, `anthropic`, memory, secrets, … |
-| `@executioncontrolprotocol/harnesses-browser-nano` | Browser nano (EQL) harness |
-| `@executioncontrolprotocol/harnesses-browser-coding` | Browser coding (Fluent/TS) harness |
+## Host-agnostic and hosts
 
-## Core subpaths
+| Package | Role | Version |
+| ------- | ---- | ------- |
+| `@executioncontrolprotocol/core` | Fluent API, engine, `./types` | `1.0.0-next.0` |
+| `@executioncontrolprotocol/node` | Node host, compile, loaders, journals | `1.0.0-next.0` |
+| `@executioncontrolprotocol/browser` | Browser host, esbuild-wasm compile | `1.0.0-next.0` |
+| `@executioncontrolprotocol/cli` | `ecp` CLI (oclif 5) | `1.0.0-next.0` |
+| `@executioncontrolprotocol/plugin-sdk` | `toCommands`, `defineOperation` | `1.0.0-next.0` |
+| `@executioncontrolprotocol/mcp` | MCP adapter (Phase 7 rebuild) | `0.14.1` |
 
-| Subpath | Use |
-| ------- | --- |
-| `@executioncontrolprotocol/core` | Browser-safe main API |
-| `@executioncontrolprotocol/core/compile` | `compileWorkflowSource` (Node; browser condition → wasm) |
-| `@executioncontrolprotocol/core/browser` | Browser authoring + wasm compile |
-| `@executioncontrolprotocol/core/loaders` | Node file I/O for CLI |
-| `@executioncontrolprotocol/core/node` | Loaders + compile convenience |
-| `@executioncontrolprotocol/core/testing` | In-repo test extension stub |
+The visual App is `packages/app` in Phase 8 (not published yet).
 
-**Compile stays on core subpaths**, not on runtime hosts. Extensions and harnesses depend on `types` + `core` only — never on `node`, `browser`, `cli`, or `mcp`.
+## Plugins
 
-## Apps vs hosts
+Every first-party plugin lives under `plugins/plugin-*` at `1.0.0-next.0` (Changesets independent versioning). See the [plugin catalogue](/reference/plugins).
 
-The [browser demo](/getting-started/browser-demo) is the private app `apps/browser-demo` in the ECP monorepo. It consumes `@executioncontrolprotocol/browser` and binds harnesses and providers. Vendor extensions (fal, image-sharp, and others) live in `packages/vendor` in that same repo.
+Ids such as `@executioncontrolprotocol/jsonata` are protocol ids, not always npm names. npm names use the `plugin-` prefix.
+
+## Install
+
+```bash
+npm install -g @executioncontrolprotocol/cli@next
+```
+
+Until `@next` exists, [build from source](/getting-started/build-from-source).
 
 ## Next steps
 
-- [Extensions](/guides/extensions)
-- [Environments](/guides/environments)
 - [Build from source](/getting-started/build-from-source)
+- [Changelog](/reference/changelog)
