@@ -1,19 +1,20 @@
-# Lint / validate Mintlify docs on every change to main (and on PRs). Same as `npm run lint`
-# locally / Husky (`mintlify validate` + `mintlify broken-links`).
+# Lint / validate Mintlify docs on every change to main and feat/** (and on PRs).
+# Same as `npm run lint` locally / Husky (`mintlify validate` + `mintlify broken-links`).
 #
-# The Mintlify GitHub App may still deploy on push unless you enable **Blocking** CI checks
-# in the Mintlify dashboard (Add-ons). See `.github/README.md`.
+# The Mintlify GitHub App may still deploy on push to main unless you enable **Blocking**
+# CI checks in the Mintlify dashboard (Add-ons). See `.github/README.md`.
+# Do not merge CLI-reset work to main until the rewrite is ready to deploy.
 #
-# Workflow runs on all pushes/PRs to `main` (no path filters) so a single required status
-# check name is always present for branch protection.
+# Workflow runs on all pushes/PRs to `main` and `feat/**` (no path filters) so a single
+# required status check name is always present for branch protection.
 
 name: Docs
 
 on:
   push:
-    branches: [main]
+    branches: [main, "feat/**"]
   pull_request:
-    branches: [main]
+    branches: [main, "feat/**"]
   workflow_dispatch:
 
 permissions:

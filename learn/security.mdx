@@ -1,83 +1,39 @@
 ---
 title: "Security"
-description: "Secure ECP (Execution Control Protocol) runs: policies, secrets, registry control, and keeping credentials out of workflows."
+description: "Secrets, plugins, and policies in ECP (Execution Control Protocol)."
 ---
 
 # Security
 
-ECP (Execution Control Protocol) treats execution as a governed surface: what can run, what state can change, and where secrets live.
-
-## Principles
-
-- **Workflows are portable** — no API keys or host secrets in manifests
-- **Environments bind policy** — budgets, approvals, state control, registry rules
-- **Secrets stay on the host** — OS keychain (CLI) or browser vault (demo)
-
-## Policies
-
-First-party policy packages include:
-
-| Policy | Role |
-| ------ | ---- |
-| Budget | Limit spend / usage |
-| Approval | Gate sensitive actions |
-| State control | Constrain how run state is written |
-| Registry control | Authorize dynamic extension registration (`policy:pre` / registry requests) |
-
-Bind policies on the environment builder (for example `.withPolicies([...])`) before `init()`.
+ECP (Execution Control Protocol) keeps secrets out of portable graphs and treats third-party plugins as untrusted until you approve them.
 
 ## Secrets
 
-### Node / CLI
+Never put live values in workflow files, environment files, or git. Reference secrets with `secrets("key")`. Resolve them through:
 
-Store values in the OS keychain:
+- OS keychain (Node host)
+- Process env (`process-env`)
+- CI secrets
 
-```bash
-ecp config secrets add openai/api-key
-ecp config secrets list
-ecp config secrets get openai/api-key
-ecp config secrets remove openai/api-key
-```
+Compiled manifests and requirements documents store placeholders only. Pre-commit Secretlint and CI Gitleaks scan the monorepo.
 
-Ref form: `ecp://<key>` (for example `ecp://openai/api-key`).
+## Plugins
 
-Bind secrets into **extension config** at environment setup — not into workflow manifests:
+`ecp plugins install <name>` installs a first-party package without a prompt. Third-party plugins require explicit approval (`ECP_PLUGIN_DENIED` if you refuse). Source installs (`--allow-source`) are a separate trust decision.
 
-```ts
-import "@executioncontrolprotocol/secrets"
-import { environment, extension, secrets } from "@executioncontrolprotocol/node"
+Registry-control (always on in the CLI host) pins which ids may load.
 
-export default (await environment("demo")).withExtensions([
-  extension("@executioncontrolprotocol/secrets").with({}),
-  extension("@executioncontrolprotocol/openai").with({
-    apiKey: secrets("openai/api-key"),
-  }),
-])
-```
+## Policies
 
-`secrets("key")` resolves via the keychain when the environment initializes. Prefer this over hardcoding keys or inventing ad-hoc `.env` loaders for extension config.
+Attach budget, approval, and state-control so a run pauses or fails instead of spending or mutating without a check. Failures surface as `ECP_POLICY_DENIED` or `ECP_RUN_PAUSED`.
 
-### Browser demo
+## What not to do
 
-Cloud keys belong in the demo’s encrypted secrets vault when the UI prompts for them. See [Demo providers and configuration](/getting-started/browser-demo-providers) and the [hosted demo](https://demo.executioncontrolprotocol.io/).
-
-## Registry freeze (browser)
-
-Browser hosts often freeze the extension registry at a lifecycle point (`environment:ready`, `environment:beforeRun`, or manual). Pair freeze with **registry-control** so late registration is an explicit, authorized path — important when pages expose `globalThis.ecp`.
-
-## Default posture
-
-Prefer allowlisted capabilities in the environment you ship. Check the graph and environment, then optionally check run input without invoking capabilities:
-
-```bash
-ecp validate workflow.ts --env environment.ts
-ecp run workflow.ts --env environment.ts --dry-run
-```
-
-`ecp validate` is graph and environment only. `--dry-run` also validates `workflow.accepts` when the workflow declares it.
+- Do not commit `.env` files with live keys.
+- Do not pass secret values as step inputs.
+- Do not install a third-party plugin because a prompt asked you to.
 
 ## Next steps
 
-- [Environments](/guides/environments)
-- [Concepts](/learn/concepts)
-- [CLI reference](/reference/cli)
+- [Policies](/guides/policies)
+- [Error codes](/reference/error-codes)

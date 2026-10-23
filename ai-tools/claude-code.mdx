@@ -1,40 +1,19 @@
 ---
 title: "Claude Code"
-description: "Use ECP (Execution Control Protocol) with Claude Code: install the skill and generate Fluent workflows."
+description: "Use ECP (Execution Control Protocol) from Claude Code with the consumer skill."
 ---
 
 # Claude Code
 
-Use Claude Code to scaffold ECP (Execution Control Protocol) workflows and environments.
-
-## Install the ECP skill
-
 ```bash
-npm install -g skills
-npx skills add https://executioncontrolprotocol.io
+npx skills add executioncontrolprotocol/docs
 ```
 
-For monorepo contribution or vendor packages:
+Point Claude Code at a project that has the `ecp` CLI on `PATH` (global `@next` when it exists, or a [source build](/getting-started/build-from-source)). The skill teaches the loop: `search` → author `*.ecp.ts` → `validate --json` → `run --json` → `runs show` → `runs rerun --from`.
 
-```bash
-npx skills add executioncontrolprotocol/executioncontrolprotocol --skill ecp-core -y
-npx skills add executioncontrolprotocol/extensions --skill ecp-extensions -y
-```
-
-## What to ask for
-
-- Fluent workflow modules exporting `workflow(...).run([...])`
-- Node environment modules using `@executioncontrolprotocol/node`
-- Secrets via `ecp config secrets` + `secrets("…")` in extension config
-- CLI: `ecp run`, `validate`, `compile`, `invoke`, `serve`, `up`, and `ecp test start|run|rerun|status`
-- Custom extensions with `defineExtension` + `capabilityFor` + `withHandler`
-- Extension catalog imports before string bindings
-- Pull runnable examples from the [ECP monorepo examples](https://github.com/executioncontrolprotocol/executioncontrolprotocol/tree/main/examples) (`examples/vendor` for vendor extensions)
-
-Avoid requesting YAML `Context` / `spec.yaml` — that surface is retired.
+`ecp mcp serve` is a Phase 7 surface. Use the CLI until then.
 
 ## Next steps
 
-- [Fluent API](/guides/fluent-api)
-- [Extensions](/guides/extensions)
-- [Cursor](/ai-tools/cursor)
+- [The agent loop](/guides/agent-loop)
+- [Error codes](/reference/error-codes)

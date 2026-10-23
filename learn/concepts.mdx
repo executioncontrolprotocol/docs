@@ -1,105 +1,44 @@
 ---
 title: "Concepts"
-description: "Core ECP (Execution Control Protocol) concepts: workflows, environments, Ecp instances, definitions, bindings, and invocations."
+description: "Core ECP (Execution Control Protocol) objects: workflow, environment, extension, policy, plugin, run, and journal."
 ---
 
 # Concepts
 
-ECP (Execution Control Protocol) centers on three runtime ideas: a portable **workflow**, a host **environment**, and an operational **Ecp** instance. A workflow is a reasoned approach, captured — you design it once and run it many times, placing each step where it belongs on the [determinism spectrum](/learn/why-ecp#the-determinism-spectrum).
+These are the objects you operate in ECP (Execution Control Protocol).
 
 ## Workflow
 
-A workflow is a portable graph of steps. You author it with the [Fluent API](/guides/fluent-api) or as JSON.
+A **workflow** is a portable execution graph. You author it as a `*.ecp.ts` file (Fluent TypeScript) or as JSON. The compiled manifest uses `schema: "@executioncontrolprotocol.workflow"` and `version: "1.0"`. It never contains secrets or host config.
 
-```ts
-import { workflow, step } from "@executioncontrolprotocol/core"
-
-export default workflow("Echo test")
-  .run([
-    step("@executioncontrolprotocol/test.echo", "Echo")
-      .with({ value: "hello" })
-      .as("echo"),
-  ])
-```
-
-Canonical manifests use:
-
-```json
-{
-  "schema": "@executioncontrolprotocol.workflow",
-  "version": "1.0"
-}
-```
-
-Workflows should stay portable: no host secrets, no environment-only helpers in the graph. Use `ref()` to read prior step state.
-
-## Workflow contract
-
-The contract is separate from steps. Same verbs in Fluent and JSON:
-
-| Field | Role |
-| ----- | ---- |
-| `.accepts()` / `workflow.accepts` | JSON Schema for run input. Property names seed state (`ref("prompt")`). |
-| `.returns()` / `workflow.returns` | JSON Schema for public output (`result.output`). Property names are top-level state keys (typically a step `.as()`). |
-
-`ecp.run(..., { input })` validates `accepts` before execute. The Graph Editor shows Inputs / Outputs from those schemas — they are projections, not dummy capabilities. See [Fluent API](/guides/fluent-api) and [Schemas](/reference/schemas).
+Bindings declared with `workflow(...).with([...])` compile into a separate **requirements** document (`schema: "@executioncontrolprotocol.requirements"`). Inference from `step("id")` fills missing rows.
 
 ## Environment
 
-An environment binds what can run a workflow: runtime, extensions, policies, harnesses, and secrets access on the host.
+An **environment** is a host plus the plugins and policies it loads. Node and browser are hosts. You compose with `environment(id).with([...])`. `--env <file>` on the CLI is an overlay, not a required pair. Omit it to use the process host (built-in Node plus installed plugins).
 
-```ts
-import { environment, extension } from "@executioncontrolprotocol/node"
-import "@executioncontrolprotocol/core/testing"
+## Extension
 
-export default (await environment("dev")).withExtensions([
-  extension("@executioncontrolprotocol/test").with({}),
-])
-```
+An **extension** is a capability package: transforms, models, storage, formats. Definitions are plain data (`defineExtension(...)`). Bind with `extension(definition)`. `.supports(environmentId, range?)` restricts a definition to a host.
 
-Lifecycle (simplified): configure → bind extensions → `environment:ready` → runs may emit `environment:beforeRun` → `ecp.terminate()` ends the session.
+## Policy
 
-## Ecp instance
+A **policy** is governance that runs around steps (budget, approval, state-control, registry-control). Bind with `policy(definition)`. Hosts can attach always-on policies.
 
-Call `await env.init()` to get an **Ecp** instance. Operational APIs live here — not on the environment builder:
+## Plugin
 
-- `run`, `validate`, `describe`, `search`
-- `encode`, `decode`, `patch`
-- `invoke` (when used by hosts/harnesses)
-- `terminate`
+A **plugin** is the npm packaging of an extension or policy. Package name is `plugin-` plus the extension or policy name; the protocol **id** stays unchanged. Installing a plugin registers the definition and generates CLI commands (`ecp jsonata transform`, `ecp format-toon encode`).
 
-```ts
-const ecp = await env.init()
-await ecp.run(manifest)
-await ecp.terminate()
-```
+## Ecp
 
-## Definitions, bindings, invocations
+`env.init()` returns an **Ecp** instance. Operational APIs live there: `run`, `validate`, `describe`, `search`, `invoke`, `encode`, `decode`, `patch`, `terminate`. They do not live on the environment builder.
 
-| Concept | Example |
-| ------- | ------- |
-| **Definition** | Extension package calls `defineExtension` + `catalogExtension` on load |
-| **Binding** | `extension("@executioncontrolprotocol/format-toon").with({})` in an environment |
-| **Invocation** | `step("@executioncontrolprotocol/memory.search", "…").with({…}).as("signals")` |
+## Run and journal
 
-IDs use `@namespace/name` for extensions and `@namespace/name.capability` for capabilities.
-
-## State and refs
-
-`.as("echo")` writes step output into run state. Later steps read it with `ref("echo.field")` (stored as `$ref` paths under state). Optional `mode` controls how state is written.
-
-## Hosts
-
-| Host | Typical entry |
-| ---- | ------------- |
-| Node | `@executioncontrolprotocol/node` + CLI |
-| Browser | `@executioncontrolprotocol/browser` (apps bind harnesses/providers) |
-| MCP | `@executioncontrolprotocol/mcp` adapter around an `Ecp` |
+A **run** executes a workflow against an Ecp. The **journal** for that run lives at `.ecp/runs/<runId>/` (`schema: "@executioncontrolprotocol.run.journal"`, `journalVersion: 1`). Use `ecp runs list`, `show`, `resume`, and `rerun --from`.
 
 ## Next steps
 
-- [Fluent API](/guides/fluent-api)
+- [Workflow files](/guides/workflow-files)
 - [Environments](/guides/environments)
-- [Extensions](/guides/extensions)
-- [Schemas](/reference/schemas)
-- [Security](/learn/security)
+- [Journal](/reference/journal)

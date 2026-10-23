@@ -1,47 +1,33 @@
 ---
 title: "Relationship to MCP"
-description: "How ECP (Execution Control Protocol) relates to MCP (Model Context Protocol): tools vs governed execution."
+description: "How ECP (Execution Control Protocol) relates to MCP: complementary layers, not competitors."
 ---
 
 # Relationship to MCP
 
-ECP (Execution Control Protocol) is designed to **embrace and extend** [MCP (Model Context Protocol)](https://modelcontextprotocol.io/) — not replace it.
+MCP (Model Context Protocol) standardizes **how a model talks to tools**. ECP (Execution Control Protocol) standardizes **how an agent delegates a governed graph of those tools**.
 
-## Split of concerns
+They stack:
 
-| Protocol | Focus |
-| -------- | ----- |
-| **MCP** | Tool discovery, tool invocation, structured tool I/O |
-| **ECP** | Workflows, environments, policies, packaging, run lifecycle |
+1. MCP exposes tools (and, later, ECP itself as an MCP server).
+2. The orchestrating agent reasons about an approach.
+3. The agent authors a `*.ecp.ts` workflow and runs it through the ECP CLI.
+4. ECP records a journal, returns structured errors, and lets the agent repair and rerun.
 
-MCP answers: *what tools can this model call, and how?*  
-ECP answers: *how does this agentic system execute end-to-end under control?*
+## Complementary, not competing
 
-Put another way: MCP defines what a model *can* reach; ECP defines what it *should* do with that reach — which steps run, in what order, under what control.
+| Layer | Job |
+| ----- | --- |
+| MCP | Discover and call tools from a model session |
+| ECP | Compile, validate, govern, journal, and rerun a workflow |
 
-## How they layer
+Use MCP when the model should poke at a live tool. Use ECP when the sequence should be portable, policy-bound, and replayable.
 
-```text
-Models / agents
-    → MCP tools (and other capabilities)
-        → ECP workflow steps + environment policies
-            → Host runtime (Node, browser, …)
-```
+## MCP as an ECP plugin
 
-An ECP environment can expose MCP-backed capabilities and still apply budgets, approvals, registry freezes, and portable workflow manifests.
-
-## MCP adapter
-
-The `@executioncontrolprotocol/mcp` package can wrap an initialized `Ecp` and expose tools such as describe, search, validate, run, encode, and decode to MCP clients. That lets agents drive ECP operations without inventing a parallel control plane.
-
-## What ECP does not do
-
-- Redefine MCP tool calling semantics
-- Replace agent frameworks or chat UIs
-- Require YAML Context manifests (Fluent/JSON workflows are the current surface)
+The `ecp mcp serve` surface is rebuilt in Phase 7. Until then, treat [MCP](/guides/mcp) as a placeholder. The CLI remains the primary agent interface.
 
 ## Next steps
 
 - [Why ECP](/learn/why-ecp)
-- [Concepts](/learn/concepts)
-- [Packages](/reference/packages)
+- [MCP placeholder](/guides/mcp)

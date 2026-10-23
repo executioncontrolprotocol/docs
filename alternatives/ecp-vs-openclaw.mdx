@@ -1,24 +1,23 @@
 ---
 title: "ECP vs OpenClaw"
-description: "Compare ECP (Execution Control Protocol) and OpenClaw-style stacks: product UX vs portable governed execution."
+description: "When to use ECP (Execution Control Protocol) instead of a personal-agent product."
 ---
 
 # ECP vs OpenClaw
 
-OpenClaw-style products emphasize an integrated agent experience. ECP (Execution Control Protocol) emphasizes **portable workflows**, **host environments**, and **explicit control**.
+OpenClaw-style products are **personal agents** with connectors and a chat UI. ECP (Execution Control Protocol) is the delegation capability those products (or any harness) can call.
 
-| Concern | Typical framework product | ECP |
-| ------- | ------------------------- | --- |
-| Portability | Tied to the product | Workflow manifests move across hosts |
-| Permissions | Product defaults | Environment policies + capability allowlists |
-| Secrets | Product storage | Host keychain / browser vault — not in workflows |
-| Discovery | Product UI | `describe` / `search` on an `Ecp` |
-| Authoring | Product-specific | Fluent API + JSON (+ TOON encode) |
+## Positioning
 
-You can use a product UI for day-to-day chat and still adopt ECP when you need shareable execution environments, CLI determinism, or MCP-exposed ops.
+| | Personal-agent product | ECP |
+| --- | --- | --- |
+| Surface | Chat, connectors, memory | CLI, workflow files, journals |
+| Scope | The whole harness | One capability inside a harness |
+| Replay | Session history | `ecp runs show` / `rerun --from` |
+
+Use the product when you want an assistant. Use ECP when the assistant should hand off a **repeatable, policy-bound** graph instead of re-prompting.
 
 ## Next steps
 
-- [Security](/learn/security)
-- [Environments](/guides/environments)
-- [Browser demo](/getting-started/browser-demo)
+- [The agent loop](/guides/agent-loop)
+- [Relationship to MCP](/learn/relationship-to-mcp)

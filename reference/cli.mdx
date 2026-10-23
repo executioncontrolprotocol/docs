@@ -1,159 +1,38 @@
 ---
-title: "CLI reference"
-description: "ECP (Execution Control Protocol) CLI: run, validate, compile, describe, search, encode, decode, invoke, serve, up, test sessions, and secrets."
+title: "CLI"
+description: "ECP (Execution Control Protocol) CLI reference. Generated in a follow-up from oclif manifests."
 ---
 
-# CLI reference
+# CLI
 
-The `ecp` CLI runs **workflows** in configured **environments** on Node.js.
+This page is a stub. The full catalogue is generated from oclif manifests in the ECP checkout (`packages/cli` and `plugins/plugin-*`).
 
-## Install
-
-```bash
-npm install -g @executioncontrolprotocol/cli
-```
-
-From a monorepo build: `pnpm link --global` inside `packages/cli` after `pnpm run build`. See [Build from source](/getting-started/build-from-source).
-
-## Commands
-
-### `ecp run`
+Until that generator lands, use:
 
 ```bash
-ecp run examples/01-echo/workflow.ts --env examples/01-echo/environment.ts
-ecp run examples/07-accepts-returns/workflow.ts --env examples/07-accepts-returns/environment.ts --input examples/07-accepts-returns/input.json
-ecp run workflow.json --env environment.ts --input input.json
-ecp run workflow.ts --env environment.ts --dry-run
+ecp --help
+ecp <command> --help
 ```
 
-| Flag | Role |
-| ---- | ---- |
-| `--env` | Environment module (default export) |
-| `--input` | JSON object validated against `workflow.accepts` before execute |
-| `--dry-run` | Same accepts gate, then complete without invoking capabilities |
+Primary commands after the reset:
 
-Invalid `--input` exits non-zero with `Workflow accepts validation failed` (including `--dry-run`). Extra unused keys on a valid object are allowed.
+| Command | Role |
+| ------- | ---- |
+| `ecp run <file>` | Run a workflow (`--env` optional, `--to`, `--events`, `--json`) |
+| `ecp validate <file>` | Validate a workflow |
+| `ecp describe` | Catalog capabilities |
+| `ecp search <query>` | Fuzzy-search capabilities |
+| `ecp invoke` | Invoke one capability |
+| `ecp runs list \| show \| resume \| rerun` | Journals |
+| `ecp install <file>` | Install requirements |
+| `ecp init <name>` | Scaffold a workflow |
+| `ecp plugins new \| link \| install \| build \| check` | Plugin lifecycle |
 
-### `ecp validate`
+`--json` prints `{ ok: true, data }` or `{ ok: false, error: { code, message, path, suggestions } }`.
 
-Checks the workflow graph and environment (bound capabilities). It does **not** check run input against `workflow.accepts` — use `ecp run` or `--dry-run` for that.
-
-```bash
-ecp validate examples/01-echo/workflow.ts --env examples/01-echo/environment.ts
-```
-
-### `ecp compile`
-
-Compile Fluent/TS (or JS) workflow source to portable JSON. No `--env` required.
-
-```bash
-ecp compile examples/01-echo/workflow.ts -o dist/workflow.json
-```
-
-### `ecp describe` / `ecp search`
-
-Bare `ecp describe` returns a light inventory (id, label, summary). Pass `--capability` or `--extension` with an exact id for full metadata and JSON Schema I/O. Search returns ranked ids; follow up with describe for detail.
-
-```bash
-ecp describe --env examples/01-echo/environment.ts
-ecp describe --env examples/01-echo/environment.ts --capability @executioncontrolprotocol/test.echo
-ecp describe --env examples/01-echo/environment.ts --extension @executioncontrolprotocol/test
-ecp search "echo" --env examples/01-echo/environment.ts
-```
-
-### `ecp encode` / `ecp decode`
-
-Require an environment that binds the format extension you use.
-
-```bash
-ecp encode workflow.json --format toon --env environment.ts -o workflow.toon
-ecp encode workflow.json --format fluent --env environment.ts -o workflow.generated.ts
-ecp decode workflow.toon --format toon --env environment.ts -o workflow.json
-```
-
-Fluent decode is not supported — use `ecp compile` instead. JSON is the canonical manifest format.
-
-### `ecp invoke`
-
-Call a single capability outside a workflow run:
-
-```bash
-ecp invoke @executioncontrolprotocol/test.echo --env examples/01-echo/environment.ts --input input.json
-ecp invoke @executioncontrolprotocol/harness-browser-nano.evaluate --env environment.ts --input in.json --uses @executioncontrolprotocol/ollama.generate
-```
-
-| Flag | Role |
-| ---- | ---- |
-| `--env` | Environment module |
-| `--input` | JSON capability input |
-| `--uses` | Optional provider capability override (harness `.uses`) |
-
-### `ecp serve`
-
-Serve a bound environment over loopback HTTP (`POST /v1/invoke`, no auth). For the Ollama browser demo bridge with pairing, use `ecp up` instead.
-
-```bash
-ecp serve --env examples/01-echo/environment.ts
-ecp serve --env environment.ts --port 3090 --cors-origin http://localhost:5173
-```
-
-Default host `127.0.0.1`, port **3090**.
-
-### `ecp up`
-
-Start a loopback HTTP daemon that bridges Ollama for the [browser demo](/getting-started/browser-demo) (CORS + Private Network Access), then open the demo with a pairing token:
-
-```bash
-ecp up
-# Opens https://demo.executioncontrolprotocol.io/?token=<uuid>&bridge=http://127.0.0.1:3090
-
-ecp up --open-url http://localhost:5173/
-ecp up --no-open
-```
-
-- Default port **3090**
-- `GET /health` — `{ ok, version, ollamaReachable }` (no auth)
-- `POST /v1/invoke` — Bearer token; body `{ capability, input?, provider? }`
-
-Hosted HTTPS demos need Chromium for Private Network Access. Add origins with `--cors-origin` when needed. Local Vite for the Graph Editor is `pnpm run dev:demo` after [building from source](/getting-started/build-from-source).
-
-### `ecp test`
-
-Drive a workflow with a **persistent test session** that freezes state between operations. This is distinct from monorepo unit tests (`npm run test:unit`) or harness eval matrices.
-
-```bash
-ecp test start examples/01-echo/workflow.ts --env examples/01-echo/environment.ts -o session.json
-ecp test run --to echo --env examples/01-echo/environment.ts --session session.json
-ecp test rerun echo --env examples/01-echo/environment.ts --session session.json
-ecp test status --session session.json
-```
-
-| Subcommand | Role |
-| ---------- | ---- |
-| `start` | Create an idle session snapshot (`-o` / `--output` required; optional `--input`) |
-| `run --to <step-id>` | Inclusive run-through; skip completed prior steps; rewrite `--session` |
-| `rerun <step-id>` | Rerun one step; clear downstream history and `.as` state |
-| `status` | Print session snapshot summary |
-
-### `ecp config secrets`
-
-OS keychain helpers:
-
-```bash
-ecp config secrets add KEY
-ecp config secrets add KEY --value …
-ecp config secrets list
-ecp config secrets get KEY
-ecp config secrets remove KEY
-```
-
-Bind stored secrets into environments with `secrets("KEY")` — see [Security](/learn/security) and [Environments](/guides/environments).
+There is no `ecp test`, `ecp serve`, `ecp up`, or root `ecp encode` / `ecp decode`. Format plugins expose `ecp format-toon encode` (and similar).
 
 ## Next steps
 
-- [Quickstart](/getting-started/quickstart)
-- [Fluent API](/guides/fluent-api)
-- [Schemas](/reference/schemas)
-- [Encode, decode, and patch](/guides/encode-decode-patch)
-- [Demo providers](/getting-started/browser-demo-providers)
-- [Examples on GitHub](https://github.com/executioncontrolprotocol/executioncontrolprotocol/tree/main/examples)
+- [Error codes](/reference/error-codes)
+- [The agent loop](/guides/agent-loop)

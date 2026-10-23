@@ -1,99 +1,48 @@
 ---
 title: "Environments"
-description: "Bind ECP (Execution Control Protocol) environments: runtime, extensions, policies, harnesses, and init() to an Ecp instance."
+description: "Hosts, plugins, policies, and optional --env overlays in ECP (Execution Control Protocol)."
 ---
 
 # Environments
 
-An **environment** is the governed execution container for ECP (Execution Control Protocol) workflows. Workflows stay portable; environments hold host bindings.
+An environment is a **host** plus the plugins and policies it loads. Node and browser are hosts. The CLI process host is Node plus whatever you installed with `ecp plugins install`.
 
-## Create and bind
-
-Node host (CLI and server apps):
+## Compose
 
 ```ts
-import { environment, extension, policy } from "@executioncontrolprotocol/node"
-import "@executioncontrolprotocol/core/testing"
-import "@executioncontrolprotocol/format-toon"
+import { environment, extension, NODE_ENVIRONMENT_ID } from "@executioncontrolprotocol/node"
+import jsonataExtension from "@executioncontrolprotocol/plugin-jsonata"
 
-export default (await environment("echo-dev", "Echo development"))
-  .withExtensions([
-    extension("@executioncontrolprotocol/test").with({}),
-    extension("@executioncontrolprotocol/format-toon").with({}),
-  ])
-```
-
-Common builder methods:
-
-| Method | Role |
-| ------ | ---- |
-| `.withRuntime(…)` | Override or set runtime |
-| `.withExtensions([...])` | Bind cataloged extensions |
-| `.withPolicies([...])` | Bind policies |
-| `.withHarnesses([...])` | Bind harnesses (common in browser apps) |
-| `.init()` | Return operational **Ecp** |
-
-Import extension packages for side-effect catalog registration before binding by string id.
-
-## Init and operational APIs
-
-```ts
-const env = await environment("dev")
-  .withExtensions([extension("@executioncontrolprotocol/test").with({})])
-
-const ecp = await env.init()
-
-await ecp.describe()
-await ecp.search("echo")
-await ecp.validate(manifest)
-await ecp.run(manifest, { input: { value: "hello" } })
-await ecp.encode(source).uses("@executioncontrolprotocol/format-toon").to("@executioncontrolprotocol.workflow").process()
-await ecp.terminate()
-```
-
-Do not call run/encode on the environment builder — use the `Ecp` returned by `init()`.
-
-`ecp.validate()` / `ecp validate` check the graph and environment only. Run input is validated against `workflow.accepts` on `ecp.run` (and `--dry-run`), not on validate.
-
-Also available on `Ecp`: `invoke`, `test`, `decode`, `patch`, `search`, and `describe`.
-
-## Secrets and extension config
-
-Keep credentials out of workflows. Store them with `ecp config secrets`, then pass `secrets("…")` into extension `.with({…})`:
-
-```ts
-import "@executioncontrolprotocol/secrets"
-import { environment, extension, secrets } from "@executioncontrolprotocol/node"
-
-export default (await environment("demo")).withExtensions([
-  extension("@executioncontrolprotocol/secrets").with({}),
-  extension("@executioncontrolprotocol/openai").with({
-    apiKey: secrets("openai/api-key"),
-  }),
+export default environment(NODE_ENVIRONMENT_ID, "local").with([
+  extension(jsonataExtension),
 ])
 ```
 
-`secrets(...)` and `env(...)` helpers are **environment setup only**. See [Security](/learn/security).
+`.supports(environmentId, range?)` on a definition restricts it to a host. Browser-only plugins fail on Node with `ECP_ENVIRONMENT_UNSUPPORTED`.
 
-## Browser hosts
+## Layering
 
-`@executioncontrolprotocol/browser` provides a slim host (executor, registry, session). **Apps** bind providers and harnesses. The [browser demo](/getting-started/browser-demo) is one such app; see [Demo providers and configuration](/getting-started/browser-demo-providers).
+1. Host always-on policies (for example registry-control on the CLI).
+2. Installed plugins.
+3. Optional `--env <file>` overlay (`environment(id).with([...])`).
+4. Workflow-file `.with([...])` / inferred requirements.
+
+The overlay is extra bindings, not a required pair of `workflow.ts` + `environment.ts`.
 
 ## CLI
 
-Point commands at an environment module:
-
 ```bash
-ecp run workflow.ts --env environment.ts --input input.json
-ecp describe --env environment.ts
-ecp describe --env environment.ts --capability @executioncontrolprotocol/test.echo
-ecp search "echo" --env environment.ts
+ecp run brief.ecp.ts
+ecp run brief.ecp.ts --env ./local.env.ts
+ecp describe
+ecp describe --env ./local.env.ts
 ```
 
-Bare `describe` is a light inventory. Pass `--capability` or `--extension` with an exact id for full metadata and JSON Schema.
+Omit `--env` unless you need extra host bindings (secrets providers, extra policies).
+
+`env.init()` returns an **Ecp**. Call `run`, `validate`, `describe`, `search`, `invoke`, `encode`, `decode`, `patch`, and `terminate` on that instance.
 
 ## Next steps
 
-- [Extensions](/guides/extensions)
-- [Security](/learn/security)
-- [Concepts](/learn/concepts)
+- [Writing a plugin](/guides/writing-a-plugin)
+- [Policies](/guides/policies)

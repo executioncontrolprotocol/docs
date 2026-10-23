@@ -1,29 +1,26 @@
 ---
 title: "ECP vs LangChain"
-description: "Compare ECP (Execution Control Protocol) and LangChain: frameworks build agents; ECP packages and governs execution."
+description: "When to use ECP (Execution Control Protocol) instead of LangChain."
 ---
 
 # ECP vs LangChain
 
+LangChain is a **framework** for building LLM applications (chains, agents, RAG). ECP (Execution Control Protocol) is a **protocol and CLI** an orchestrating agent operates.
+
+## Positioning
+
 | | LangChain | ECP |
-| - | --------- | --- |
-| Focus | Build agents, chains, and tool wiring | Package and run governed workflows |
-| Artifact | App code + framework graphs | Portable Fluent/JSON **workflows** + **environments** |
-| Tools | Framework integrations | MCP + extension capabilities |
-| Ops | App-specific | `validate`, `describe`, `run`, encode/decode across hosts |
+| --- | --- | --- |
+| Primary user | App developer | Orchestrating agent (and the human who ships plugins) |
+| Unit of work | Chain / graph in application code | Portable `*.ecp.ts` workflow + requirements |
+| Governance | Callbacks, tracing products | Policies, `ECP_*` errors, journals |
+| Extensibility | Integrations in the framework | npm plugins that generate CLI commands |
 
-## Use both
+Use LangChain when you are writing the application. Use ECP when another agent should **delegate** a governed graph, validate it, and rerun from a named step.
 
-LangChain (or similar) can own agent logic. ECP owns **how execution is declared, bound, and audited** on Node or in the browser:
-
-- Ship a workflow manifest between teams
-- Bind policies and secrets in an environment
-- Run the same graph via CLI or host runtime
-
-ECP does not try to replace LangChain’s ecosystem. It standardizes the execution layer those apps often reinvent.
+They can coexist: a LangChain app can shell out to `ecp run`, and an ECP plugin can wrap a model provider.
 
 ## Next steps
 
 - [Why ECP](/learn/why-ecp)
-- [Concepts](/learn/concepts)
-- [Fluent API](/guides/fluent-api)
+- [Writing a plugin](/guides/writing-a-plugin)
