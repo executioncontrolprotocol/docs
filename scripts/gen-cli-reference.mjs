@@ -267,7 +267,7 @@ export async function generateCliReference(ecpRoot) {
     "",
     "Generated from oclif manifests in the ECP checkout (`packages/cli` operations and `plugins/plugin-*/oclif.manifest.json`). Do not hand-edit. Learn flags from `ecp <command> --help` when in doubt.",
     "",
-    "Until `@next` is on the npm registry, [build from source](/getting-started/build-from-source).",
+    "Until **0.50.0** is on npm `latest`, [build from source](/getting-started/build-from-source).",
     "",
     "## `--json` envelope",
     "",

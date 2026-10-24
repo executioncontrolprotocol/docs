@@ -12,7 +12,7 @@ description: >-
 
 You operate ECP as a **deterministic delegation** capability. Author a workflow file, run it, read structured errors, repair, and rerun. You are not the whole harness.
 
-Install: `npx skills add executioncontrolprotocol/docs` (this skill). CLI: `npm install -g @executioncontrolprotocol/cli@next` when that dist-tag exists; otherwise build from source.
+Install: `npx skills add executioncontrolprotocol/docs` (this skill). CLI: `npm install -g @executioncontrolprotocol/cli` for **0.50.0** (`latest` field-test, not 1.0). Until that version is on the registry, build from source.
 
 Learn flags from `ecp <command> --help`. Do not copy CLI tables into this skill.
 

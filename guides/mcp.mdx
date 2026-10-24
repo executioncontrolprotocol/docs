@@ -12,7 +12,7 @@ ecp plugins link packages/mcp
 ecp mcp serve
 ```
 
-Until `@next` is on the registry, link the workspace package (or install a packed tarball with `ECP_ALLOW_SOURCE=path`). JIT from npm (`oclif.jitPlugins`) cannot fully pass until that dist-tag exists.
+Until **0.50.0** is on the registry, link the workspace package (or install a packed tarball with `ECP_ALLOW_SOURCE=path`). CLI `oclif.jitPlugins` pins `"^0.50"`. First-use JIT from npm waits on that publish.
 
 `ecp mcp serve` is the MCP surface. There is no root `ecp serve` or `ecp up`.
 
