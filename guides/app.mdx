@@ -12,7 +12,7 @@ ecp plugins link plugins/plugin-app
 ecp app examples/01-echo/workflow.ecp.ts
 ```
 
-Until `@next` is on the registry, link the workspace package (or install a packed tarball with `ECP_ALLOW_SOURCE=path`). JIT from npm (`oclif.jitPlugins`) cannot fully pass until that dist-tag exists.
+Until **0.50.0** is on the registry, link the workspace package (or install a packed tarball with `ECP_ALLOW_SOURCE=path`). CLI `oclif.jitPlugins` pins `"^0.50"`. First-use JIT from npm waits on that publish.
 
 There is no hosted browser demo and no `ecp up`. The App is not a chat client and not a secrets host.
 

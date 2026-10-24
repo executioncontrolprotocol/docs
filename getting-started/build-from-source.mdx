@@ -1,11 +1,11 @@
 ---
 title: "Build from source"
-description: "Clone the ECP (Execution Control Protocol) monorepo, build packages, and pack-install the CLI while @next is unpublished."
+description: "Clone the ECP (Execution Control Protocol) monorepo, build packages, and pack-install the CLI while 0.50.0 is unpublished."
 ---
 
 # Build from source
 
-Use this path when you are changing ECP (Execution Control Protocol) packages, or when `@next` is not on the npm registry yet. Day-to-day usage should [install the CLI from npm](/getting-started/quickstart) once a dist-tag exists.
+Use this path when you are changing ECP (Execution Control Protocol) packages, or when **0.50.0** is not on npm `latest` yet. Day-to-day usage should [install the CLI from npm](/getting-started/quickstart) once that version exists.
 
 ## Prerequisites
 
@@ -37,7 +37,7 @@ Prove a clean install from packed tarballs (core, node, plugin-sdk, CLI, and eve
 pnpm run test:plugin-pack
 ```
 
-That smoke does not hit unpublished npm. It is the install proof until `@next` exists.
+That smoke does not hit unpublished npm. It is the install proof until **0.50.0** is on `latest`.
 
 ## Layout
 
@@ -52,9 +52,9 @@ That smoke does not hit unpublished npm. It is the install proof until `@next` e
 | `packages/app` | `@executioncontrolprotocol/app` (graph encoder, `HostAdapter`, `dist/web`) |
 | `plugins/plugin-*` | First-party plugins including `plugin-app` (`ecp app`) |
 
-Versions for core, hosts, CLI, plugin-sdk, MCP, and plugins start at `1.0.0-next.0`. In-repo dependencies use `workspace:^`, never `file:`.
+Versions for core, hosts, CLI, plugin-sdk, MCP, App, and plugins are `0.50.0` (field-test, not 1.0). In-repo dependencies use `workspace:^`, never `file:`.
 
-Release tooling is Changesets (`pnpm exec changeset`). Prereleases, when published, use the `next` dist-tag from a milestone branch. See the monorepo `RELEASING.md`.
+Release tooling is Changesets (`pnpm exec changeset`). The field-test publishes `latest` from `main`. See the monorepo `RELEASING.md`.
 
 ## Checks
 

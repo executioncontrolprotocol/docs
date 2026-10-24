@@ -1,22 +1,25 @@
 ---
 title: "Changelog"
-description: "What changed in the ECP (Execution Control Protocol) CLI reset (1.0)."
+description: "What changed in the ECP (Execution Control Protocol) CLI reset (0.50.0 field-test)."
 ---
 
 # Changelog
 
-The reset ships as **1.0**, a major version. There is no compatibility shim for 0.x APIs. Phase 9 will `npm deprecate` old packages when first-party npm exists.
+The reset publishes as **0.50.0** on npm `latest`: a field-test, not 1.0. It is breaking
+versus 0.14. There is no compatibility shim for 0.x APIs. 1.0 (deprecate old package names,
+live dogfood) is later.
 
-## 1.0 (reset, in progress)
+## 0.50.0 (field-test)
 
 - CLI rebuilt on oclif 5 with generated commands from `defineOperation` and plugin metadata.
 - Workflow files are `*.ecp.ts`; `--env` is optional.
 - Bindings compile to `@executioncontrolprotocol.requirements`, not into the portable manifest.
 - Run journals under `.ecp/runs/<runId>/`; `ecp runs list|show|resume|rerun`.
-- Plugins live in `plugins/plugin-*` with Changesets (`1.0.0-next.0`).
+- Plugins live in `plugins/plugin-*` with Changesets (`0.50.0`).
 - Types live at `@executioncontrolprotocol/core/types`.
-- MCP: `@executioncontrolprotocol/mcp` `1.0.0-next.0`, `ecp mcp serve` (stdio and loopback HTTP).
-- App: `@executioncontrolprotocol/app` and `@executioncontrolprotocol/plugin-app` `1.0.0-next.0`, `ecp app` (loopback + pairing token).
+- MCP: `@executioncontrolprotocol/mcp` `0.50.0`, `ecp mcp serve` (stdio and loopback HTTP).
+- App: `@executioncontrolprotocol/app` and `@executioncontrolprotocol/plugin-app` `0.50.0`, `ecp app` (loopback + pairing token).
+- CLI `oclif.jitPlugins` pins `mcp` and `plugin-app` at `^0.50`.
 
 ## Removed
 

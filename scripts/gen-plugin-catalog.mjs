@@ -156,7 +156,7 @@ export async function generatePluginCatalog(ecpRoot) {
     "",
     "# Plugins",
     "",
-    "First-party plugins are listed from `plugins/plugin-*` in the ECP checkout. They are not installed from `@next` (unpublished). Third-party plugins are whatever `registry.npmjs.org` returns for keyword `ecosystem:ecp-plugin`.",
+    "First-party plugins are listed from `plugins/plugin-*` in the ECP checkout at **0.50.0** (field-test). Third-party plugins are whatever `registry.npmjs.org` returns for keyword `ecosystem:ecp-plugin`.",
     "",
     "Install with `ecp plugins install <name>`. Package name is `plugin-` plus the extension or policy name; the protocol id is unchanged.",
     "",

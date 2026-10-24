@@ -6,7 +6,7 @@
 
 - [ECP (Execution Control Protocol)](https://executioncontrolprotocol.io/index): ECP (Execution Control Protocol) is the deterministic delegation capability an orchestrating agent operates: author a workflow, run it, read structured errors, repair, and rerun.
 - [Quickstart](https://executioncontrolprotocol.io/getting-started/quickstart): Install the ECP (Execution Control Protocol) CLI and skill, then run your first workflow file.
-- [Build from source](https://executioncontrolprotocol.io/getting-started/build-from-source): Clone the ECP (Execution Control Protocol) monorepo, build packages, and pack-install the CLI while @next is unpublished.
+- [Build from source](https://executioncontrolprotocol.io/getting-started/build-from-source): Clone the ECP (Execution Control Protocol) monorepo, build packages, and pack-install the CLI while 0.50.0 is unpublished.
 - [Why ECP](https://executioncontrolprotocol.io/learn/why-ecp): Why ECP (Execution Control Protocol) exists: deterministic delegation instead of one-off tool calls.
 - [Concepts](https://executioncontrolprotocol.io/learn/concepts): Core ECP (Execution Control Protocol) objects: workflow, environment, extension, policy, plugin, run, and journal.
 - [Relationship to MCP](https://executioncontrolprotocol.io/learn/relationship-to-mcp): How ECP (Execution Control Protocol) relates to MCP: complementary layers, not competitors.
@@ -32,5 +32,5 @@
 - [Journal](https://executioncontrolprotocol.io/reference/journal): Run journals for ECP (Execution Control Protocol): schema, layout, and CLI commands.
 - [Schemas](https://executioncontrolprotocol.io/reference/schemas): JSON Schema documents shipped with ECP (Execution Control Protocol).
 - [Packages](https://executioncontrolprotocol.io/reference/packages): Published and in-repo packages for ECP (Execution Control Protocol).
-- [Changelog](https://executioncontrolprotocol.io/reference/changelog): What changed in the ECP (Execution Control Protocol) CLI reset (1.0).
+- [Changelog](https://executioncontrolprotocol.io/reference/changelog): What changed in the ECP (Execution Control Protocol) CLI reset (0.50.0 field-test).
 

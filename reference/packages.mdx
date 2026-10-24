@@ -5,34 +5,34 @@ description: "Published and in-repo packages for ECP (Execution Control Protocol
 
 # Packages
 
-Scope: `@executioncontrolprotocol/*`. During the CLI reset, first-party npm is unpublished; versions below are the monorepo `package.json` values on `milestone/cli-reset`.
+Scope: `@executioncontrolprotocol/*`. The CLI reset field-test is **0.50.0** on npm `latest` (not 1.0). Versions below are the monorepo `package.json` values on `milestone/cli-reset`. Until 0.50.0 is published, first-party npm still has 0.14.x as `latest`.
 
 ## Host-agnostic and hosts
 
 | Package | Role | Version |
 | ------- | ---- | ------- |
-| `@executioncontrolprotocol/core` | Fluent API, engine, `./types` | `1.0.0-next.0` |
-| `@executioncontrolprotocol/node` | Node host, compile, loaders, journals | `1.0.0-next.0` |
-| `@executioncontrolprotocol/browser` | Browser host, esbuild-wasm compile | `1.0.0-next.0` |
-| `@executioncontrolprotocol/cli` | `ecp` CLI (oclif 5) | `1.0.0-next.0` |
-| `@executioncontrolprotocol/plugin-sdk` | `toCommands`, `defineOperation` | `1.0.0-next.0` |
-| `@executioncontrolprotocol/mcp` | MCP server + `ecp mcp serve` | `1.0.0-next.0` |
-| `@executioncontrolprotocol/app` | Visual App library, graph encoder, `dist/web` | `1.0.0-next.0` |
-| `@executioncontrolprotocol/plugin-app` | JIT plugin behind `ecp app` | `1.0.0-next.0` |
+| `@executioncontrolprotocol/core` | Fluent API, engine, `./types` | `0.50.0` |
+| `@executioncontrolprotocol/node` | Node host, compile, loaders, journals | `0.50.0` |
+| `@executioncontrolprotocol/browser` | Browser host, esbuild-wasm compile | `0.50.0` |
+| `@executioncontrolprotocol/cli` | `ecp` CLI (oclif 5) | `0.50.0` |
+| `@executioncontrolprotocol/plugin-sdk` | `toCommands`, `defineOperation` | `0.50.0` |
+| `@executioncontrolprotocol/mcp` | MCP server + `ecp mcp serve` | `0.50.0` |
+| `@executioncontrolprotocol/app` | Visual App library, graph encoder, `dist/web` | `0.50.0` |
+| `@executioncontrolprotocol/plugin-app` | JIT plugin behind `ecp app` | `0.50.0` |
 
 ## Plugins
 
-Every first-party plugin lives under `plugins/plugin-*` at `1.0.0-next.0` (Changesets independent versioning). See the [plugin catalogue](/reference/plugins).
+Every first-party plugin lives under `plugins/plugin-*` at `0.50.0` (Changesets independent versioning). See the [plugin catalogue](/reference/plugins).
 
 Ids such as `@executioncontrolprotocol/jsonata` are protocol ids, not always npm names. npm names use the `plugin-` prefix.
 
 ## Install
 
 ```bash
-npm install -g @executioncontrolprotocol/cli@next
+npm install -g @executioncontrolprotocol/cli
 ```
 
-Until `@next` exists, [build from source](/getting-started/build-from-source).
+Until **0.50.0** is on `latest`, [build from source](/getting-started/build-from-source).
 
 ## Next steps
 
