@@ -11,7 +11,7 @@ Stop and ask the user when you cannot proceed safely. Do not guess secrets, appr
 | `ECP_POLICY_DENIED` | Explain the denial. Change budget/approval config only if they ask. |
 | Paid model keys (Anthropic, OpenAI, FAL, Firefly, Azure) | Prefer Ollama / jsonata / image-sharp local paths, or ask them to bind secrets. |
 | MCP (`ecp mcp serve`) | Same host as the CLI. Prefer the CLI loop unless the user asked for MCP. |
-| Visual App | Phase 8 placeholder. Stay on the CLI. |
+| Visual App (`ecp app`) | Same host as the CLI, on loopback. Prefer the CLI loop unless the user asked for the graph. |
 
 ## Monorepo work
 

@@ -19,7 +19,7 @@
 - [Files and media](https://executioncontrolprotocol.io/guides/files-and-media): Pass files through ECP (Execution Control Protocol) workflows with FileRef, resolveFile, and writeMediaArtifact.
 - [Formats and converters](https://executioncontrolprotocol.io/guides/formats): Encode, decode, and patch workflow graphs with ECP (Execution Control Protocol) format plugins.
 - [MCP](https://executioncontrolprotocol.io/guides/mcp): Serve ECP (Execution Control Protocol) as MCP tools with ecp mcp serve. Same host as the CLI, over stdio or loopback HTTP.
-- [App](https://executioncontrolprotocol.io/guides/app): Visual App for ECP (Execution Control Protocol). Phase 8; this page is a placeholder.
+- [App](https://executioncontrolprotocol.io/guides/app): Open a live graph of an ECP (Execution Control Protocol) workflow file with ecp app. Same host as the CLI, on loopback with a pairing token.
 - [Alternatives](https://executioncontrolprotocol.io/alternatives/index): How ECP (Execution Control Protocol) compares with agent frameworks and MCP-only stacks.
 - [ECP vs LangChain](https://executioncontrolprotocol.io/alternatives/ecp-vs-langchain): When to use ECP (Execution Control Protocol) instead of LangChain.
 - [ECP vs OpenClaw](https://executioncontrolprotocol.io/alternatives/ecp-vs-openclaw): When to use ECP (Execution Control Protocol) instead of a personal-agent product.

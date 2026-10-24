@@ -49,7 +49,8 @@ That smoke does not hit unpublished npm. It is the install proof until `@next` e
 | `packages/cli` | `@executioncontrolprotocol/cli` |
 | `packages/plugin-sdk` | `@executioncontrolprotocol/plugin-sdk` |
 | `packages/mcp` | `@executioncontrolprotocol/mcp` (`ecp mcp serve`) |
-| `plugins/plugin-*` | First-party plugins (independent versions, Changesets pre-`next`) |
+| `packages/app` | `@executioncontrolprotocol/app` (graph encoder, `HostAdapter`, `dist/web`) |
+| `plugins/plugin-*` | First-party plugins including `plugin-app` (`ecp app`) |
 
 Versions for core, hosts, CLI, plugin-sdk, MCP, and plugins start at `1.0.0-next.0`. In-repo dependencies use `workspace:^`, never `file:`.
 

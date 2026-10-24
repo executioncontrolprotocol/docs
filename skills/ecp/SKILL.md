@@ -18,7 +18,7 @@ Learn flags from `ecp <command> --help`. Do not copy CLI tables into this skill.
 
 ## When to delegate
 
-Use ECP when the work is **repeatable, governed, or must be repaired** (policies, journals, plugins). Do **not** use it for a single throwaway tool call or for chat-only reasoning. MCP is `ecp mcp serve` on the same host as the CLI (see the MCP guide); do not copy that catalogue here. The visual App is still a Phase 8 placeholder.
+Use ECP when the work is **repeatable, governed, or must be repaired** (policies, journals, plugins). Do **not** use it for a single throwaway tool call or for chat-only reasoning. MCP is `ecp mcp serve` on the same host as the CLI (see the MCP guide). The visual App is `ecp app <file>` on that same host (see the App guide). Do not copy either catalogue here.
 
 ## Loop
 
@@ -34,7 +34,7 @@ Use ECP when the work is **repeatable, governed, or must be repaired** (policies
 
 - Never put secret **values** in workflow or environment files. Use `secrets("key")`.
 - Install plugins with `ecp plugins install <name>`. Third-party plugins need **user approval** (`ECP_PLUGIN_DENIED` if they refuse).
-- There is no `ecp test`, `ecp serve`, `ecp up`, or root `ecp encode` / `decode`. Format plugins are `ecp format-toon encode`.
+- There is no `ecp test`, `ecp serve`, `ecp up`, or root `ecp encode` / `decode`. Format plugins are `ecp format-toon encode`. The graph UI is `ecp app <file>` (see the App guide).
 - Do not import hosts from plugin packages.
 
 ## Error codes (what to do)

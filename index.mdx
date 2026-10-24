@@ -15,7 +15,7 @@ MCP standardizes how models call tools. ECP standardizes how an agent **delegate
 4. **Run** (`ecp run --json`). On failure, read the error code and the journal.
 5. **Repair** the file and `ecp runs rerun --from <step>`.
 
-The CLI is the primary surface. A model should learn flags from `ecp --help`. [MCP](/guides/mcp) (`ecp mcp serve`) exposes the same host as tools. The visual [App](/guides/app) is a Phase 8 plugin.
+The CLI is the primary surface. A model should learn flags from `ecp --help`. [MCP](/guides/mcp) (`ecp mcp serve`) exposes the same host as tools. The visual [App](/guides/app) (`ecp app`) is the same host in a graph.
 
 ## Install
 
