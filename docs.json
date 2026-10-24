@@ -27,8 +27,6 @@
             "pages": [
               "index",
               "getting-started/quickstart",
-              "getting-started/browser-demo",
-              "getting-started/browser-demo-providers",
               "getting-started/build-from-source"
             ]
           },
@@ -44,11 +42,15 @@
           {
             "group": "Build",
             "pages": [
-              "guides/fluent-api",
+              "guides/agent-loop",
+              "guides/workflow-files",
               "guides/environments",
-              "guides/extensions",
+              "guides/writing-a-plugin",
+              "guides/policies",
               "guides/files-and-media",
-              "guides/encode-decode-patch"
+              "guides/formats",
+              "guides/mcp",
+              "guides/app"
             ]
           },
           {
@@ -71,6 +73,9 @@
             "group": "Reference",
             "pages": [
               "reference/cli",
+              "reference/plugins",
+              "reference/error-codes",
+              "reference/journal",
               "reference/schemas",
               "reference/packages",
               "reference/changelog"
@@ -86,10 +91,6 @@
   },
   "navbar": {
     "links": [
-      {
-        "label": "Demo",
-        "href": "https://demo.executioncontrolprotocol.io/"
-      },
       {
         "label": "GitHub",
         "href": "https://github.com/executioncontrolprotocol"

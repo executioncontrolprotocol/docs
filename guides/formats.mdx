@@ -1,0 +1,33 @@
+---
+title: "Formats and converters"
+description: "Encode, decode, and patch workflow graphs with ECP (Execution Control Protocol) format plugins."
+---
+
+# Formats and converters
+
+Format plugins turn a workflow graph into another representation (and back). There is **no** root `ecp encode` / `ecp decode`. Commands live on the plugin topic:
+
+```bash
+ecp format-toon encode --input brief.ecp.ts
+ecp format-mermaid encode --input brief.ecp.ts
+```
+
+`--format` on `describe` / `run` output goes through the same plugin path. If the format plugin is not installed, the CLI returns **`ECP_PLUGINS_MISSING`**.
+
+## First-party format plugins
+
+| Package | Commands |
+| ------- | -------- |
+| `@executioncontrolprotocol/plugin-format-toon` | `ecp format-toon encode`, `decode` |
+| `@executioncontrolprotocol/plugin-format-mermaid` | `ecp format-mermaid encode` |
+
+Fluent TypeScript rendering is in **core** (`toFluentSource`, `ecp.encode(...).as("fluent")`). There is no `format-fluent` extension.
+
+## Patch
+
+`ecp.patch` (on the Ecp instance) applies a structured patch to a graph. Use it from code after you inspect a journal; the CLI surfaces repair through `ecp runs rerun --from`.
+
+## Next steps
+
+- [Plugin catalogue](/reference/plugins)
+- [Error codes](/reference/error-codes)

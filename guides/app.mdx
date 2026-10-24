@@ -1,0 +1,42 @@
+---
+title: "App"
+description: "Open a live graph of an ECP (Execution Control Protocol) workflow file with ecp app. Same host as the CLI, on loopback with a pairing token."
+---
+
+# App
+
+`ecp app` opens a live graph of a workflow file on the **same process host** the CLI uses. File edits update the graph. Graph edits rewrite the file. Runs use the same journal as `ecp run`. The App stores no secrets and makes no model calls.
+
+```bash
+ecp plugins link plugins/plugin-app
+ecp app examples/01-echo/workflow.ecp.ts
+```
+
+Until **0.50.0** is on the registry, link the workspace package (or install a packed tarball with `ECP_ALLOW_SOURCE=path`). CLI `oclif.jitPlugins` pins `"^0.50"`. First-use JIT from npm waits on that publish.
+
+There is no hosted browser demo and no `ecp up`. The App is not a chat client and not a secrets host.
+
+## Loopback and token
+
+The server binds **127.0.0.1** on a free port. A pairing token goes in the URL that opens the browser. Every request requires that token (query, `Authorization: Bearer`, or cookie). `--no-open` skips the browser (tests and CI).
+
+```bash
+ecp app brief.ecp.ts --no-open
+ecp app brief.ecp.ts --port 0
+```
+
+## Two-way sync
+
+- **File → graph:** the server watches the file (150 ms debounce). Disk edits show up in the graph within a second.
+- **Graph → file:** a graph edit patches the manifest, then the file is rewritten with the Fluent encoder.
+- **Read-only:** files that cannot round-trip (relative imports, computed `.with()` values) open with a banner explaining why. Losing comments or formatting on save is a warning, not read-only. Encoder-written files stay editable.
+
+## Runs and palette
+
+Runs from the App go through the same host and journal as `ecp run`, so `ecp runs show <id>` works. The palette is the capability catalogue from `ecp describe` on this process.
+
+## Next steps
+
+- [The agent loop](/guides/agent-loop)
+- [MCP](/guides/mcp)
+- [CLI](/reference/cli)

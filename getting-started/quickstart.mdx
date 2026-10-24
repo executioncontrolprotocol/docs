@@ -1,22 +1,25 @@
 ---
 title: "Quickstart"
-description: "Install the ECP (Execution Control Protocol) CLI and run your first Fluent workflow in a governed environment."
+description: "Install the ECP (Execution Control Protocol) CLI and skill, then run your first workflow file."
 ---
 
 # Quickstart
 
-Get ECP (Execution Control Protocol) running in a few minutes: install the CLI, author a Fluent workflow, bind an environment, and run.
+Get ECP (Execution Control Protocol) running in a few minutes: install the CLI, add the agent skill, and run a workflow file.
 
 ## Prerequisites
 
 - Node.js 22+
 - npm
 
-## Install the CLI
+## Install
 
 ```bash
 npm install -g @executioncontrolprotocol/cli
+npx skills add executioncontrolprotocol/docs
 ```
+
+The field-test is **0.50.0** on `latest` (not 1.0). Until that version is on the registry, use [build from source](/getting-started/build-from-source).
 
 Confirm the binary:
 
@@ -24,82 +27,40 @@ Confirm the binary:
 ecp --help
 ```
 
-For local monorepo development, see [Build from source](/getting-started/build-from-source).
+## Author and run
 
-Runnable examples live in the [core examples](https://github.com/executioncontrolprotocol/executioncontrolprotocol/tree/main/examples) tree (echo, accepts/returns, secrets bind, encode/decode, test sessions, invoke).
-
-## Run the echo example
-
-From a checkout of the [ECP monorepo](https://github.com/executioncontrolprotocol/executioncontrolprotocol) (after `pnpm install` and `pnpm run build`):
-
-```bash
-ecp run examples/01-echo/workflow.ts --env examples/01-echo/environment.ts
-```
-
-Validate without executing:
-
-```bash
-ecp validate examples/01-echo/workflow.ts --env examples/01-echo/environment.ts
-```
-
-Compile Fluent/TS to a portable JSON manifest:
-
-```bash
-ecp compile examples/01-echo/workflow.ts -o /tmp/workflow.json
-```
-
-## Pass run input
-
-Workflows that declare `.accepts()` take a JSON object on `ecp run --input`. The CLI validates that object against `workflow.accepts` before steps execute.
-
-```bash
-ecp run examples/07-accepts-returns/workflow.ts \
-  --env examples/07-accepts-returns/environment.ts \
-  --input examples/07-accepts-returns/input.json
-```
-
-`--dry-run` runs the same input check without invoking capabilities. `ecp validate` still checks the graph and environment only. See [Fluent API](/guides/fluent-api) and [Schemas](/reference/schemas).
-
-## Minimal Fluent workflow
+Scaffold a workflow, or copy the echo example from the [monorepo](https://github.com/executioncontrolprotocol/executioncontrolprotocol/tree/milestone/cli-reset/examples/01-echo):
 
 ```ts
 import { workflow, step } from "@executioncontrolprotocol/core"
 
-export default workflow("Echo test")
-  .run([
-    step("@executioncontrolprotocol/test.echo", "Echo")
-      .with({ value: "hello from fluent API" })
-      .as("echo"),
-  ])
-```
-
-## Minimal Node environment
-
-```ts
-import { environment, extension } from "@executioncontrolprotocol/node"
-import "@executioncontrolprotocol/core/testing"
-
-export default (await environment("dev")).withExtensions([
-  extension("@executioncontrolprotocol/test").with({}),
+export default workflow("Echo test").run([
+  step("@executioncontrolprotocol/test.echo", "Echo")
+    .with({ value: "hello from fluent API" })
+    .as("echo"),
 ])
 ```
 
-Operational APIs live on the instance returned by `init()`:
+`--env` is optional. Omit it to use the process host (built-in Node plus installed plugins):
 
-```ts
-const ecp = await env.init()
-await ecp.run(manifest)
-await ecp.terminate()
+```bash
+ecp init brief
+ecp validate brief.ecp.ts --json
+ecp run brief.ecp.ts --json
 ```
 
-## Prefer the browser?
+`--json` prints `{ ok: true, data }` or `{ ok: false, error: { code, message, path, suggestions } }`. Journals land under `.ecp/runs/<runId>/`.
 
-Open the [hosted Graph Editor](https://demo.executioncontrolprotocol.io/) or follow [Browser demo](/getting-started/browser-demo). For local Ollama, run `ecp up` so the demo can pair with a loopback bridge.
+Install a plugin when a workflow needs one:
+
+```bash
+ecp plugins install jsonata
+```
+
+Third-party plugins ask for approval. First-party npm packages install without a prompt.
 
 ## Next steps
 
-- [Fluent API](/guides/fluent-api)
-- [Environments](/guides/environments)
-- [Schemas](/reference/schemas)
-- [CLI reference](/reference/cli)
-- [Providers in the demo](/getting-started/browser-demo-providers)
+- [The agent loop](/guides/agent-loop)
+- [Workflow files](/guides/workflow-files)
+- [Error codes](/reference/error-codes)

@@ -1,44 +1,65 @@
 ---
 title: "ECP (Execution Control Protocol)"
-description: "ECP (Execution Control Protocol) is the governed execution layer for AI agents—portable Fluent workflows, environments, and a browser demo."
+description: "ECP (Execution Control Protocol) is the deterministic delegation capability an orchestrating agent operates: author a workflow, run it, read structured errors, repair, and rerun."
 ---
 
-AI reasoning is powerful — and it is expensive and non-deterministic. Most of what an agent does does not need to be reasoned out again on every run. ECP (Execution Control Protocol) lets you reason about an approach once, capture it as a portable workflow, and run it deterministically inside a governed environment — then iterate on it fast when the approach needs to change.
+ECP (Execution Control Protocol) is the **deterministic delegation** layer an agent uses when work should be repeatable, governed, and repairable. You reason about an approach once, capture it as a workflow file, and run it under policies instead of re-prompting a model every time.
 
-**Reason once, run many times, iterate fast.**
+MCP standardizes how models call tools. ECP standardizes how an agent **delegates** a graph of those tools: which steps run, in what order, under which plugins and policies, with a journal you can inspect and rerun.
 
-The protocol is an open standard and reference implementation for defining, packaging, and running **portable workflows** inside **governed environments**.
+## Determinism ladder
 
-- **MCP** standardizes how models call tools.
-- **ECP** standardizes how agents, tools, policies, and runtimes execute together.
+1. **Search** the installed capabilities (`ecp search`, `ecp describe`).
+2. **Author** a single `*.ecp.ts` workflow file.
+3. **Validate** (`ecp validate --json`) until the graph and bindings are sound.
+4. **Run** (`ecp run --json`). On failure, read the error code and the journal.
+5. **Repair** the file and `ecp runs rerun --from <step>`.
 
-You author workflows with a **Fluent TypeScript API**, compile them to JSON manifests, and run them with the `ecp` CLI or a host runtime (Node or browser).
+The CLI is the primary surface. A model should learn flags from `ecp --help`. [MCP](/guides/mcp) (`ecp mcp serve`) exposes the same host as tools. The visual [App](/guides/app) (`ecp app`) is the same host in a graph.
+
+## Install
+
+```bash
+npm install -g @executioncontrolprotocol/cli
+npx skills add executioncontrolprotocol/docs
+```
+
+The field-test is **0.50.0** on `latest` (not 1.0). Until that version is on the registry, [build from source](/getting-started/build-from-source) (or pack-install with `pnpm run test:plugin-pack` in the monorepo).
+
+Then:
+
+```bash
+ecp init brief
+ecp run brief.ecp.ts
+```
 
 <CardGroup cols={2}>
-  <Card title="Quickstart" icon="rocket" href="/getting-started/quickstart">
-    Install the CLI and run the echo workflow.
+  <Card title="Quickstart" href="/getting-started/quickstart">
+    Install the CLI, add the skill, and run the echo workflow.
   </Card>
-  <Card title="Browser demo" icon="browser" href="/getting-started/browser-demo">
-    Try the Graph Editor with Chrome AI or Ollama.
+  <Card title="The agent loop" href="/guides/agent-loop">
+    Author, validate, run, read the journal, rerun.
   </Card>
-  <Card title="Fluent API" icon="code" href="/guides/fluent-api">
-    Author portable workflows with TypeScript.
+  <Card title="Workflow files" href="/guides/workflow-files">
+    Fluent TypeScript that compiles to a portable JSON graph.
   </Card>
-  <Card title="CLI reference" icon="terminal" href="/reference/cli">
-    run, validate, compile, encode, decode, and ecp up.
+  <Card title="CLI reference" href="/reference/cli">
+    Generated from oclif manifests.
   </Card>
 </CardGroup>
 
-## What you build
+## What you operate
 
 | Piece | Role |
 | ----- | ---- |
-| **Workflow** | Portable graph of steps (Fluent/TS or JSON) |
-| **Environment** | Runtime + extensions + policies that can execute a workflow |
-| **Ecp** | Operational instance after `env.init()` — run, validate, encode, decode, patch, describe, search |
+| **Workflow** | Portable graph (`*.ecp.ts` or JSON). Bindings compile into a separate requirements document. |
+| **Environment** | Host (Node or browser) plus installed plugins and policies. |
+| **Ecp** | Operational APIs after `init()`: `run`, `validate`, `describe`, `search`, `invoke`, and more. |
+| **Plugin** | npm package that registers an extension or policy and generates CLI commands. |
+| **Journal** | One directory per run under `.ecp/runs/<runId>/`. |
 
 ## Next steps
 
-- [Why ECP](/learn/why-ecp)
-- [Core concepts](/learn/concepts)
-- [Relationship to MCP](/learn/relationship-to-mcp)
+- [Quickstart](/getting-started/quickstart)
+- [Concepts](/learn/concepts)
+- [Writing a plugin](/guides/writing-a-plugin)

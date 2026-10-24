@@ -1,0 +1,61 @@
+---
+title: "The agent loop"
+description: "How an orchestrating agent authors, validates, runs, and repairs ECP (Execution Control Protocol) workflows."
+---
+
+# The agent loop
+
+ECP (Execution Control Protocol) is the capability you operate, not the whole harness. The loop is search → author → validate → run → inspect → repair.
+
+## 1. Search
+
+```bash
+ecp search "echo"
+ecp describe
+ecp describe --capability @executioncontrolprotocol/jsonata.transform
+```
+
+`--env` is optional. Omit it to use installed plugins on the process host.
+
+## 2. Author a workflow file
+
+Write a `*.ecp.ts` file. Prefer `ecp init <name>` for a stub. Bind plugins with `.with([...])` or let inference fill requirements from `step("id")`.
+
+See [Workflow files](/guides/workflow-files).
+
+## 3. Validate
+
+```bash
+ecp validate brief.ecp.ts --json
+```
+
+Fix `ECP_INPUT_INVALID`, `ECP_BINDING_INVALID`, and `ECP_PLUGINS_MISSING` before you run. Codes and suggestions live in [Error codes](/reference/error-codes).
+
+## 4. Run
+
+```bash
+ecp run brief.ecp.ts --json
+ecp run brief.ecp.ts --to fetch --events
+```
+
+`--to` stops after a named step. `--events` streams run events. A journal is written under `.ecp/runs/<runId>/`.
+
+## 5. Inspect and repair
+
+```bash
+ecp runs list
+ecp runs show <runId>
+ecp runs resume <runId>
+ecp runs rerun <runId> --from <step>
+```
+
+Read the error envelope, patch the workflow file, and rerun from the failing step when the graph still matches.
+
+## What not to copy
+
+Do not paste CLI flag tables into prompts. Run `ecp <command> --help`. Do not put secret values in the workflow file.
+
+## Next steps
+
+- [Quickstart](/getting-started/quickstart)
+- [Journal](/reference/journal)

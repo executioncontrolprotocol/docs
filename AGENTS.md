@@ -1,13 +1,13 @@
-> Docs should contain public information only: installing, configuring, and running ECP.
-
 # Documentation project instructions
+
+Docs should contain public information only: installing, configuring, and running ECP.
 
 ## About this project
 
 - Pages are MDX files with YAML frontmatter.
 - Content is public-facing and focuses on installing, configuring, and running ECP (Execution Control Protocol).
 - Stack: Mintlify. Navigation: `docs.json`.
-- Agent skills: `.mintlify/skills/ecp/` (canonical consumer skill `ecp`). For monorepo work, agents install `ecp-core` / `ecp-extensions` from the core and extensions GitHub repos.
+- Agent skills: `skills/ecp/` (canonical consumer skill `ecp`; `npx skills add executioncontrolprotocol/docs`). `.mintlify/skills/ecp/` is a pointer only. For monorepo work, agents install `ecp-core` from the core GitHub repo.
 
 ## Terminology
 
@@ -15,7 +15,7 @@
 - **Workflow**: Portable Fluent/TS or JSON execution graph. Capitalize when referring to the ECP object.
 - **Environment**: Host bindings (runtime, extensions, policies) that execute workflows.
 - **Ecp**: Operational instance returned by `env.init()`.
-- **Fluent API**: Public authoring spec for workflows (not YAML Context).
+- **Fluent API**: Public authoring spec for workflow files (not YAML Context).
 - **MCP**: Model Context Protocol; don’t expand unless the page is MCP-focused.
 - **Do not** document legacy YAML Context / `ECPContext` / `spec.yaml` as current.
 
@@ -31,15 +31,15 @@
   - Use “Related reading” / “Next steps” sections when useful
 - **Formatting**:
   - Bold for UI elements: Click **Settings**
-  - Code formatting for file names, commands, paths, and code references
+  - Code formatting for file names, commands, and paths
 
 ## Content boundaries
 
-- Public pages: install, configure, run, Fluent authoring, CLI, browser demo (public URL + how to use it).
+- Public pages: install, configure, run, workflow files, CLI.
 - Do not publish Mintlify/`docs.json`/contribution workflow on public MDX pages (keep that in README/CONTRIBUTING).
-- Do not deep-dive monorepo-only eval matrices on public pages.
-- **No internal product ops on public pages or in the consumer skill:** analytics backends, prompt/telemetry logging vendors (e.g. Supabase), private `.env` / feature-flag wiring, unpublished roadmaps, or demo app implementation details that only maintainers need.
-- **Browser demo docs:** lead with the [hosted demo URL](https://demo.executioncontrolprotocol.io/). For clone and local dev, point at the ECP monorepo (`apps/browser-demo`, `pnpm run dev:demo`) instead of a separate demo repository.
+- **No internal product ops** on public pages or in the consumer skill: analytics backends, prompt/telemetry logging vendors, private `.env` / feature-flag wiring, unpublished roadmaps, or App implementation details that only maintainers need.
+- **Do not** document harnesses, the browser demo, Chrome AI, EQL, `ecp test`, `ecp serve`, `ecp up`, or root `ecp encode` / `ecp decode`. Format plugins are `ecp format-toon encode`.
+- MCP is documented at `guides/mcp` (`ecp mcp serve`). The App is documented at `guides/app` (`ecp app`).
 
 ## Cursor rules
 

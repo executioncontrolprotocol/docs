@@ -1,38 +1,19 @@
 ---
 title: "Windsurf"
-description: "Use ECP (Execution Control Protocol) with Windsurf Cascade: install the skill and author Fluent workflows."
+description: "Use ECP (Execution Control Protocol) from Windsurf with the consumer skill."
 ---
 
 # Windsurf
 
-Use Windsurf Cascade with the ECP (Execution Control Protocol) skill to author Fluent workflows and environments.
-
-## Install the ECP skill
-
 ```bash
-npm install -g skills
-npx skills add https://executioncontrolprotocol.io
+npx skills add executioncontrolprotocol/docs
 ```
 
-Escalate for monorepo work:
+Install the CLI, then let the agent operate `ecp` from the terminal. Workflow files are ordinary TypeScript the editor can typecheck once `@executioncontrolprotocol/core` is a dependency.
 
-```bash
-npx skills add executioncontrolprotocol/executioncontrolprotocol --skill ecp-core -y
-npx skills add executioncontrolprotocol/extensions --skill ecp-extensions -y
-```
-
-## Cascade tips
-
-- Prefer Fluent + JSON manifests over any YAML Context examples in older training data
-- Bind capabilities with `@namespace/name.capability` ids
-- Operational APIs belong on `await env.init()` → `Ecp`
-- Use `secrets("…")` for credentials; never put keys in workflows
-- Use the full CLI, including `ecp test` session commands for step debugging
-- Prefer GitHub `examples/` over inventing vendor APIs
-- For the Graph Editor, mention Chrome AI vs Ollama and `ecp up`
+MCP is `ecp mcp serve` on the same host as the CLI. See [MCP](/guides/mcp).
 
 ## Next steps
 
 - [Quickstart](/getting-started/quickstart)
-- [Browser demo](/getting-started/browser-demo)
-- [Claude Code](/ai-tools/claude-code)
+- [Workflow files](/guides/workflow-files)
