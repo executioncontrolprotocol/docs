@@ -2588,6 +2588,28 @@ Plugin: `@executioncontrolprotocol/plugin-anthropic`.
 ecp anthropic generate --prompt <prompt> --system <system> --model <model>
 ```
 
+## `ecp app`
+
+Open a live graph of a workflow file
+
+Serve the App on 127.0.0.1 with a pairing token in the URL. File edits update the graph; graph edits rewrite the file. Runs use the same host and journal as ecp run. The App stores no secrets. Until @next is published, install with ecp plugins link plugins/plugin-app.
+
+Plugin: `@executioncontrolprotocol/plugin-app`.
+
+### Args
+
+| Arg | Required | Description |
+| --- | --- | --- |
+| `file` | yes | Workflow file (*.ecp.ts) |
+
+### Flags
+
+| Flag | Type | Required | Description |
+| --- | --- | --- | --- |
+| `--host` | option | no | HTTP bind address (loopback only) |
+| `--port` | option | no | HTTP bind port (0 = ephemeral) |
+| `--no-open` | boolean | no | Do not open the default browser |
+
 ## `ecp azure-blob-storage create-sas-url`
 
 Mint a time-limited SAS URL for a blob
