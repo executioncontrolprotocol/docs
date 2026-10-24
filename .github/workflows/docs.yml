@@ -1,19 +1,20 @@
-# Lint / validate Mintlify docs on every change to main (and on PRs). Same as `npm run lint`
-# locally / Husky (`mintlify validate` + `mintlify broken-links`).
+# Lint / validate Mintlify docs on every change to main and feat/** (and on PRs).
+# Same as `npm run lint` locally / Husky (`mintlify validate` + `mintlify broken-links`).
 #
-# The Mintlify GitHub App may still deploy on push unless you enable **Blocking** CI checks
-# in the Mintlify dashboard (Add-ons). See `.github/README.md`.
+# The Mintlify GitHub App may still deploy on push to main unless you enable **Blocking**
+# CI checks in the Mintlify dashboard (Add-ons). See `.github/README.md`.
+# Mintlify deploys from `main`. Generated reference clones ECP `development`.
 #
-# Workflow runs on all pushes/PRs to `main` (no path filters) so a single required status
-# check name is always present for branch protection.
+# Workflow runs on all pushes/PRs to `main` and `feat/**` (no path filters) so a single
+# required status check name is always present for branch protection.
 
 name: Docs
 
 on:
   push:
-    branches: [main]
+    branches: [main, "feat/**"]
   pull_request:
-    branches: [main]
+    branches: [main, "feat/**"]
   workflow_dispatch:
 
 permissions:
@@ -65,3 +66,34 @@ jobs:
 
       - name: Lint Mintlify docs (same as pre-commit)
         run: npm run lint
+
+  generated-reference:
+    name: Generated reference
+    runs-on: ubuntu-latest
+    needs: secrets
+    timeout-minutes: 15
+    steps:
+      - name: Checkout docs
+        uses: actions/checkout@v5
+
+      - name: Checkout ECP (development)
+        uses: actions/checkout@v5
+        with:
+          repository: executioncontrolprotocol/executioncontrolprotocol
+          ref: development
+          path: ecp
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v5
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Generate CLI, plugin catalogue, and llms.txt
+        run: npm run generate:reference -- --ecp-root ecp
+
+      - name: Fail if generated files are stale
+        run: git diff --exit-code -- reference/cli.mdx reference/plugins.mdx llms.txt

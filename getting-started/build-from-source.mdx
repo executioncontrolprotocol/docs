@@ -1,62 +1,68 @@
 ---
 title: "Build from source"
-description: "Clone the ECP (Execution Control Protocol) monorepo, build packages, and link the CLI for local development."
+description: "Clone the ECP (Execution Control Protocol) monorepo and build packages when you are changing the CLI or plugins."
 ---
 
 # Build from source
 
-Use this path when you are changing ECP (Execution Control Protocol) packages themselves. Day-to-day usage should [install the CLI from npm](/getting-started/quickstart).
+Use this path when you are **changing** ECP (Execution Control Protocol) packages. Day-to-day usage should [install the CLI from npm](/getting-started/quickstart) (`0.50.0` on `latest`).
 
 ## Prerequisites
 
 - Node.js 22+
-- pnpm (install from the **repo root**, never inside individual packages)
+- pnpm 10 (install from the **repo root**, never inside individual packages)
 
 ## Clone and build
+
+Work from `development`. Pushes to `main` publish to npm.
 
 ```bash
 git clone https://github.com/executioncontrolprotocol/executioncontrolprotocol.git
 cd executioncontrolprotocol
+git checkout development
 pnpm install
 pnpm run build
 ```
 
-Link the CLI:
+Link the CLI for local commands:
 
 ```bash
 cd packages/cli
 pnpm link --global
 ```
 
-From the monorepo root, run an example:
+Prove a clean install from packed tarballs (core, node, plugin-sdk, CLI, and every plugin):
 
 ```bash
-ecp run examples/01-echo/workflow.ts --env examples/01-echo/environment.ts
-ecp validate examples/01-echo/workflow.ts --env examples/01-echo/environment.ts
+pnpm run test:plugin-pack
 ```
 
-## Useful monorepo commands
+## Layout
+
+| Path | Package |
+| ---- | ------- |
+| `packages/core` | `@executioncontrolprotocol/core` (Fluent API, engine, `./types`) |
+| `packages/environments/node` | `@executioncontrolprotocol/node` |
+| `packages/environments/browser` | `@executioncontrolprotocol/browser` |
+| `packages/cli` | `@executioncontrolprotocol/cli` |
+| `packages/plugin-sdk` | `@executioncontrolprotocol/plugin-sdk` |
+| `packages/mcp` | `@executioncontrolprotocol/mcp` (`ecp mcp serve`) |
+| `packages/app` | `@executioncontrolprotocol/app` (graph encoder, `HostAdapter`, `dist/web`) |
+| `plugins/plugin-*` | First-party plugins including `plugin-app` (`ecp app`) |
+
+Versions for core, hosts, CLI, plugin-sdk, MCP, App, and plugins are `0.50.0` (field-test, not 1.0). In-repo dependencies use `workspace:^`, never `file:`.
+
+Release tooling is Changesets (`pnpm exec changeset`). The field-test publishes `latest` from `main`. See the monorepo `RELEASING.md`.
+
+## Checks
 
 ```bash
-pnpm run check          # build + schema + lint + tests
-pnpm run test:unit
-pnpm run generate:schema
+pnpm run check
+pnpm run test:browser
 ```
-
-Package map and boundaries: see the monorepo [`AGENTS.md`](https://github.com/executioncontrolprotocol/executioncontrolprotocol/blob/main/AGENTS.md) and [Packages](/reference/packages).
-
-## Browser demo
-
-The Graph Editor is `apps/browser-demo` in this monorepo. After `pnpm install` and `pnpm run build`:
-
-```bash
-pnpm run dev:demo
-```
-
-Public try-out: [hosted demo](https://demo.executioncontrolprotocol.io/).
 
 ## Next steps
 
 - [Quickstart](/getting-started/quickstart)
-- [Fluent API](/guides/fluent-api)
-- [CLI reference](/reference/cli)
+- [Packages](/reference/packages)
+- [Writing a plugin](/guides/writing-a-plugin)

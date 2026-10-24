@@ -1,0 +1,37 @@
+# Execution Control Protocol
+
+> ECP (Execution Control Protocol) is the deterministic delegation capability an orchestrating agent operates: author a workflow file, run it, read structured errors, repair, and rerun.
+
+## Docs
+
+- [ECP (Execution Control Protocol)](https://executioncontrolprotocol.io/index): ECP (Execution Control Protocol) is the deterministic delegation capability an orchestrating agent operates: author a workflow, run it, read structured errors, repair, and rerun.
+- [Quickstart](https://executioncontrolprotocol.io/getting-started/quickstart): Install the ECP (Execution Control Protocol) CLI and skill, then run your first workflow file.
+- [Build from source](https://executioncontrolprotocol.io/getting-started/build-from-source): Clone the ECP (Execution Control Protocol) monorepo and build packages when you are changing the CLI or plugins.
+- [Why ECP](https://executioncontrolprotocol.io/learn/why-ecp): Why ECP (Execution Control Protocol) exists: deterministic delegation instead of one-off tool calls.
+- [Concepts](https://executioncontrolprotocol.io/learn/concepts): Core ECP (Execution Control Protocol) objects: workflow, environment, extension, policy, plugin, run, and journal.
+- [Relationship to MCP](https://executioncontrolprotocol.io/learn/relationship-to-mcp): How ECP (Execution Control Protocol) relates to MCP: complementary layers, not competitors.
+- [Security](https://executioncontrolprotocol.io/learn/security): Secrets, plugins, and policies in ECP (Execution Control Protocol).
+- [The agent loop](https://executioncontrolprotocol.io/guides/agent-loop): How an orchestrating agent authors, validates, runs, and repairs ECP (Execution Control Protocol) workflows.
+- [Workflow files](https://executioncontrolprotocol.io/guides/workflow-files): Author ECP (Execution Control Protocol) workflows as Fluent TypeScript that compiles to a portable JSON graph.
+- [Fluent API](https://executioncontrolprotocol.io/guides/fluent-api): Author ECP (Execution Control Protocol) workflows with the Fluent TypeScript API — the public authoring spec.
+- [Environments](https://executioncontrolprotocol.io/guides/environments): Hosts, plugins, policies, and optional --env overlays in ECP (Execution Control Protocol).
+- [Writing a plugin](https://executioncontrolprotocol.io/guides/writing-a-plugin): Define an ECP (Execution Control Protocol) plugin with defineExtension, metadata, and generated CLI commands.
+- [Policies](https://executioncontrolprotocol.io/guides/policies): Govern ECP (Execution Control Protocol) runs with budget, approval, state-control, and registry-control.
+- [Files and media](https://executioncontrolprotocol.io/guides/files-and-media): Pass files through ECP (Execution Control Protocol) workflows with FileRef, resolveFile, and writeMediaArtifact.
+- [Formats and converters](https://executioncontrolprotocol.io/guides/formats): Encode, decode, and patch workflow graphs with ECP (Execution Control Protocol) format plugins.
+- [MCP](https://executioncontrolprotocol.io/guides/mcp): Serve ECP (Execution Control Protocol) as MCP tools with ecp mcp serve. Same host as the CLI, over stdio or loopback HTTP.
+- [App](https://executioncontrolprotocol.io/guides/app): Open a live graph of an ECP (Execution Control Protocol) workflow file with ecp app. Same host as the CLI, on loopback with a pairing token.
+- [Alternatives](https://executioncontrolprotocol.io/alternatives/index): How ECP (Execution Control Protocol) compares with agent frameworks and MCP-only stacks.
+- [ECP vs LangChain](https://executioncontrolprotocol.io/alternatives/ecp-vs-langchain): When to use ECP (Execution Control Protocol) instead of LangChain.
+- [ECP vs OpenClaw](https://executioncontrolprotocol.io/alternatives/ecp-vs-openclaw): When to use ECP (Execution Control Protocol) instead of a personal-agent product.
+- [Cursor](https://executioncontrolprotocol.io/ai-tools/cursor): Use ECP (Execution Control Protocol) from Cursor with the consumer skill.
+- [Claude Code](https://executioncontrolprotocol.io/ai-tools/claude-code): Use ECP (Execution Control Protocol) from Claude Code with the consumer skill.
+- [Windsurf](https://executioncontrolprotocol.io/ai-tools/windsurf): Use ECP (Execution Control Protocol) from Windsurf with the consumer skill.
+- [CLI](https://executioncontrolprotocol.io/reference/cli): Generated CLI reference for ECP (Execution Control Protocol).
+- [Plugins](https://executioncontrolprotocol.io/reference/plugins): Generated plugin catalogue for ECP (Execution Control Protocol).
+- [Error codes](https://executioncontrolprotocol.io/reference/error-codes): ECP_* catalogue returned by the ECP (Execution Control Protocol) CLI and engine.
+- [Journal](https://executioncontrolprotocol.io/reference/journal): Run journals for ECP (Execution Control Protocol): schema, layout, and CLI commands.
+- [Schemas](https://executioncontrolprotocol.io/reference/schemas): JSON Schema documents shipped with ECP (Execution Control Protocol).
+- [Packages](https://executioncontrolprotocol.io/reference/packages): Published and in-repo packages for ECP (Execution Control Protocol).
+- [Changelog](https://executioncontrolprotocol.io/reference/changelog): What changed in the ECP (Execution Control Protocol) CLI reset (0.50.0 field-test).
+

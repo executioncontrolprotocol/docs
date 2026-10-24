@@ -1,27 +1,35 @@
 ---
 title: "Changelog"
-description: "Where to find ECP (Execution Control Protocol) release notes and the Fluent API overhaul."
+description: "What changed in the ECP (Execution Control Protocol) CLI reset (0.50.0 field-test)."
 ---
 
 # Changelog
 
-Release notes for ECP (Execution Control Protocol) packages live in the monorepo:
+The reset publishes as **0.50.0** on npm `latest`: a field-test, not 1.0. It is breaking
+versus 0.14. There is no compatibility shim for 0.x APIs. 1.0 (deprecate old package names,
+live dogfood) is later.
 
-- [CHANGELOG on GitHub](https://github.com/executioncontrolprotocol/executioncontrolprotocol/blob/main/CHANGELOG.md)
-- npm package pages under the `@executioncontrolprotocol` scope
+## 0.50.0 (field-test)
 
-## Fluent-era docs
+- CLI rebuilt on oclif 5 with generated commands from `defineOperation` and plugin metadata.
+- Workflow files are `*.ecp.ts`; `--env` is optional.
+- Bindings compile to `@executioncontrolprotocol.requirements`, not into the portable manifest.
+- Run journals under `.ecp/runs/<runId>/`; `ecp runs list|show|resume|rerun`.
+- Plugins live in `plugins/plugin-*` with Changesets (`0.50.0`).
+- Types live at `@executioncontrolprotocol/core/types`.
+- MCP: `@executioncontrolprotocol/mcp` `0.50.0`, `ecp mcp serve` (stdio and loopback HTTP).
+- App: `@executioncontrolprotocol/app` and `@executioncontrolprotocol/plugin-app` `0.50.0`, `ecp app` (loopback + pairing token).
+- CLI `oclif.jitPlugins` pins `mcp` and `plugin-app` at `^0.50`.
 
-This documentation site describes the **Fluent Workflow + Environment** surface:
+## Removed
 
-- Author with TypeScript Fluent API → JSON manifests
-- Workflow contract: `.accepts()` / `.returns()` → `result.output`
-- Run with `ecp` CLI and host runtimes
-- Browser Graph Editor + `ecp up` for Ollama
-
-Older **YAML Context / `spec.yaml` / ECPContext** material is obsolete and is not documented here. Prefer [Fluent API](/guides/fluent-api) and [Concepts](/learn/concepts).
+- Harnesses, evals, browser demo, Temporal stub
+- `format-eql`, `chrome-ai`, `memory`, `telemetry`, `storage`, `slack`, `browser-secrets`, `image-policy`
+- CLI `serve`, `up`, `encode`, `decode` as root commands
+- `ecp test` (replaced by `ecp run --to` and `ecp runs`)
+- YAML Context / `ECPContext` / `spec.yaml`
 
 ## Next steps
 
-- [Quickstart](/getting-started/quickstart)
 - [Packages](/reference/packages)
+- [CLI](/reference/cli)
