@@ -39,7 +39,7 @@ Docs should contain public information only: installing, configuring, and runnin
 - Do not publish Mintlify/`docs.json`/contribution workflow on public MDX pages (keep that in README/CONTRIBUTING).
 - **No internal product ops** on public pages or in the consumer skill: analytics backends, prompt/telemetry logging vendors, private `.env` / feature-flag wiring, unpublished roadmaps, or App implementation details that only maintainers need.
 - **Do not** document harnesses, the browser demo, Chrome AI, EQL, `ecp test`, `ecp serve`, `ecp up`, or root `ecp encode` / `ecp decode`. Format plugins are `ecp format-toon encode`.
-- MCP and App pages are placeholders until Phases 7 and 8.
+- MCP is documented at `guides/mcp` (`ecp mcp serve`). The App page is a placeholder until Phase 8.
 
 ## Cursor rules
 

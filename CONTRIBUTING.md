@@ -35,7 +35,7 @@ This file is the guide for **previewing and validating this documentation site**
 ## Writing guidelines
 
 - **Follow project voice and SEO rules**: see `AGENTS.md` and `.cursor/rules/docs-voice-seo.mdc`
-- **Public-only content**: no internal ops (analytics, prompt-logging backends, private `.env` catalogs). MCP and App pages are placeholders until Phases 7 and 8.
+- **Public-only content**: no internal ops (analytics, prompt-logging backends, private `.env` catalogs). The App page is a placeholder until Phase 8.
 - **No emojis**: do not use emoji characters in docs
 - **Match the right path**: intended install is **`npm install -g @executioncontrolprotocol/cli@next`**; until `@next` exists, send readers to **[Build from source](/getting-started/build-from-source)**
 - **Authoring surface**: workflow files (`*.ecp.ts`) — not YAML Context
