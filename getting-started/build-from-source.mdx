@@ -48,10 +48,10 @@ That smoke does not hit unpublished npm. It is the install proof until `@next` e
 | `packages/environments/browser` | `@executioncontrolprotocol/browser` |
 | `packages/cli` | `@executioncontrolprotocol/cli` |
 | `packages/plugin-sdk` | `@executioncontrolprotocol/plugin-sdk` |
-| `packages/mcp` | `@executioncontrolprotocol/mcp` (Phase 7 rebuild) |
+| `packages/mcp` | `@executioncontrolprotocol/mcp` (`ecp mcp serve`) |
 | `plugins/plugin-*` | First-party plugins (independent versions, Changesets pre-`next`) |
 
-Versions for core, hosts, CLI, plugin-sdk, and plugins start at `1.0.0-next.0`. MCP stays `0.14.1` until Phase 7. In-repo dependencies use `workspace:^`, never `file:`.
+Versions for core, hosts, CLI, plugin-sdk, MCP, and plugins start at `1.0.0-next.0`. In-repo dependencies use `workspace:^`, never `file:`.
 
 Release tooling is Changesets (`pnpm exec changeset`). Prereleases, when published, use the `next` dist-tag from a milestone branch. See the monorepo `RELEASING.md`.
 

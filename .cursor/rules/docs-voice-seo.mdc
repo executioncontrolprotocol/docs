@@ -33,7 +33,7 @@ alwaysApply: false
 - **Commands**: prefer installed CLIs over one-off runners in docs. Show the one-time install/link step, then the command. Intended install is `npm install -g @executioncontrolprotocol/cli@next`; until `@next` exists, link [build from source](/getting-started/build-from-source).
 - **Public-only docs**: do not publish internal documentation about building or operating the docs site (Mintlify, `mint dev`, `docs.json`, contribution workflow). Pages should focus on installing, configuring, and running ECP.
 - **Do not leak internal ops**: never document analytics backends, prompt/telemetry logging vendors or pipelines, private env var catalogs, feature flags, or unpublished roadmap/UI details on public MDX or in `skills/ecp/`.
-- **MCP / App**: placeholder pages only until Phases 7 and 8. Do not document a hosted browser demo.
+- **App**: placeholder page only until Phase 8. Do not document a hosted browser demo. MCP is `ecp mcp serve` ([guides/mcp](/guides/mcp)).
 
 ## Content checks before publishing
 

@@ -18,7 +18,7 @@ Learn flags from `ecp <command> --help`. Do not copy CLI tables into this skill.
 
 ## When to delegate
 
-Use ECP when the work is **repeatable, governed, or must be repaired** (policies, journals, plugins). Do **not** use it for a single throwaway tool call, for chat-only reasoning, or for unpublished MCP/App surfaces (those are Phase 7 / 8 placeholders).
+Use ECP when the work is **repeatable, governed, or must be repaired** (policies, journals, plugins). Do **not** use it for a single throwaway tool call or for chat-only reasoning. MCP is `ecp mcp serve` on the same host as the CLI (see the MCP guide); do not copy that catalogue here. The visual App is still a Phase 8 placeholder.
 
 ## Loop
 

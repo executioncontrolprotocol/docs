@@ -1,20 +1,122 @@
 ---
 title: "MCP"
-description: "MCP adapter for ECP (Execution Control Protocol). Phase 7 rebuild; this page is a placeholder."
+description: "Serve ECP (Execution Control Protocol) as MCP tools with ecp mcp serve. Same host as the CLI, over stdio or loopback HTTP."
 ---
 
 # MCP
 
-The MCP adapter for ECP (Execution Control Protocol) is rebuilt in **Phase 7**. Until that ships, the CLI is the primary agent surface.
+ECP (Execution Control Protocol) exposes the **same process host** the CLI uses as MCP tools. Installed plugins become tools. Meta tools wrap `search`, `describe`, `validate`, `run`, journals, `invoke`, and plugin install. There is no per-capability MCP code.
 
 ```bash
-# Coming in Phase 7
+ecp plugins link packages/mcp
 ecp mcp serve
 ```
 
-Do not treat the current `@executioncontrolprotocol/mcp` `0.14.1` package as the reset API. See [Relationship to MCP](/learn/relationship-to-mcp).
+Until `@next` is on the registry, link the workspace package (or install a packed tarball with `ECP_ALLOW_SOURCE=path`). JIT from npm (`oclif.jitPlugins`) cannot fully pass until that dist-tag exists.
+
+`ecp mcp serve` is the MCP surface. There is no root `ecp serve` or `ecp up`.
+
+## stdio (default)
+
+stdout is the protocol stream. Do not log to stdout.
+
+```bash
+ecp mcp serve
+ecp mcp serve --tools meta
+```
+
+`--tools meta` serves only the closed meta set when a client cannot handle a large capability catalogue. Capabilities stay reachable with `ecp_invoke`.
+
+## HTTP
+
+```bash
+ecp mcp serve --http
+```
+
+HTTP binds **127.0.0.1** and requires a bearer token, printed once to stderr at start. Pass that token as `Authorization: Bearer <token>`.
+
+```bash
+ecp mcp serve --http --host 127.0.0.1 --port 3847
+ecp mcp serve --http --host 0.0.0.0 --allow-remote
+```
+
+`--host` and `--port` change the bind. Binding beyond loopback requires `--allow-remote`. Use that only on a trusted network.
+
+## Claude Desktop
+
+Add a stdio server that runs the same `ecp` on your `PATH` (after you have linked or installed the MCP plugin):
+
+```json
+{
+  "mcpServers": {
+    "ecp": {
+      "command": "ecp",
+      "args": ["mcp", "serve"]
+    }
+  }
+}
+```
+
+Use `--tools meta` as an extra arg if the client chokes on the capability list:
+
+```json
+{
+  "mcpServers": {
+    "ecp": {
+      "command": "ecp",
+      "args": ["mcp", "serve", "--tools", "meta"]
+    }
+  }
+}
+```
+
+## Claude Code and other MCP clients
+
+Point the client at `ecp mcp serve` the same way: stdio command `ecp` with args `mcp serve`. The server sees every plugin you already installed for the CLI.
+
+## Tool names
+
+Claude clients require `^[a-zA-Z0-9_-]{1,64}$`, so names use underscores, not dots.
+
+**Meta tools** (always registered unless you pass `--tools meta` only):
+
+| Tool | Does |
+| ---- | ---- |
+| `ecp_search` | Search capabilities |
+| `ecp_describe` | Describe the environment (`format` for `toon`) |
+| `ecp_validate` | Validate a workflow `path` or Fluent `source` |
+| `ecp_run` | Run a workflow `path` or `source`; returns `runId` |
+| `ecp_runs_show` | Show a journal |
+| `ecp_runs_rerun` | Rerun from a step |
+| `ecp_invoke` | Invoke one capability by id |
+| `ecp_plugins_install` | Install a plugin (`confirm: true`; trust policy applies) |
+
+**Capability tools** are generated from the registry: `<extension>_<capability>`, sanitized. Names longer than 64 characters are truncated and get a 6-character hash. Example: `jsonata_transform`. Format plugins show up as `format_toon_encode`, not root `encode` / `decode`.
+
+Clients with tool search (Claude Code) load capability tools on demand, so a large catalogue costs nothing up front.
+
+## Path or source
+
+`ecp_validate` and `ecp_run` accept a workflow **file path** or inlined Fluent **source** (for clients that cannot write files). Source is written to a temp `*.ecp.ts` and compiled through the Node loader, so import rules match the CLI.
+
+```json
+{ "name": "ecp_run", "arguments": { "source": "import { workflow, step } from \"@executioncontrolprotocol/core\"\nexport default workflow(\"Echo\").run([\n  step(\"@executioncontrolprotocol/jsonata.transform\", \"T\").with({ expression: \"a\", payload: { a: 1 } }).as(\"out\"),\n])\n" } }
+```
+
+Pass `events: true` on `ecp_run` to map the CLI `--events` stream to MCP **progress** notifications. The result still includes `runId`.
+
+## Live updates
+
+Installing or linking a plugin updates `<oclif dataDir>/package.json`. The server rebuilds the host and sends `notifications/tools/list_changed`. New capabilities appear as tools without restarting the client connection.
+
+`ecp_plugins_install` requires `confirm: true`. Third-party packages also go through the CLI trust hook (the user must approve).
+
+## Resources
+
+The server exposes `ecp://environment`, `ecp://capabilities`, `ecp://policies`, `ecp://capability/{id}`, and `ecp://runs/{runId}`. Run resources read the **journal** on disk (`.ecp/runs/<runId>/`), not an in-memory map.
 
 ## Next steps
 
+- [Relationship to MCP](/learn/relationship-to-mcp)
 - [The agent loop](/guides/agent-loop)
-- [AI tools](/ai-tools/cursor)
+- [CLI](/reference/cli)

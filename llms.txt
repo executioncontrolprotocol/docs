@@ -18,7 +18,7 @@
 - [Policies](https://executioncontrolprotocol.io/guides/policies): Govern ECP (Execution Control Protocol) runs with budget, approval, state-control, and registry-control.
 - [Files and media](https://executioncontrolprotocol.io/guides/files-and-media): Pass files through ECP (Execution Control Protocol) workflows with FileRef, resolveFile, and writeMediaArtifact.
 - [Formats and converters](https://executioncontrolprotocol.io/guides/formats): Encode, decode, and patch workflow graphs with ECP (Execution Control Protocol) format plugins.
-- [MCP](https://executioncontrolprotocol.io/guides/mcp): MCP adapter for ECP (Execution Control Protocol). Phase 7 rebuild; this page is a placeholder.
+- [MCP](https://executioncontrolprotocol.io/guides/mcp): Serve ECP (Execution Control Protocol) as MCP tools with ecp mcp serve. Same host as the CLI, over stdio or loopback HTTP.
 - [App](https://executioncontrolprotocol.io/guides/app): Visual App for ECP (Execution Control Protocol). Phase 8; this page is a placeholder.
 - [Alternatives](https://executioncontrolprotocol.io/alternatives/index): How ECP (Execution Control Protocol) compares with agent frameworks and MCP-only stacks.
 - [ECP vs LangChain](https://executioncontrolprotocol.io/alternatives/ecp-vs-langchain): When to use ECP (Execution Control Protocol) instead of LangChain.
