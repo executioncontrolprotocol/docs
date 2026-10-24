@@ -1,11 +1,11 @@
 ---
 title: "Build from source"
-description: "Clone the ECP (Execution Control Protocol) monorepo, build packages, and pack-install the CLI while 0.50.0 is unpublished."
+description: "Clone the ECP (Execution Control Protocol) monorepo and build packages when you are changing the CLI or plugins."
 ---
 
 # Build from source
 
-Use this path when you are changing ECP (Execution Control Protocol) packages, or when **0.50.0** is not on npm `latest` yet. Day-to-day usage should [install the CLI from npm](/getting-started/quickstart) once that version exists.
+Use this path when you are **changing** ECP (Execution Control Protocol) packages. Day-to-day usage should [install the CLI from npm](/getting-started/quickstart) (`0.50.0` on `latest`).
 
 ## Prerequisites
 
@@ -14,12 +14,12 @@ Use this path when you are changing ECP (Execution Control Protocol) packages, o
 
 ## Clone and build
 
-Work from `milestone/cli-reset` during the CLI reset. Do not push `main` or `development` from that milestone (`main` publishes to npm).
+Work from `development`. Pushes to `main` publish to npm.
 
 ```bash
 git clone https://github.com/executioncontrolprotocol/executioncontrolprotocol.git
 cd executioncontrolprotocol
-git checkout milestone/cli-reset
+git checkout development
 pnpm install
 pnpm run build
 ```
@@ -36,8 +36,6 @@ Prove a clean install from packed tarballs (core, node, plugin-sdk, CLI, and eve
 ```bash
 pnpm run test:plugin-pack
 ```
-
-That smoke does not hit unpublished npm. It is the install proof until **0.50.0** is on `latest`.
 
 ## Layout
 

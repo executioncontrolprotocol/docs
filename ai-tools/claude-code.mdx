@@ -9,7 +9,7 @@ description: "Use ECP (Execution Control Protocol) from Claude Code with the con
 npx skills add executioncontrolprotocol/docs
 ```
 
-Point Claude Code at a project that has the `ecp` CLI on `PATH` (global **0.50.0** when it is on `latest`, or a [source build](/getting-started/build-from-source)). The skill teaches the loop: `search` → author `*.ecp.ts` → `validate --json` → `run --json` → `runs show` → `runs rerun --from`.
+Point Claude Code at a project that has the `ecp` CLI on `PATH` (global **0.50.0**, or a [source build](/getting-started/build-from-source)). The skill teaches the loop: `search` → author `*.ecp.ts` → `validate --json` → `run --json` → `runs show` → `runs rerun --from`.
 
 Claude Code can also attach to `ecp mcp serve` (stdio). Capability tools load on demand through tool search. See [MCP](/guides/mcp).
 

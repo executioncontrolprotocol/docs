@@ -6,13 +6,14 @@
 
 - [ECP (Execution Control Protocol)](https://executioncontrolprotocol.io/index): ECP (Execution Control Protocol) is the deterministic delegation capability an orchestrating agent operates: author a workflow, run it, read structured errors, repair, and rerun.
 - [Quickstart](https://executioncontrolprotocol.io/getting-started/quickstart): Install the ECP (Execution Control Protocol) CLI and skill, then run your first workflow file.
-- [Build from source](https://executioncontrolprotocol.io/getting-started/build-from-source): Clone the ECP (Execution Control Protocol) monorepo, build packages, and pack-install the CLI while 0.50.0 is unpublished.
+- [Build from source](https://executioncontrolprotocol.io/getting-started/build-from-source): Clone the ECP (Execution Control Protocol) monorepo and build packages when you are changing the CLI or plugins.
 - [Why ECP](https://executioncontrolprotocol.io/learn/why-ecp): Why ECP (Execution Control Protocol) exists: deterministic delegation instead of one-off tool calls.
 - [Concepts](https://executioncontrolprotocol.io/learn/concepts): Core ECP (Execution Control Protocol) objects: workflow, environment, extension, policy, plugin, run, and journal.
 - [Relationship to MCP](https://executioncontrolprotocol.io/learn/relationship-to-mcp): How ECP (Execution Control Protocol) relates to MCP: complementary layers, not competitors.
 - [Security](https://executioncontrolprotocol.io/learn/security): Secrets, plugins, and policies in ECP (Execution Control Protocol).
 - [The agent loop](https://executioncontrolprotocol.io/guides/agent-loop): How an orchestrating agent authors, validates, runs, and repairs ECP (Execution Control Protocol) workflows.
 - [Workflow files](https://executioncontrolprotocol.io/guides/workflow-files): Author ECP (Execution Control Protocol) workflows as Fluent TypeScript that compiles to a portable JSON graph.
+- [Fluent API](https://executioncontrolprotocol.io/guides/fluent-api): Author ECP (Execution Control Protocol) workflows with the Fluent TypeScript API — the public authoring spec.
 - [Environments](https://executioncontrolprotocol.io/guides/environments): Hosts, plugins, policies, and optional --env overlays in ECP (Execution Control Protocol).
 - [Writing a plugin](https://executioncontrolprotocol.io/guides/writing-a-plugin): Define an ECP (Execution Control Protocol) plugin with defineExtension, metadata, and generated CLI commands.
 - [Policies](https://executioncontrolprotocol.io/guides/policies): Govern ECP (Execution Control Protocol) runs with budget, approval, state-control, and registry-control.

@@ -44,6 +44,7 @@
             "pages": [
               "guides/agent-loop",
               "guides/workflow-files",
+              "guides/fluent-api",
               "guides/environments",
               "guides/writing-a-plugin",
               "guides/policies",

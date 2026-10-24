@@ -1,0 +1,116 @@
+---
+title: "Fluent API"
+description: "Author ECP (Execution Control Protocol) workflows with the Fluent TypeScript API — the public authoring spec."
+---
+
+# Fluent API
+
+The Fluent API is the **public authoring spec** for ECP (Execution Control Protocol) workflows. You write TypeScript, compile to a JSON manifest, and run that manifest in any compatible environment.
+
+Import builders from `@executioncontrolprotocol/core`.
+
+## Hello workflow
+
+```ts
+import { workflow, step } from "@executioncontrolprotocol/core"
+
+export default workflow("Echo test")
+  .run([
+    step("@executioncontrolprotocol/test.echo", "Echo")
+      .with({ value: "hello from fluent API" })
+      .as("echo"),
+  ])
+```
+
+- `workflow(label)` — create a builder
+- `.accepts(schema)` / `.returns(schema)` — JSON Schema (or Zod) for run input / public output
+- `step(capabilityId, label)` — invoke a capability
+- `.with({…})` — step input
+- `.as("echo")` — write output into run state under `echo`
+- `.run([...])` — ordered root steps (and flow nodes)
+
+## Multi-step and refs
+
+```ts
+import { workflow, step, ref } from "@executioncontrolprotocol/core"
+
+export default workflow("Weekly brief").run([
+  step("@executioncontrolprotocol/test.echo", "Collect signals")
+    .with({ value: "weekly" })
+    .as("signals"),
+  step("@executioncontrolprotocol/jsonata.transform", "Reshape")
+    .with({
+      expression: "{ brief: payload }",
+      payload: ref("signals"),
+    })
+    .as("brief"),
+])
+```
+
+`ref("signals")` becomes a `$ref` into run state. Keep secrets out of workflows; use `secrets("key")` at bind time.
+
+## Workflow input and output
+
+`.accepts()` and `.returns()` are the same verbs in Fluent and JSON. They describe the workflow contract — not dummy steps. Fluent render and browser compile emit **JSON Schema literals** (no `zod` import). Zod objects are an authoring convenience that serialize to the same JSON.
+
+```ts
+import { workflow, step, ref } from "@executioncontrolprotocol/core"
+
+export default workflow("Echo from input")
+  .id("echo-from-input")
+  .accepts({
+    type: "object",
+    properties: { value: { type: "string" } },
+    required: ["value"],
+  })
+  .returns({
+    type: "object",
+    properties: { echo: { type: "object" } },
+    required: ["echo"],
+  })
+  .run([
+    step("@executioncontrolprotocol/test.echo", "Echo")
+      .with({ value: ref("value") })
+      .as("echo"),
+  ])
+```
+
+- `accepts` property names seed `ecp.run(..., { input })` and are read with `ref("value")`.
+- `returns` property names are top-level state keys (typically a step `.as()`). After a successful run, `result.output` picks those keys.
+- Omit either field (or pass an empty object schema) when the workflow has no public I/O.
+
+`ecp run --input` validates input against `accepts` **before** steps execute. Extra unused keys on a valid object succeed. `ecp validate` still checks the graph and environment only.
+
+Runnable example: [07-accepts-returns](https://github.com/executioncontrolprotocol/executioncontrolprotocol/tree/development/examples/07-accepts-returns).
+
+## Flow control
+
+From `@executioncontrolprotocol/core`:
+
+| Builder | Role |
+| ------- | ---- |
+| `parallel([...])` | Run branches concurrently |
+| `branch(…)` | Conditional paths |
+| `loop(…)` | Iterate while a condition holds |
+
+Compose them inside `.run([...])` alongside `step(...)` nodes. Step IDs are globally unique in the compiled manifest.
+
+## Manifest shape
+
+Compiled workflows use `schema: "@executioncontrolprotocol.workflow"` and `version: "1.0"`. Field names are camelCase in JSON. Capability IDs use kebab-case segments.
+
+There is **no** `format-fluent` plugin. Fluent encode lives on `Ecp` after `init()` (`ecp.encode(...).as("fluent")`). There is no root `ecp encode` / `ecp decode`; format plugins are `ecp format-toon encode`.
+
+## Related helpers
+
+| Helper | Use |
+| ------ | --- |
+| `ref` | Portable state references in workflows |
+| `secrets` | Host secret references at bind time |
+
+## Next steps
+
+- [Workflow files](/guides/workflow-files)
+- [Environments](/guides/environments)
+- [Schemas](/reference/schemas)
+- [Quickstart](/getting-started/quickstart)

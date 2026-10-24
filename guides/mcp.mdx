@@ -8,11 +8,10 @@ description: "Serve ECP (Execution Control Protocol) as MCP tools with ecp mcp s
 ECP (Execution Control Protocol) exposes the **same process host** the CLI uses as MCP tools. Installed plugins become tools. Meta tools wrap `search`, `describe`, `validate`, `run`, journals, `invoke`, and plugin install. There is no per-capability MCP code.
 
 ```bash
-ecp plugins link packages/mcp
 ecp mcp serve
 ```
 
-Until **0.50.0** is on the registry, link the workspace package (or install a packed tarball with `ECP_ALLOW_SOURCE=path`). CLI `oclif.jitPlugins` pins `"^0.50"`. First-use JIT from npm waits on that publish.
+First use installs `@executioncontrolprotocol/mcp` from npm (`oclif.jitPlugins` pins `"^0.50"`). From a source checkout you can still `ecp plugins link packages/mcp`.
 
 `ecp mcp serve` is the MCP surface. There is no root `ecp serve` or `ecp up`.
 

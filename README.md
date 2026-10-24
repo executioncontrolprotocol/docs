@@ -4,7 +4,7 @@ This repository contains the documentation site for **ECP (Execution Control Pro
 
 **Live site:** https://executioncontrolprotocol.io/
 
-The CLI reset rewrite lives on `feat/cli-reset-docs`. The 0.50.0 field-test is ready to deploy (Mintlify publishes `main`); merge that branch when you want the new site live.
+The live site is the 0.50.0 field-test rewrite. Mintlify publishes `main`.
 
 ## What’s in here
 

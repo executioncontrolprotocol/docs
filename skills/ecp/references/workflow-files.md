@@ -26,7 +26,10 @@ export default workflow("reshape-payload")
 - `.as("id")` names a step for `ref()`, `--to`, and `runs rerun --from`.
 - `.requires(range, pkg?)` pins a plugin version.
 - Inference fills requirements from `step("id")` when `.with()` is omitted.
+- `.accepts(schema)` / `.returns(schema)` declare run input and public output. Pass input with `ecp run --input`. See https://github.com/executioncontrolprotocol/executioncontrolprotocol/tree/development/examples/07-accepts-returns
 
 `ecp install brief.ecp.ts` installs missing plugins from requirements.
+
+Echo example: https://github.com/executioncontrolprotocol/executioncontrolprotocol/tree/development/examples/01-echo
 
 Do not use YAML Context / `spec.yaml` / `withExtensions`.

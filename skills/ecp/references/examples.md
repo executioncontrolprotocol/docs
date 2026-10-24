@@ -1,6 +1,6 @@
 # Dogfood workflows
 
-Three tasks used to prove this skill. Fixtures live in the ECP repo under `reset/dogfood/` on `milestone/cli-reset`. Copy the shape; do not invent old `ecp test` sessions.
+Three tasks used to prove this skill. Copy the shape from `examples/` and `plugins/plugin-*/examples` on `development`. Do not invent old `ecp test` sessions.
 
 ## 1. JSONata reshape
 
