@@ -9,7 +9,12 @@ ECP (Execution Control Protocol) moves binaries as **file references**, not as i
 
 ## FileRef
 
-A `FileRef` is `{ uri, mediaType?, name? }`. Steps accept refs in inputs and return refs in outputs. The host resolves `uri` at run time.
+A `FileRef` is a tagged object with `kind`:
+
+- `{ kind: "file", path }` — a host path on Node, or an `ecp://browser/<id>` locator in the browser
+- `{ kind: "artifact", uri }` — bytes the host already stored (`ecp://file/…` on disk)
+- `{ kind: "url", url }` — a remote URL (opt-in with `allowRemoteUrls`)
+- `{ kind: "buffer", data }` — base64 bytes (tests and small fixtures)
 
 Do not embed secret paths or credentials in the ref. Use `secrets("key")` for credentials; pass the ref as data.
 
@@ -17,14 +22,15 @@ Do not embed secret paths or credentials in the ref. Use `secrets("key")` for cr
 
 Plugin code uses host helpers:
 
-- `resolveFile(ref)` — read bytes (and metadata) for a `FileRef`
-- `writeMediaArtifact(bytes, { mediaType, name })` — persist output and return a new `FileRef`
+- `resolveFile(ref, ctx)` — read bytes (and metadata) for a `FileRef`
+- `writeMediaArtifact(bytes, { mediaType, name, prefix }, ctx)` — persist output and return a new `FileRef`
 
-These live on the execution context. Plugins never import Node or browser hosts.
+These live on the execution context. Plugins never import Node or browser hosts. The bound environment supplies a `MediaStore`:
 
-## Storage plugins
+- **Node** writes under `.ecp/artifacts` (override with `ECP_ARTIFACTS_DIR`) and returns `ecp://file/…` refs. `{ kind: "file", path: "./photo.jpg" }` reads that path from disk.
+- **Browser** keeps bytes as `ecp://browser/<id>` refs. When you pair a Node host (`ecp app`), the browser store uploads those bytes to `POST /v1/media` so the host saves them on disk.
 
-Upload and download go through plugins, not a core storage package. First-party example: `@executioncontrolprotocol/plugin-azure-blob-storage` (`ecp plugins install azure-blob-storage`). Image bytes go through `@executioncontrolprotocol/plugin-image-sharp` and generative inference through `@executioncontrolprotocol/plugin-fal` or Adobe Firefly Services.
+Remote blob upload and download stay an explicit plugin step (`@executioncontrolprotocol/plugin-azure-blob-storage`), not a store tier.
 
 ## Journals
 
@@ -34,3 +40,4 @@ Run artifacts and events live under `.ecp/runs/<runId>/` (override with `ECP_RUN
 
 - [Formats and converters](/guides/formats)
 - [Writing a plugin](/guides/writing-a-plugin)
+- [App](/guides/app)
