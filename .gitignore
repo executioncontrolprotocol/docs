@@ -1,5 +1,10 @@
 node_modules
 
+# Local `npx skills add` copies (canonical skill is skills/ecp/)
+.agents/
+.claude/
+skills-lock.json
+
 # Vitest / V8 coverage (never commit)
 coverage/
 coverage-tmp/

@@ -1,6 +1,11 @@
 # Mintlify automatically ignores these files and directories:
 # .git, .github, .claude, .agents, .idea, node_modules,
 # README.md, LICENSE.md, CHANGELOG.md, CONTRIBUTING.md
+#
+# `npx skills add` still writes `.agents/` and `.claude/` locally. Name them here so
+# `mintlify validate` does not try to symlink a second `ecp` skill (EPERM on Windows).
+.agents/
+.claude/
 
 # Draft content
 drafts/
