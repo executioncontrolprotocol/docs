@@ -1,11 +1,11 @@
 ---
 title: "App"
-description: "Open a live graph of an ECP (Execution Control Protocol) workflow file with ecp app. Same host as the CLI, on loopback with a pairing token."
+description: "Open a live 50/50 Fluent editor and React Flow canvas of an ECP (Execution Control Protocol) workflow file with ecp app. Same host as the CLI, on loopback with a pairing token."
 ---
 
 # App
 
-`ecp app` opens a live graph of a workflow file on the **same process host** the CLI uses. File edits update the graph. Graph edits rewrite the file. Runs use the same journal as `ecp run`. The App stores no secrets and makes no model calls.
+`ecp app` opens a live editor of a workflow file on the **same process host** the CLI uses. The window is a 50/50 split: Fluent TypeScript on the left, and a React Flow canvas (or Run tab) on the right. File edits update the graph. Graph edits rewrite the file. Runs from the Run tab use the same journal as `ecp run`. The App stores no secrets and makes no model calls.
 
 ```bash
 ecp app examples/01-echo/workflow.ecp.ts
@@ -24,15 +24,24 @@ ecp app brief.ecp.ts --no-open
 ecp app brief.ecp.ts --port 0
 ```
 
+## Layout
+
+- **Left:** Fluent TypeScript in Monaco. Edits save through the CLI host (about 400 ms after you stop typing).
+- **Right, Workflow tab:** React Flow canvas of steps, accepts, and returns. Connect ports, disconnect edges, and configure step or I/O fields. This tab is the default.
+- **Right, Run tab:** Accepts form, a running state, then outputs. A run uses the same host and journal as `ecp run`, so `ecp runs show <id>` works.
+
 ## Two-way sync
 
-- **File → graph:** the server watches the file (150 ms debounce). Disk edits show up in the graph within a second.
-- **Graph → file:** a graph edit patches the manifest, then the file is rewritten with the Fluent encoder.
-- **Read-only:** files that cannot round-trip (relative imports, computed `.with()` values) open with a banner explaining why. Losing comments or formatting on save is a warning, not read-only. Encoder-written files stay editable.
+- **File → both panes:** the server watches the file (150 ms debounce). Disk edits show up in the editor and graph within a second when you have no unsaved local edits.
+- **Code → file:** the editor buffer is written as typed. The Node host compiles it. A compile failure keeps your text and the last good graph, and shows the load error.
+- **Graph → file:** a graph edit patches the manifest, then the file is rewritten with the Fluent encoder. Connecting ports writes `$ref` bindings (`state.<as>` or `state.<as>.<handle>`).
+- **Read-only graph:** files that cannot round-trip (relative imports, computed `.with()` values) open with a banner explaining why. You can still edit the Fluent buffer. Losing comments or formatting on a graph save is a warning, not read-only. Encoder-written files stay editable.
 
-## Runs and palette
+If you are mid-edit in the Fluent pane when the file changes on disk, the editor keeps your buffer and tells you the file changed.
 
-Runs from the App go through the same host and journal as `ecp run`, so `ecp runs show <id>` works. The palette is the capability catalogue from `ecp describe` on this process.
+## Runs
+
+The Run tab calls the same host as `ecp run`. Progress colors the Workflow canvas so you can switch back and see which steps ran. File inputs upload through the App host media route and become file refs in the run input.
 
 ## Next steps
 
