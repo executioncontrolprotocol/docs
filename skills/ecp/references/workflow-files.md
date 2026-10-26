@@ -8,7 +8,10 @@ import jsonataExtension from "@executioncontrolprotocol/plugin-jsonata"
 import { extension } from "@executioncontrolprotocol/core"
 
 export default workflow("reshape-payload")
-  .with([extension(jsonataExtension)])
+  .with([
+    extension(jsonataExtension),
+    extension("@executioncontrolprotocol/test"),
+  ])
   .run([
     step("@executioncontrolprotocol/jsonata.transform", "Reshape")
       .with({
@@ -25,7 +28,7 @@ export default workflow("reshape-payload")
 - `.with([...])` binds extensions and policies for this file.
 - `.as("id")` names a step for `ref()`, `--to`, and `runs rerun --from`.
 - `.requires(range, pkg?)` pins a plugin version.
-- Inference fills requirements from `step("id")` when `.with()` is omitted.
+- Inference fills requirements from `step("id")` when `.with()` is omitted. `@executioncontrolprotocol/test` infers `@executioncontrolprotocol/plugin-test` (not a Node default).
 - `.accepts(schema)` / `.returns(schema)` declare run input and public output. Pass input with `ecp run --input`. See https://github.com/executioncontrolprotocol/executioncontrolprotocol/tree/development/examples/07-accepts-returns
 
 `ecp install brief.ecp.ts` installs missing plugins from requirements.

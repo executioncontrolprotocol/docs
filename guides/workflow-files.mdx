@@ -15,7 +15,10 @@ import jsonataExtension from "@executioncontrolprotocol/plugin-jsonata"
 import { extension } from "@executioncontrolprotocol/core"
 
 export default workflow("reshape-payload")
-  .with([extension(jsonataExtension)])
+  .with([
+    extension(jsonataExtension),
+    extension("@executioncontrolprotocol/test"),
+  ])
   .run([
     step("@executioncontrolprotocol/jsonata.transform", "Reshape")
       .with({
@@ -37,7 +40,7 @@ export default workflow("reshape-payload")
 
 ## Inference
 
-If you omit `.with()` for a first-party capability the CLI can resolve, compile infers a requirements row from `step("id")`. Explicit `.with()` still wins for config and version pins. Built-ins such as `@executioncontrolprotocol/test` and `registry-control` do not need an npm package row.
+If you omit `.with()` for a first-party capability the CLI can resolve, compile infers a requirements row from `step("id")`. Explicit `.with()` still wins for config and version pins. Host built-ins such as `registry-control` do not need an npm package row. `@executioncontrolprotocol/test` infers `@executioncontrolprotocol/plugin-test` (not a Node default — link or install that plugin before `ecp run`).
 
 ## Compile split
 

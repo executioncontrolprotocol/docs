@@ -32,14 +32,18 @@ ecp --help
 Scaffold a workflow, or copy the echo example from the [monorepo](https://github.com/executioncontrolprotocol/executioncontrolprotocol/tree/development/examples/01-echo):
 
 ```ts
-import { workflow, step } from "@executioncontrolprotocol/core"
+import { workflow, step, extension } from "@executioncontrolprotocol/core"
 
-export default workflow("Echo test").run([
-  step("@executioncontrolprotocol/test.echo", "Echo")
-    .with({ value: "hello from fluent API" })
-    .as("echo"),
-])
+export default workflow("Echo test")
+  .with([extension("@executioncontrolprotocol/test")])
+  .run([
+    step("@executioncontrolprotocol/test.echo", "Echo")
+      .with({ value: "hello from fluent API" })
+      .as("echo"),
+  ])
 ```
+
+`test.echo` is not built into Node. Link or install `@executioncontrolprotocol/plugin-test` first (`ecp plugins link plugins/plugin-test` from a source checkout, or `ecp plugins install test` after 0.50.0 is on npm).
 
 `--env` is optional. Omit it to use the process host (built-in Node plus installed plugins):
 
