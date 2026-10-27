@@ -11,7 +11,7 @@ export default environment(NODE_ENVIRONMENT_ID, "local").with([
 ])
 ```
 
-Omit `--env` to use the process host (built-in Node + `ecp plugins install`).
+Omit `--env` to use the process host (built-in Node + `ecp plugins install`). The default environment file is `~/.ecp/config/environment.ecp.ts`; `ecp environments edit` prints the path and opens it.
 
 `env.init()` returns an **Ecp**. Call `run`, `validate`, `describe`, `search`, `invoke`, `encode`, `decode`, `patch`, `terminate` on that instance.
 

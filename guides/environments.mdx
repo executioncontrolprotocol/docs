@@ -34,9 +34,14 @@ The overlay is extra bindings, not a required pair of `workflow.ts` + `environme
 ```bash
 ecp run brief.ecp.ts
 ecp run brief.ecp.ts --env ./local.env.ts
-ecp describe
-ecp describe --env ./local.env.ts
+ecp environments describe
+ecp environments describe --env ./local.env.ts
+ecp environments init
+ecp environments edit
+ecp environments export --format package-json
 ```
+
+The default environment file lives in `~/.ecp/config/environment.ecp.ts` (`ECP_CONFIG_DIR` / `XDG_CONFIG_HOME` override that). `environments edit` prints the resolved path, scaffolds the file if it is missing, then opens `$VISUAL` or `$EDITOR`.
 
 Omit `--env` unless you need extra host bindings (secrets providers, extra policies).
 

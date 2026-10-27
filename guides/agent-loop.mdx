@@ -10,23 +10,23 @@ ECP (Execution Control Protocol) is the capability you operate, not the whole ha
 ## 1. Search
 
 ```bash
-ecp search "echo"
-ecp describe
-ecp describe --capability @executioncontrolprotocol/jsonata.transform
+ecp environments search "echo"
+ecp environments describe
+ecp environments describe --capability @executioncontrolprotocol/jsonata.transform
 ```
 
 `--env` is optional. Omit it to use installed plugins on the process host.
 
 ## 2. Author a workflow file
 
-Write a `*.ecp.ts` file. Prefer `ecp init <name>` for a stub. Bind plugins with `.with([...])` or let inference fill requirements from `step("id")`.
+Write a `*.ecp.ts` file. Prefer `ecp workflows init <name>` for a stub. Bind plugins with `.with([...])` or let inference fill requirements from `step("id")`.
 
 See [Workflow files](/guides/workflow-files).
 
 ## 3. Validate
 
 ```bash
-ecp validate brief.ecp.ts --json
+ecp workflows validate brief.ecp.ts --json
 ```
 
 Fix `ECP_INPUT_INVALID`, `ECP_BINDING_INVALID`, and `ECP_PLUGINS_MISSING` before you run. Codes and suggestions live in [Error codes](/reference/error-codes).
