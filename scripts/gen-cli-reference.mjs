@@ -275,7 +275,7 @@ export async function generateCliReference(ecpRoot) {
     "",
     "Every command accepts `--json`. Success prints `{ ok: true, data }`. Failure prints `{ ok: false, error: { code, message, path, suggestions } }` and a non-zero exit (`0` success, `1` failed run, `2` usage, `3` validation, `4` plugin/environment load).",
     "",
-    "There is no `ecp test`, `ecp serve`, `ecp up`, or root `ecp encode` / `ecp decode`. Format plugins expose `ecp format-toon encode` (and similar). There is no shell-completion command; discover the surface with `ecp --help` and topic help (`ecp workflows`, `ecp environments`, `ecp plugins`).",
+    "There is no `ecp test`, `ecp serve`, `ecp up`, or root `ecp encode` / `ecp decode`. Format plugins expose `ecp format-toon encode` (and similar). There is no shell-completion command; discover the surface with `ecp --help` and topic help (`ecp workflows`, `ecp environments`, `ecp config`, `ecp plugins`).",
     "",
     "## Plugin install (oclif)",
     "",
