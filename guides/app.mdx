@@ -30,9 +30,13 @@ ecp app brief.ecp.ts --port 0
 - **Graph → file:** a graph edit patches the manifest, then the file is rewritten with the Fluent encoder.
 - **Read-only:** files that cannot round-trip (relative imports, computed `.with()` values) open with a banner explaining why. Losing comments or formatting on save is a warning, not read-only. Encoder-written files stay editable.
 
-## Runs and palette
+## Build from the canvas
 
-Runs from the App go through the same host and journal as `ecp run`, so `ecp runs show <id>` works. The palette and the Environment tab are the live process host from `ecp environments describe` (installed plugins plus merged config). `--config` selects which config file the host loads; the tab does not show that file.
+Drag a port from a step, Inputs, or Outputs onto empty canvas. A search overlay lists installed capabilities grouped by plugin. Filter by name or description, then select a capability. The App inserts a step and wires the original branch to the first matching port type.
+
+## Runs and the Environment tab
+
+Runs from the App go through the same host and journal as `ecp run`, so `ecp runs show <id>` works. The Environment tab is the live process host from `ecp environments describe` (installed plugins plus merged config). `--config` selects which config file the host loads; the tab does not show that file.
 
 ## Next steps
 
