@@ -279,7 +279,7 @@ export async function generateCliReference(ecpRoot) {
     "",
     "## Plugin install (oclif)",
     "",
-    "`ecp plugins install`, `ecp plugins link`, `ecp plugins uninstall`, and `ecp plugins update` come from `@oclif/plugin-plugins`. First-party packages install without a prompt. Third-party plugins require approval (`ECP_PLUGIN_DENIED` if you refuse). Source installs need `--allow-source`. `ecp plugins install <name> --add-to-env` appends a commented binding stub to the default environment file.",
+    "`ecp plugins install`, `ecp plugins link`, `ecp plugins uninstall`, and `ecp plugins update` come from `@oclif/plugin-plugins`. First-party packages install without a prompt. Third-party plugins require approval (`ECP_PLUGIN_DENIED` if you refuse). Source installs need `--allow-source`. `ecp plugins install <name> --add-to-config` appends a commented binding stub to the default config file.",
     "",
     "```bash",
     "ecp plugins install jsonata",

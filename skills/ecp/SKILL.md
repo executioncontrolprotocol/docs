@@ -25,14 +25,14 @@ Use ECP when the work is **repeatable, governed, or must be repaired** (policies
 1. `ecp environments search "<intent>"` / `ecp environments describe` / `ecp environments describe --capability <id>`
 2. Write a `*.ecp.ts` file (`ecp workflows init <name>` for a stub). Bind plugins with `.with([...])` or let inference fill requirements.
 3. `ecp workflows validate <file> --json`
-4. `ecp run <file> --json` (optional `--to`, `--events`). `--env` is optional.
+4. `ecp run <file> --json` (optional `--to`, `--events`). Optional `config.ecp.ts` holds machine settings.
 5. `ecp runs show <runId>` on failure. Patch the file. `ecp runs rerun <runId> --from <step>`
 
 `--json` is `{ ok: true, data }` or `{ ok: false, error: { code, message, path, suggestions } }`.
 
 ## Hard rules
 
-- Never put secret **values** in workflow or environment files. Use `secrets("key")`.
+- Never put secret **values** in workflow or config files. Use `secrets("key")`.
 - Install plugins with `ecp plugins install <name>`. Third-party plugins need **user approval** (`ECP_PLUGIN_DENIED` if they refuse).
 - There is no `ecp test`, `ecp serve`, `ecp up`, or root `ecp encode` / `decode`. Format plugins are `ecp format-toon encode`. The graph UI is `ecp app <file>` (see the App guide).
 - Do not import hosts from plugin packages.

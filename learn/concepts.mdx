@@ -15,7 +15,7 @@ Bindings declared with `workflow(...).with([...])` compile into a separate **req
 
 ## Environment
 
-An **environment** is a host plus the plugins and policies it loads. Node and browser are hosts. You compose with `environment(id).with([...])`. `--env <file>` on the CLI is an overlay, not a required pair. Omit it to use the process host (built-in Node plus installed plugins).
+An **environment** is a host plus the plugins and policies it loads. Node and browser are hosts. Programmatic hosts use `environment(id).with([...])`. Optional `config.ecp.ts` (`--config`) holds machine settings and is merged onto the process host. It does not replace installed plugins.
 
 ## Extension
 

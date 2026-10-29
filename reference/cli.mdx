@@ -19,7 +19,7 @@ There is no `ecp test`, `ecp serve`, `ecp up`, or root `ecp encode` / `ecp decod
 
 ## Plugin install (oclif)
 
-`ecp plugins install`, `ecp plugins link`, `ecp plugins uninstall`, and `ecp plugins update` come from `@oclif/plugin-plugins`. First-party packages install without a prompt. Third-party plugins require approval (`ECP_PLUGIN_DENIED` if you refuse). Source installs need `--allow-source`. `ecp plugins install <name> --add-to-env` appends a commented binding stub to the default environment file.
+`ecp plugins install`, `ecp plugins link`, `ecp plugins uninstall`, and `ecp plugins update` come from `@oclif/plugin-plugins`. First-party packages install without a prompt. Third-party plugins require approval (`ECP_PLUGIN_DENIED` if you refuse). Source installs need `--allow-source`. `ecp plugins install <name> --add-to-config` appends a commented binding stub to the default config file.
 
 ```bash
 ecp plugins install jsonata
@@ -32,7 +32,31 @@ ecp plugins link plugins/plugin-jsonata
 
 Manage local CLI configuration
 
-Host-local settings for this machine, not workflow files. Subcommands: secrets. Variables and secrets are stored here.
+Host-local settings for this machine, not workflow files. Subcommands: init, edit, secrets. Machine config lives in config.ecp.ts; variables and secrets are stored here.
+
+## `ecp config edit`
+
+Print and open the default config file
+
+Resolve the user config file, print its path, scaffold it when missing, then open $VISUAL or $EDITOR.
+
+### Examples
+
+```bash
+ecp config edit
+```
+
+## `ecp config init`
+
+Scaffold the default config file
+
+Write config.ecp.ts in the global ECP config directory. Refuses if the file already exists.
+
+### Examples
+
+```bash
+ecp config init
+```
 
 ## `ecp config secrets`
 
@@ -127,15 +151,15 @@ ecp config secrets remove server/fetch.token
 
 ## `ecp environments`
 
-Inspect and author the process environment
+Inspect the process environment
 
-Subcommands: describe, search, invoke, export, init, edit. Omit --env to use the process host or ~/.ecp/config/environment.ecp.ts.
+Subcommands: describe, search, invoke, export. The environment is the Node host plus installed plugins. Use --config for machine settings.
 
 ## `ecp environments describe`
 
 Describe an environment
 
-Return a structured catalog of extensions, capabilities, and policies. Pass --env to load an environment module; otherwise use installed plugins.
+Return a structured catalog of extensions, capabilities, and policies. Pass --config for machine settings; otherwise use installed plugins.
 
 ### Args
 
@@ -147,7 +171,7 @@ Return a structured catalog of extensions, capabilities, and policies. Pass --en
 
 | Flag | Type | Required | Description |
 | --- | --- | --- | --- |
-| `--env` | option | no | env |
+| `--config` | option | no | config |
 | `--query` | option | no | query |
 | `--capability` | option | no | capability |
 | `--extension` | option | no | extension |
@@ -160,23 +184,11 @@ Return a structured catalog of extensions, capabilities, and policies. Pass --en
 ecp environments describe
 ```
 
-## `ecp environments edit`
-
-Print and open the default environment file
-
-Resolve the user environment file, print its path, scaffold it when missing, then open $VISUAL or $EDITOR.
-
-### Examples
-
-```bash
-ecp environments edit
-```
-
 ## `ecp environments export`
 
 Export an environment to a foreign-runtime manifest
 
-Project the Node host, an optional --env file, and requirements inferred from a workflow into package.json. Never copies secret values.
+Project the Node host, an optional --config file, and requirements inferred from a workflow into package.json. Never copies secret values.
 
 ### Args
 
@@ -188,7 +200,7 @@ Project the Node host, an optional --env file, and requirements inferred from a 
 
 | Flag | Type | Required | Description |
 | --- | --- | --- | --- |
-| `--env` | option | no | env |
+| `--config` | option | no | config |
 | `--format` | option | yes | format |
 | `--output` | option | no | output |
 
@@ -197,18 +209,6 @@ Project the Node host, an optional --env file, and requirements inferred from a 
 ```bash
 ecp environments export --format package-json
 ecp environments export brief.ecp.ts --format package-json --output package.json
-```
-
-## `ecp environments init`
-
-Scaffold the default environment file
-
-Write environment.ecp.ts in the global ECP config directory. Refuses if the file already exists.
-
-### Examples
-
-```bash
-ecp environments init
 ```
 
 ## `ecp environments invoke`
@@ -227,7 +227,7 @@ Call a registered capability by id without running a workflow. Prints an InvokeR
 
 | Flag | Type | Required | Description |
 | --- | --- | --- | --- |
-| `--env` | option | no | env |
+| `--config` | option | no | config |
 | `--input` | option | no | input |
 
 ### Examples
@@ -253,7 +253,7 @@ Fuzzy-match capabilities by id or label. Quote multi-word queries.
 
 | Flag | Type | Required | Description |
 | --- | --- | --- | --- |
-| `--env` | option | no | env |
+| `--config` | option | no | config |
 
 ### Examples
 
@@ -386,7 +386,7 @@ Restores steps before --from from the journal. Default --from is the first faile
 
 | Flag | Type | Required | Description |
 | --- | --- | --- | --- |
-| `--env` | option | no | env |
+| `--config` | option | no | config |
 | `--from` | option | no | from |
 | `--to` | option | no | to |
 
@@ -413,7 +413,7 @@ Starts a new run from the journal cursor. --approve records an approval for the 
 
 | Flag | Type | Required | Description |
 | --- | --- | --- | --- |
-| `--env` | option | no | env |
+| `--config` | option | no | config |
 | `--to` | option | no | to |
 | `--approve` | boolean | no | approve |
 
@@ -515,7 +515,7 @@ Infer required plugins from the workflow file and install them without running t
 
 | Flag | Type | Required | Description |
 | --- | --- | --- | --- |
-| `--env` | option | no | env |
+| `--config` | option | no | config |
 
 ### Examples
 
@@ -528,7 +528,7 @@ ecp workflows install brief.ecp.ts --yes
 
 Run a workflow file
 
-Compile (if needed) and execute a workflow. --env is an optional environment file overlay; omit it to use the process host.
+Compile (if needed) and execute a workflow. --config is optional machine settings; omit it to use ~/.ecp/config/config.ecp.ts when present, else installed plugins.
 
 Aliases: `ecp run`.
 
@@ -542,7 +542,7 @@ Aliases: `ecp run`.
 
 | Flag | Type | Required | Description |
 | --- | --- | --- | --- |
-| `--env` | option | no | env |
+| `--config` | option | no | config |
 | `--input` | option | no | input |
 | `--dry-run` | boolean | no | dry-run |
 | `--to` | option | no | to |
@@ -560,7 +560,7 @@ ecp run brief.ecp.ts --events
 
 Validate a workflow file
 
-Compile (if needed) and validate a workflow against the process host, an optional --env file, and the workflow's bindings. Never installs plugins.
+Compile (if needed) and validate a workflow against the process host, optional --config, and the workflow's bindings. Never installs plugins.
 
 ### Args
 
@@ -572,7 +572,7 @@ Compile (if needed) and validate a workflow against the process host, an optiona
 
 | Flag | Type | Required | Description |
 | --- | --- | --- | --- |
-| `--env` | option | no | env |
+| `--config` | option | no | config |
 
 ### Examples
 
@@ -2631,7 +2631,7 @@ ecp anthropic generate --prompt <prompt> --system <system> --model <model>
 
 Open a live graph of a workflow file
 
-Serve the App on 127.0.0.1 with a pairing token in the URL. File edits update the graph; graph edits rewrite the file. Runs use the same host and journal as ecp run. The App stores no secrets. Until 0.50.0 is on the registry, install with ecp plugins link plugins/plugin-app.
+Serve the App on 127.0.0.1 with a pairing token in the URL. File edits update the graph; graph edits rewrite the file. Runs use the same host and journal as ecp run. --config is optional machine settings; omit it to use ~/.ecp/config/config.ecp.ts when present, else installed plugins. The Environment tab shows the live process host. The App stores no secrets. Until 0.51.0 is on the registry, install with ecp plugins link plugins/plugin-app.
 
 Plugin: `@executioncontrolprotocol/plugin-app`.
 
@@ -2648,6 +2648,7 @@ Plugin: `@executioncontrolprotocol/plugin-app`.
 | `--host` | option | no | HTTP bind address (loopback only) |
 | `--port` | option | no | HTTP bind port (0 = ephemeral) |
 | `--no-open` | boolean | no | Do not open the default browser |
+| `--config` | option | no | Optional machine config file; omit to use ~/.ecp/config/config.ecp.ts when present |
 
 ## `ecp azure-blob-storage create-sas-url`
 

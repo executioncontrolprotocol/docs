@@ -14,7 +14,7 @@ Generate them from the monorepo with `pnpm run generate:schema`. Output: `packag
 | `@executioncontrolprotocol.workflow` | Portable workflow manifest (`version: "1.0"`) |
 | `@executioncontrolprotocol.requirements` | Workflow-file bindings (never merged into the manifest) |
 | `@executioncontrolprotocol.run.journal` | Run journal (`journalVersion: 1`) |
-| `@executioncontrolprotocol.environment` | Environment overlay |
+| `@executioncontrolprotocol.environment` | Environment descriptor |
 
 Validation issues carry `code`, `message`, `path`, `suggestions`, and `severity`. New codes join the `ECP_*` catalogue in [Error codes](/reference/error-codes).
 

@@ -12,7 +12,7 @@ live dogfood) is later.
 ## 0.50.0 (field-test)
 
 - CLI rebuilt on oclif 5 with generated commands from `defineOperation` and plugin metadata.
-- Workflow files are `*.ecp.ts`; `--env` is optional.
+- Workflow files are `*.ecp.ts`; optional `config.ecp.ts` holds machine settings.
 - Bindings compile to `@executioncontrolprotocol.requirements`, not into the portable manifest.
 - Run journals under `.ecp/runs/<runId>/`; `ecp runs list|show|resume|rerun`.
 - Plugins live in `plugins/plugin-*` with Changesets (`0.50.0`).
