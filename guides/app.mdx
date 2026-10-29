@@ -34,9 +34,9 @@ ecp app brief.ecp.ts --port 0
 
 Drag a port from a step, Inputs, or Outputs onto empty canvas. A search overlay lists installed capabilities grouped by plugin. Filter by name or description, then select a capability. The App inserts a step and wires the original branch to the first matching port type.
 
-## Runs and the Environment tab
+## Runs and the Config tab
 
-Runs from the App go through the same host and journal as `ecp run`, so `ecp runs show <id>` works. The Environment tab is the live process host from `ecp environments describe` (installed plugins plus merged config). `--config` selects which config file the host loads; the tab does not show that file.
+Runs from the App go through the same host and journal as `ecp run`, so `ecp runs show <id>` works. The Config tab is read-only `config.ecp.ts` (`--config` or `~/.ecp/config/config.ecp.ts`). The App creates that file if it is missing. Capability discovery still uses installed plugins (`ecp environments describe`).
 
 ## Next steps
 
