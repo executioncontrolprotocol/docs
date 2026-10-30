@@ -9,9 +9,9 @@ MCP standardizes how models call tools. ECP standardizes how an agent **delegate
 
 ## Determinism ladder
 
-1. **Search** the installed capabilities (`ecp search`, `ecp describe`).
+1. **Search** the installed capabilities (`ecp environments search`, `ecp environments describe`).
 2. **Author** a single `*.ecp.ts` workflow file.
-3. **Validate** (`ecp validate --json`) until the graph and bindings are sound.
+3. **Validate** (`ecp workflows validate --json`) until the graph and bindings are sound.
 4. **Run** (`ecp run --json`). On failure, read the error code and the journal.
 5. **Repair** the file and `ecp runs rerun --from <step>`.
 
@@ -24,18 +24,19 @@ npm install -g @executioncontrolprotocol/cli
 npx skills add executioncontrolprotocol/docs
 ```
 
-The field-test is **0.50.0** on `latest` (not 1.0). Contributors who are changing packages can [build from source](/getting-started/build-from-source).
+The field-test is **0.51.0** on `latest` (not 1.0). Contributors who are changing packages can [build from source](/getting-started/build-from-source).
 
 Then:
 
 ```bash
-ecp init brief
+ecp workflows init brief
+ecp plugins install jsonata
 ecp run brief.ecp.ts
 ```
 
 <CardGroup cols={2}>
   <Card title="Quickstart" href="/getting-started/quickstart">
-    Install the CLI, add the skill, and run the echo workflow.
+    Install the CLI, add the skill, and run a workflow.
   </Card>
   <Card title="The agent loop" href="/guides/agent-loop">
     Author, validate, run, read the journal, rerun.

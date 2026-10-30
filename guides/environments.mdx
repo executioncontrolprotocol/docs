@@ -1,20 +1,27 @@
 ---
 title: "Environments"
-description: "Hosts, plugins, policies, and optional --env overlays in ECP (Execution Control Protocol)."
+description: "Hosts, installed plugins, and optional config.ecp.ts machine settings in ECP (Execution Control Protocol)."
 ---
 
 # Environments
 
-An environment is a **host** plus the plugins and policies it loads. Node and browser are hosts. The CLI process host is Node plus whatever you installed with `ecp plugins install`.
+An environment is a **host** plus the plugins it has installed. Node and browser are hosts. The CLI process host is Node plus whatever you installed with `ecp plugins install`.
+
+Machine settings live in optional `config.ecp.ts`. That file does not define the catalog. `ecp environments describe` lists the live host. The App Config tab shows the config file itself.
 
 ## Compose
 
-```ts
-import { environment, extension, NODE_ENVIRONMENT_ID } from "@executioncontrolprotocol/node"
-import jsonataExtension from "@executioncontrolprotocol/plugin-jsonata"
+Programmatic hosts still use `environment(id).with([...])`. The user config file does not:
 
-export default environment(NODE_ENVIRONMENT_ID, "local").with([
-  extension(jsonataExtension),
+```ts
+import { config, extension, policy, secrets } from "@executioncontrolprotocol/core"
+
+export default config().with([
+  extension("@executioncontrolprotocol/anthropic").with({
+    apiKey: secrets("anthropic/api-key"),
+    defaultModel: "claude-sonnet-5-5",
+  }),
+  policy("@executioncontrolprotocol/budget").with({ maxCostUsd: 5 }),
 ])
 ```
 
@@ -23,22 +30,25 @@ export default environment(NODE_ENVIRONMENT_ID, "local").with([
 ## Layering
 
 1. Host always-on policies (for example registry-control on the CLI).
-2. Installed plugins.
-3. Optional `--env <file>` overlay (`environment(id).with([...])`).
+2. Installed plugins (the catalog).
+3. Optional `config.ecp.ts` / `--config` settings merged onto matching plugins.
 4. Workflow-file `.with([...])` / inferred requirements.
 
-The overlay is extra bindings, not a required pair of `workflow.ts` + `environment.ts`.
+Config bindings for plugins that are not installed fail with `ECP_PLUGINS_MISSING`. They do not hide the rest of the catalog.
 
 ## CLI
 
 ```bash
 ecp run brief.ecp.ts
-ecp run brief.ecp.ts --env ./local.env.ts
-ecp describe
-ecp describe --env ./local.env.ts
+ecp environments describe
+ecp config init
+ecp config edit
+ecp environments export --format package-json
 ```
 
-Omit `--env` unless you need extra host bindings (secrets providers, extra policies).
+The default config file lives in `~/.ecp/config/config.ecp.ts` (`ECP_CONFIG_DIR` / `XDG_CONFIG_HOME` override that). `ecp config edit` prints the resolved path, scaffolds the file if it is missing, then opens `$VISUAL` or `$EDITOR`.
+
+Omit `--config` unless you need a specific file. The default `config.ecp.ts` is enough when it exists.
 
 `env.init()` returns an **Ecp**. Call `run`, `validate`, `describe`, `search`, `invoke`, `encode`, `decode`, `patch`, and `terminate` on that instance.
 

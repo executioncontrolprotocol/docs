@@ -116,6 +116,7 @@ async function parseCliOperations(operationsDir) {
       const summary = matchQuoted(block, "summary") ?? id
       const description = matchQuoted(block, "description") ?? ""
       const examples = matchStringArray(block, "examples")
+      const aliases = matchStringArray(block, "aliases")
       const argNames = matchStringArray(block, "args")
       const flags = flagsFromZodObject(block)
       /** @type {Record<string, { name: string, required: boolean, description: string, type: string }>} */
@@ -135,6 +136,7 @@ async function parseCliOperations(operationsDir) {
         summary,
         description,
             examples: examples.map(sanitizeExample),
+            aliases: aliases.length > 0 ? aliases : undefined,
             flags,
             args,
             pluginName: "@executioncontrolprotocol/cli",
@@ -267,17 +269,17 @@ export async function generateCliReference(ecpRoot) {
     "",
     "Generated from oclif manifests in the ECP checkout (`packages/cli` operations and `plugins/plugin-*/oclif.manifest.json`). Do not hand-edit. Learn flags from `ecp <command> --help` when in doubt.",
     "",
-    "Install with `npm install -g @executioncontrolprotocol/cli` (**0.50.0** on `latest`). Contributors who are changing packages can [build from source](/getting-started/build-from-source).",
+    "Install with `npm install -g @executioncontrolprotocol/cli` (**0.51.0** on `latest`). Contributors who are changing packages can [build from source](/getting-started/build-from-source).",
     "",
     "## `--json` envelope",
     "",
     "Every command accepts `--json`. Success prints `{ ok: true, data }`. Failure prints `{ ok: false, error: { code, message, path, suggestions } }` and a non-zero exit (`0` success, `1` failed run, `2` usage, `3` validation, `4` plugin/environment load).",
     "",
-    "There is no `ecp test`, `ecp serve`, `ecp up`, or root `ecp encode` / `ecp decode`. Format plugins expose `ecp format-toon encode` (and similar).",
+    "There is no `ecp test`, `ecp serve`, `ecp up`, or root `ecp encode` / `ecp decode`. Format plugins expose `ecp format-toon encode` (and similar). There is no shell-completion command; discover the surface with `ecp --help` and topic help (`ecp workflows`, `ecp environments`, `ecp config`, `ecp plugins`).",
     "",
     "## Plugin install (oclif)",
     "",
-    "`ecp plugins install`, `ecp plugins link`, and `ecp plugins uninstall` come from `@oclif/plugin-plugins`. First-party packages install without a prompt. Third-party plugins require approval (`ECP_PLUGIN_DENIED` if you refuse). Source installs need `--allow-source`.",
+    "`ecp plugins install`, `ecp plugins link`, `ecp plugins uninstall`, and `ecp plugins update` come from `@oclif/plugin-plugins`. First-party packages install without a prompt. Third-party plugins require approval (`ECP_PLUGIN_DENIED` if you refuse). Source installs need `--allow-source`. `ecp plugins install <name> --add-to-config` appends a commented binding stub to the default config file.",
     "",
     "```bash",
     "ecp plugins install jsonata",

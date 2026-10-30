@@ -11,7 +11,7 @@ description: "Open a live graph of an ECP (Execution Control Protocol) workflow 
 ecp app examples/01-echo/workflow.ecp.ts
 ```
 
-First use installs `@executioncontrolprotocol/plugin-app` from npm (`oclif.jitPlugins` pins `"^0.50"`). From a source checkout you can still `ecp plugins link plugins/plugin-app`.
+First use installs `@executioncontrolprotocol/plugin-app` from npm (`oclif.jitPlugins` pins `"^0.51"`). From a source checkout, link until that version is on the registry: `ecp plugins link plugins/plugin-app`.
 
 There is no hosted browser demo and no `ecp up`. The App is not a chat client and not a secrets host.
 
@@ -30,9 +30,13 @@ ecp app brief.ecp.ts --port 0
 - **Graph → file:** a graph edit patches the manifest, then the file is rewritten with the Fluent encoder.
 - **Read-only:** files that cannot round-trip (relative imports, computed `.with()` values) open with a banner explaining why. Losing comments or formatting on save is a warning, not read-only. Encoder-written files stay editable.
 
-## Runs and palette
+## Build from the canvas
 
-Runs from the App go through the same host and journal as `ecp run`, so `ecp runs show <id>` works. The palette is the capability catalogue from `ecp describe` on this process.
+Drag a port from a step, Inputs, or Outputs onto empty canvas. A search overlay lists installed capabilities grouped by plugin. Filter by name or description, then select a capability. The App inserts a step and wires the original branch to the first matching port type.
+
+## Runs and the Config tab
+
+Runs from the App go through the same host and journal as `ecp run`, so `ecp runs show <id>` works. The Config tab is read-only `config.ecp.ts` (`--config` or `~/.ecp/config/config.ecp.ts`). The App creates that file if it is missing. Capability discovery still uses installed plugins (`ecp environments describe`).
 
 ## Next steps
 

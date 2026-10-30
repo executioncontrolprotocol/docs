@@ -9,17 +9,17 @@ description: "Generated CLI reference for ECP (Execution Control Protocol)."
 
 Generated from oclif manifests in the ECP checkout (`packages/cli` operations and `plugins/plugin-*/oclif.manifest.json`). Do not hand-edit. Learn flags from `ecp <command> --help` when in doubt.
 
-Install with `npm install -g @executioncontrolprotocol/cli` (**0.50.0** on `latest`). Contributors who are changing packages can [build from source](/getting-started/build-from-source).
+Install with `npm install -g @executioncontrolprotocol/cli` (**0.51.0** on `latest`). Contributors who are changing packages can [build from source](/getting-started/build-from-source).
 
 ## `--json` envelope
 
 Every command accepts `--json`. Success prints `{ ok: true, data }`. Failure prints `{ ok: false, error: { code, message, path, suggestions } }` and a non-zero exit (`0` success, `1` failed run, `2` usage, `3` validation, `4` plugin/environment load).
 
-There is no `ecp test`, `ecp serve`, `ecp up`, or root `ecp encode` / `ecp decode`. Format plugins expose `ecp format-toon encode` (and similar).
+There is no `ecp test`, `ecp serve`, `ecp up`, or root `ecp encode` / `ecp decode`. Format plugins expose `ecp format-toon encode` (and similar). There is no shell-completion command; discover the surface with `ecp --help` and topic help (`ecp workflows`, `ecp environments`, `ecp config`, `ecp plugins`).
 
 ## Plugin install (oclif)
 
-`ecp plugins install`, `ecp plugins link`, and `ecp plugins uninstall` come from `@oclif/plugin-plugins`. First-party packages install without a prompt. Third-party plugins require approval (`ECP_PLUGIN_DENIED` if you refuse). Source installs need `--allow-source`.
+`ecp plugins install`, `ecp plugins link`, `ecp plugins uninstall`, and `ecp plugins update` come from `@oclif/plugin-plugins`. First-party packages install without a prompt. Third-party plugins require approval (`ECP_PLUGIN_DENIED` if you refuse). Source installs need `--allow-source`. `ecp plugins install <name> --add-to-config` appends a commented binding stub to the default config file.
 
 ```bash
 ecp plugins install jsonata
@@ -28,34 +28,39 @@ ecp plugins link plugins/plugin-jsonata
 
 ## Host commands
 
-## `ecp compile`
+## `ecp config`
 
-Compile a workflow to JSON
+Manage local CLI configuration
 
-Bundle and evaluate a workflow module (.ts or .js), or load .json, and emit the workflow manifest.
+Host-local settings for this machine, not workflow files. Subcommands: init, edit, secrets. Machine config lives in config.ecp.ts; variables and secrets are stored here.
 
-### Args
+## `ecp config edit`
 
-| Arg | Required | Description |
-| --- | --- | --- |
-| `workflow-path` | yes | workflow-path |
+Print and open the default config file
 
-### Flags
-
-| Flag | Type | Required | Description |
-| --- | --- | --- | --- |
-| `--output` | option | no | output |
-| `--format` | option | no | format |
+Resolve the user config file, print its path, scaffold it when missing, then open $VISUAL or $EDITOR.
 
 ### Examples
 
 ```bash
-ecp compile examples/01-echo/workflow.ecp.ts
+ecp config edit
+```
+
+## `ecp config init`
+
+Scaffold the default config file
+
+Write config.ecp.ts in the global ECP config directory. Refuses if the file already exists.
+
+### Examples
+
+```bash
+ecp config init
 ```
 
 ## `ecp config secrets`
 
-Manage OS keychain secrets
+Store values in the OS keychain
 
 ### Examples
 
@@ -144,11 +149,17 @@ Delete a secret by lookup key.
 ecp config secrets remove server/fetch.token
 ```
 
-## `ecp describe`
+## `ecp environments`
+
+Inspect the process environment
+
+Subcommands: describe, search, invoke, export. The environment is the Node host plus installed plugins. Use --config for machine settings.
+
+## `ecp environments describe`
 
 Describe an environment
 
-Return a structured catalog of extensions, capabilities, and policies. Pass --env to load an environment module; otherwise use installed plugins.
+Return a structured catalog of extensions, capabilities, and policies. Pass --config for machine settings; otherwise use installed plugins.
 
 ### Args
 
@@ -160,7 +171,7 @@ Return a structured catalog of extensions, capabilities, and policies. Pass --en
 
 | Flag | Type | Required | Description |
 | --- | --- | --- | --- |
-| `--env` | option | no | env |
+| `--config` | option | no | config |
 | `--query` | option | no | query |
 | `--capability` | option | no | capability |
 | `--extension` | option | no | extension |
@@ -170,82 +181,37 @@ Return a structured catalog of extensions, capabilities, and policies. Pass --en
 ### Examples
 
 ```bash
-ecp describe
+ecp environments describe
 ```
 
-## `ecp discover`
+## `ecp environments export`
 
-Discover ECP plugins on npm
+Export an environment to a foreign-runtime manifest
 
-Search the npm registry for packages tagged ecosystem:ecp-plugin. First-party packages are marked; installed plugins are hidden unless --all.
+Project the Node host, an optional --config file, and requirements inferred from a workflow into package.json. Never copies secret values.
 
 ### Args
 
 | Arg | Required | Description |
 | --- | --- | --- |
-| `query` | no | query |
+| `workflow-path` | no | workflow-path |
 
 ### Flags
 
 | Flag | Type | Required | Description |
 | --- | --- | --- | --- |
-| `--all` | boolean | no | all |
-| `--install` | boolean | no | install |
-| `--sort-field` | option | no | sort-field |
-| `--sort-order` | option | no | sort-order |
+| `--config` | option | no | config |
+| `--format` | option | yes | format |
+| `--output` | option | no | output |
 
 ### Examples
 
 ```bash
-ecp discover jsonata --json
-ecp discover --sort-field name
+ecp environments export --format package-json
+ecp environments export brief.ecp.ts --format package-json --output package.json
 ```
 
-## `ecp init`
-
-Create a workflow file
-
-Write \<name>.ecp.ts with a jsonata.transform step. Use ecp search to find capabilities.
-
-### Args
-
-| Arg | Required | Description |
-| --- | --- | --- |
-| `name` | no | name |
-
-### Examples
-
-```bash
-ecp init
-ecp init brief
-```
-
-## `ecp install`
-
-Install plugins a workflow file requires
-
-Infer required plugins from the workflow file and install them without running the workflow.
-
-### Args
-
-| Arg | Required | Description |
-| --- | --- | --- |
-| `workflow-path` | yes | workflow-path |
-
-### Flags
-
-| Flag | Type | Required | Description |
-| --- | --- | --- | --- |
-| `--env` | option | no | env |
-
-### Examples
-
-```bash
-ecp install brief.ecp.ts
-ecp install brief.ecp.ts --yes
-```
-
-## `ecp invoke`
+## `ecp environments invoke`
 
 Invoke a capability
 
@@ -261,13 +227,38 @@ Call a registered capability by id without running a workflow. Prints an InvokeR
 
 | Flag | Type | Required | Description |
 | --- | --- | --- | --- |
-| `--env` | option | no | env |
+| `--config` | option | no | config |
 | `--input` | option | no | input |
 
 ### Examples
 
 ```bash
-ecp invoke @executioncontrolprotocol/test.echo --input input.json
+ecp plugins link plugins/plugin-test
+ecp environments invoke @executioncontrolprotocol/test.echo --input input.json
+```
+
+## `ecp environments search`
+
+Search environment capabilities
+
+Fuzzy-match capabilities by id or label. Quote multi-word queries.
+
+### Args
+
+| Arg | Required | Description |
+| --- | --- | --- |
+| `query` | yes | query |
+
+### Flags
+
+| Flag | Type | Required | Description |
+| --- | --- | --- | --- |
+| `--config` | option | no | config |
+
+### Examples
+
+```bash
+echo
 ```
 
 ## `ecp plugins build`
@@ -307,6 +298,34 @@ Compare package.json, dist/oclif.js, and oclif.manifest.json to the compiled def
 ecp plugins check plugins/plugin-jsonata
 ```
 
+## `ecp plugins discover`
+
+Discover ECP plugins on npm
+
+Search the npm registry for packages tagged ecosystem:ecp-plugin. First-party packages are marked; installed plugins are hidden unless --all.
+
+### Args
+
+| Arg | Required | Description |
+| --- | --- | --- |
+| `query` | no | query |
+
+### Flags
+
+| Flag | Type | Required | Description |
+| --- | --- | --- | --- |
+| `--all` | boolean | no | all |
+| `--install` | boolean | no | install |
+| `--sort-field` | option | no | sort-field |
+| `--sort-order` | option | no | sort-order |
+
+### Examples
+
+```bash
+ecp plugins discover jsonata --json
+ecp plugins discover --sort-field name
+```
+
 ## `ecp plugins new`
 
 Scaffold an ECP plugin
@@ -323,48 +342,6 @@ Write src/index.ts and a minimal package.json. Then run ecp plugins build.
 
 ```bash
 ecp plugins new jsonata
-```
-
-## `ecp rollback`
-
-Remove user overrides of bundled plugins
-
-Uninstall user-installed plugins that shadow a bundled (core) plugin so the CLI copy is used again.
-
-### Examples
-
-```bash
-ecp rollback
-```
-
-## `ecp run`
-
-Run a workflow file
-
-Compile (if needed) and execute a workflow. --env is an optional environment file overlay; omit it to use the process host.
-
-### Args
-
-| Arg | Required | Description |
-| --- | --- | --- |
-| `workflow-path` | yes | workflow-path |
-
-### Flags
-
-| Flag | Type | Required | Description |
-| --- | --- | --- | --- |
-| `--env` | option | no | env |
-| `--input` | option | no | input |
-| `--dry-run` | boolean | no | dry-run |
-| `--to` | option | no | to |
-| `--events` | boolean | no | events |
-
-### Examples
-
-```bash
-ecp run examples/01-echo/workflow.ecp.ts
-ecp run brief.ecp.ts --to fetch
-ecp run brief.ecp.ts --events
 ```
 
 ## `ecp runs`
@@ -409,7 +386,7 @@ Restores steps before --from from the journal. Default --from is the first faile
 
 | Flag | Type | Required | Description |
 | --- | --- | --- | --- |
-| `--env` | option | no | env |
+| `--config` | option | no | config |
 | `--from` | option | no | from |
 | `--to` | option | no | to |
 
@@ -436,7 +413,7 @@ Starts a new run from the journal cursor. --approve records an approval for the 
 
 | Flag | Type | Required | Description |
 | --- | --- | --- | --- |
-| `--env` | option | no | env |
+| `--config` | option | no | config |
 | `--to` | option | no | to |
 | `--approve` | boolean | no | approve |
 
@@ -472,56 +449,17 @@ ecp runs show <id>
 ecp runs show <id> --step echo
 ```
 
-## `ecp search`
+## `ecp workflows`
 
-Search environment capabilities
+Author, validate, compile, and run workflow files
 
-Fuzzy-match capabilities by id or label. Quote multi-word queries.
+Subcommands: run, init, validate, compile, install. `ecp run` is an alias of `workflows run`.
 
-### Args
+## `ecp workflows compile`
 
-| Arg | Required | Description |
-| --- | --- | --- |
-| `query` | yes | query |
+Compile a workflow to JSON
 
-### Flags
-
-| Flag | Type | Required | Description |
-| --- | --- | --- | --- |
-| `--env` | option | no | env |
-
-### Examples
-
-```bash
-echo
-```
-
-## `ecp update`
-
-Update user-installed ECP plugins
-
-List user plugins with newer versions on npm and install them. Core (bundled) plugins are not updatable this way; reinstall the CLI instead.
-
-### Flags
-
-| Flag | Type | Required | Description |
-| --- | --- | --- | --- |
-| `--list` | boolean | no | list |
-| `--interactive` | boolean | no | interactive |
-| `--no-confirm` | boolean | no | no-confirm |
-
-### Examples
-
-```bash
-ecp update --list
-ecp update --no-confirm
-```
-
-## `ecp validate`
-
-Validate a workflow file
-
-Compile (if needed) and validate a workflow against the process host, an optional --env file, and the workflow's bindings. Never installs plugins.
+Bundle and evaluate a workflow module (.ts or .js), or load .json, and emit the workflow manifest.
 
 ### Args
 
@@ -533,12 +471,113 @@ Compile (if needed) and validate a workflow against the process host, an optiona
 
 | Flag | Type | Required | Description |
 | --- | --- | --- | --- |
-| `--env` | option | no | env |
+| `--output` | option | no | output |
+| `--format` | option | no | format |
 
 ### Examples
 
 ```bash
-ecp validate examples/01-echo/workflow.ecp.ts
+ecp workflows compile examples/01-echo/workflow.ecp.ts
+```
+
+## `ecp workflows init`
+
+Create a workflow file
+
+Write \<name>.ecp.ts with a jsonata.transform step. Use ecp environments search to find capabilities.
+
+### Args
+
+| Arg | Required | Description |
+| --- | --- | --- |
+| `name` | no | name |
+
+### Examples
+
+```bash
+ecp workflows init
+ecp workflows init brief
+```
+
+## `ecp workflows install`
+
+Install plugins a workflow file requires
+
+Infer required plugins from the workflow file and install them without running the workflow.
+
+### Args
+
+| Arg | Required | Description |
+| --- | --- | --- |
+| `workflow-path` | yes | workflow-path |
+
+### Flags
+
+| Flag | Type | Required | Description |
+| --- | --- | --- | --- |
+| `--config` | option | no | config |
+
+### Examples
+
+```bash
+ecp workflows install brief.ecp.ts
+ecp workflows install brief.ecp.ts --yes
+```
+
+## `ecp workflows run`
+
+Run a workflow file
+
+Compile (if needed) and execute a workflow. --config is optional machine settings; omit it to use ~/.ecp/config/config.ecp.ts when present, else installed plugins.
+
+Aliases: `ecp run`.
+
+### Args
+
+| Arg | Required | Description |
+| --- | --- | --- |
+| `workflow-path` | yes | workflow-path |
+
+### Flags
+
+| Flag | Type | Required | Description |
+| --- | --- | --- | --- |
+| `--config` | option | no | config |
+| `--input` | option | no | input |
+| `--dry-run` | boolean | no | dry-run |
+| `--to` | option | no | to |
+| `--events` | boolean | no | events |
+
+### Examples
+
+```bash
+ecp run examples/01-echo/workflow.ecp.ts
+ecp workflows run brief.ecp.ts --to fetch
+ecp run brief.ecp.ts --events
+```
+
+## `ecp workflows validate`
+
+Validate a workflow file
+
+Compile (if needed) and validate a workflow against the process host, optional --config, and the workflow's bindings. Never installs plugins.
+
+### Args
+
+| Arg | Required | Description |
+| --- | --- | --- |
+| `workflow-path` | yes | workflow-path |
+
+### Flags
+
+| Flag | Type | Required | Description |
+| --- | --- | --- | --- |
+| `--config` | option | no | config |
+
+### Examples
+
+```bash
+ecp workflows validate examples/01-echo/workflow.ecp.ts
 ```
 
 ## Plugin commands
@@ -2592,7 +2631,7 @@ ecp anthropic generate --prompt <prompt> --system <system> --model <model>
 
 Open a live graph of a workflow file
 
-Serve the App on 127.0.0.1 with a pairing token in the URL. File edits update the graph; graph edits rewrite the file. Runs use the same host and journal as ecp run. The App stores no secrets. Until 0.50.0 is on the registry, install with ecp plugins link plugins/plugin-app.
+Serve the App on 127.0.0.1 with a pairing token in the URL. File edits update the graph; graph edits rewrite the file. Runs use the same host and journal as ecp run. --config is optional machine settings; omit it to use ~/.ecp/config/config.ecp.ts when present, else installed plugins. The Config tab shows config.ecp.ts. Capability discovery uses installed plugins. The App stores no secrets. Until 0.51.0 is on the registry, install with ecp plugins link plugins/plugin-app.
 
 Plugin: `@executioncontrolprotocol/plugin-app`.
 
@@ -2609,6 +2648,7 @@ Plugin: `@executioncontrolprotocol/plugin-app`.
 | `--host` | option | no | HTTP bind address (loopback only) |
 | `--port` | option | no | HTTP bind port (0 = ephemeral) |
 | `--no-open` | boolean | no | Do not open the default browser |
+| `--config` | option | no | Optional machine config file; omit to use ~/.ecp/config/config.ecp.ts when present |
 
 ## `ecp azure-blob-storage create-sas-url`
 
@@ -3113,6 +3153,111 @@ Plugin: `@executioncontrolprotocol/plugin-openai`.
 
 ```bash
 ecp openai generate --prompt <prompt> --system <system> --model <model>
+```
+
+## `ecp test echo`
+
+Return the input value unchanged.
+
+Echoes the supplied value or a default greeting. Used to verify wiring, refs, and step output propagation in minimal workflows.
+
+Plugin: `@executioncontrolprotocol/plugin-test`.
+
+### Flags
+
+| Flag | Type | Required | Description |
+| --- | --- | --- | --- |
+| `--json` | boolean | no | Format output as json. |
+| `--input` | option | no | JSON object for the full input, from a file or stdin (`-`) |
+
+### Examples
+
+```bash
+ecp test echo --input payload.json
+```
+
+## `ecp test notify`
+
+Placeholder notify step for multi-capability demos.
+
+Returns a fixed ok stub. Stands in for notification side effects in tutorials and tests.
+
+Plugin: `@executioncontrolprotocol/plugin-test`.
+
+### Flags
+
+| Flag | Type | Required | Description |
+| --- | --- | --- | --- |
+| `--json` | boolean | no | Format output as json. |
+| `--input` | option | no | JSON object for the full input, from a file or stdin (`-`) |
+
+### Examples
+
+```bash
+ecp test notify --input payload.json
+```
+
+## `ecp test summarize`
+
+Placeholder summarize step for multi-capability demos.
+
+Returns a fixed ok stub. Useful in sample workflows that list several capability kinds without real summarization logic.
+
+Plugin: `@executioncontrolprotocol/plugin-test`.
+
+### Flags
+
+| Flag | Type | Required | Description |
+| --- | --- | --- | --- |
+| `--json` | boolean | no | Format output as json. |
+| `--input` | option | no | JSON object for the full input, from a file or stdin (`-`) |
+
+### Examples
+
+```bash
+ecp test summarize --input payload.json
+```
+
+## `ecp test translate`
+
+Placeholder translate step for multi-capability demos.
+
+Returns a fixed ok stub. Represents a translate-shaped step in examples without calling a real translation service.
+
+Plugin: `@executioncontrolprotocol/plugin-test`.
+
+### Flags
+
+| Flag | Type | Required | Description |
+| --- | --- | --- | --- |
+| `--json` | boolean | no | Format output as json. |
+| `--input` | option | no | JSON object for the full input, from a file or stdin (`-`) |
+
+### Examples
+
+```bash
+ecp test translate --input payload.json
+```
+
+## `ecp test validate`
+
+Placeholder validate step for multi-capability demos.
+
+Returns a fixed ok stub. Represents a validation-shaped step in sample graphs without running real validators.
+
+Plugin: `@executioncontrolprotocol/plugin-test`.
+
+### Flags
+
+| Flag | Type | Required | Description |
+| --- | --- | --- | --- |
+| `--json` | boolean | no | Format output as json. |
+| `--input` | option | no | JSON object for the full input, from a file or stdin (`-`) |
+
+### Examples
+
+```bash
+ecp test validate --input payload.json
 ```
 
 ## Next steps

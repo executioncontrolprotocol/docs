@@ -43,19 +43,19 @@ If you omit `.with()` for a first-party capability the CLI can resolve, compile 
 
 | Artifact | Schema | Contains |
 | -------- | ------ | -------- |
-| Manifest | `@executioncontrolprotocol.workflow` | Graph, steps, schemas |
-| Requirements | `@executioncontrolprotocol.requirements` | Extension/policy ids, package names, placeholder config |
+| Manifest (`ecp workflows compile`) | `@executioncontrolprotocol.workflow` | Graph, steps, schemas |
+| Requirements (`ecp environments export`) | `@executioncontrolprotocol.requirements` projected to `package.json` | Extension/policy packages and version ranges |
 
-`ecp install brief.ecp.ts` reads requirements and installs missing plugins.
+`ecp workflows install brief.ecp.ts` reads requirements and installs missing plugins. `ecp environments export --format package-json` projects those requirements into a Node `package.json`.
 
 ## Run from the CLI
 
 ```bash
-ecp validate brief.ecp.ts --json
+ecp workflows validate brief.ecp.ts --json
 ecp run brief.ecp.ts --json
 ```
 
-`--env` is optional. See [Environments](/guides/environments).
+See [Environments](/guides/environments) for the process host and optional `config.ecp.ts`.
 
 ## Next steps
 

@@ -79,7 +79,7 @@ export default workflow("Echo from input")
 - `returns` property names are top-level state keys (typically a step `.as()`). After a successful run, `result.output` picks those keys.
 - Omit either field (or pass an empty object schema) when the workflow has no public I/O.
 
-`ecp run --input` validates input against `accepts` **before** steps execute. Extra unused keys on a valid object succeed. `ecp validate` still checks the graph and environment only.
+`ecp run --input` validates input against `accepts` **before** steps execute. Extra unused keys on a valid object succeed. `ecp workflows validate` still checks the graph and environment only.
 
 Runnable example: [07-accepts-returns](https://github.com/executioncontrolprotocol/executioncontrolprotocol/tree/development/examples/07-accepts-returns).
 

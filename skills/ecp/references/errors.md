@@ -6,7 +6,7 @@
 | ---- | ----- | ----------- |
 | `ECP_WORKFLOW_LOAD` | File would not compile | Fix TypeScript / path |
 | `ECP_PLUGINS_MISSING` | Required or `--format` plugin absent | `ecp plugins install <name>` (ask if third-party) |
-| `ECP_CAPABILITY_UNKNOWN` | Step id not in the registry | `ecp search` / install the plugin |
+| `ECP_CAPABILITY_UNKNOWN` | Step id not in the registry | `ecp environments search` / install the plugin |
 | `ECP_INPUT_INVALID` | Schema failed (wrong `ref()`, bad payload) | Fix the step input; `validate --json` |
 | `ECP_REF_UNRESOLVED` | `ref()` target missing | Fix `.as()` names |
 | `ECP_BINDING_INVALID` | Bad extension/policy binding | Fix `.with()` config (placeholders only) |

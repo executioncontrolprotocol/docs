@@ -5,7 +5,7 @@ description: "Clone the ECP (Execution Control Protocol) monorepo and build pack
 
 # Build from source
 
-Use this path when you are **changing** ECP (Execution Control Protocol) packages. Day-to-day usage should [install the CLI from npm](/getting-started/quickstart) (`0.50.0` on `latest`).
+Use this path when you are **changing** ECP (Execution Control Protocol) packages. Day-to-day usage should [install the CLI from npm](/getting-started/quickstart) (`0.51.0` on `latest`).
 
 ## Prerequisites
 
@@ -50,7 +50,7 @@ pnpm run test:plugin-pack
 | `packages/app` | `@executioncontrolprotocol/app` (graph encoder, `HostAdapter`, `dist/web`) |
 | `plugins/plugin-*` | First-party plugins including `plugin-app` (`ecp app`) |
 
-Versions for core, hosts, CLI, plugin-sdk, MCP, App, and plugins are `0.50.0` (field-test, not 1.0). In-repo dependencies use `workspace:^`, never `file:`.
+Versions for core, hosts, CLI, plugin-sdk, MCP, App, and plugins are `0.51.0` (field-test, not 1.0). In-repo dependencies use `workspace:^`, never `file:`.
 
 Release tooling is Changesets (`pnpm exec changeset`). The field-test publishes `latest` from `main`. See the monorepo `RELEASING.md`.
 

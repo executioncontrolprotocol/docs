@@ -28,7 +28,7 @@ export default workflow("reshape-payload")
 - Inference fills requirements from `step("id")` when `.with()` is omitted.
 - `.accepts(schema)` / `.returns(schema)` declare run input and public output. Pass input with `ecp run --input`. See https://github.com/executioncontrolprotocol/executioncontrolprotocol/tree/development/examples/07-accepts-returns
 
-`ecp install brief.ecp.ts` installs missing plugins from requirements.
+`ecp workflows install brief.ecp.ts` installs missing plugins from requirements.
 
 Echo example: https://github.com/executioncontrolprotocol/executioncontrolprotocol/tree/development/examples/01-echo
 
