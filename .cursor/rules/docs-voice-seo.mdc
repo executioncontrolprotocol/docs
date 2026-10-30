@@ -30,10 +30,10 @@ alwaysApply: false
 - **Headings**: sentence case; use clear, specific H2s that match real queries (no clickbait).
 - **Internal links**: add 2–5 relevant links to deeper docs (concepts, workflow files, security, MCP relationship, CLI) where helpful.
 - **Comparisons**: state what ECP is and isn’t; use crisp “X is for…, ECP is for…” framing.
-- **Commands**: prefer installed CLIs over one-off runners in docs. Show the one-time install/link step, then the command. Intended install is `npm install -g @executioncontrolprotocol/cli@next`; until `@next` exists, link [build from source](/getting-started/build-from-source).
+- **Commands**: prefer installed CLIs over one-off runners in docs. Show the one-time install/link step, then the command. Intended install is `npm install -g @executioncontrolprotocol/cli` (`latest`). Contributors who are changing packages can [build from source](/getting-started/build-from-source).
 - **Public-only docs**: do not publish internal documentation about building or operating the docs site (Mintlify, `mint dev`, `docs.json`, contribution workflow). Pages should focus on installing, configuring, and running ECP.
 - **Do not leak internal ops**: never document analytics backends, prompt/telemetry logging vendors or pipelines, private env var catalogs, feature flags, or unpublished roadmap/UI details on public MDX or in `skills/ecp/`.
-- **App**: placeholder page only until Phase 8. Do not document a hosted browser demo. MCP is `ecp mcp serve` ([guides/mcp](/guides/mcp)).
+- **App**: document `ecp app` (loopback + pairing token). Do not document a hosted browser demo. MCP is `ecp mcp serve` ([guides/mcp](/guides/mcp)).
 
 ## Content checks before publishing
 

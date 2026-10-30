@@ -4,7 +4,7 @@ This repository contains the documentation site for **ECP (Execution Control Pro
 
 **Live site:** https://executioncontrolprotocol.io/
 
-The live site is the 0.50.0 field-test rewrite. Mintlify publishes `main`.
+The live site is the 0.51.0 field-test rewrite. Mintlify publishes `main`.
 
 ## What’s in here
 

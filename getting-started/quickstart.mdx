@@ -19,7 +19,7 @@ npm install -g @executioncontrolprotocol/cli
 npx skills add executioncontrolprotocol/docs
 ```
 
-The field-test is **0.50.0** on `latest` (not 1.0). Contributors who are changing packages can [build from source](/getting-started/build-from-source).
+The field-test is **0.51.0** on `latest` (not 1.0). Contributors who are changing packages can [build from source](/getting-started/build-from-source).
 
 Confirm the binary:
 
@@ -29,33 +29,36 @@ ecp --help
 
 ## Author and run
 
-Scaffold a workflow, or copy the echo example from the [monorepo](https://github.com/executioncontrolprotocol/executioncontrolprotocol/tree/development/examples/01-echo):
-
-```ts
-import { workflow, step } from "@executioncontrolprotocol/core"
-
-export default workflow("Echo test").run([
-  step("@executioncontrolprotocol/test.echo", "Echo")
-    .with({ value: "hello from fluent API" })
-    .as("echo"),
-])
-```
-
-The process host is built-in Node plus installed plugins. Optional `config.ecp.ts` holds machine settings:
+Scaffold a workflow. `ecp workflows init` writes a `jsonata.transform` step, so install that plugin before you validate or run:
 
 ```bash
 ecp workflows init brief
+ecp plugins install jsonata
 ecp workflows validate brief.ecp.ts --json
 ecp run brief.ecp.ts --json
 ```
 
-`--json` prints `{ ok: true, data }` or `{ ok: false, error: { code, message, path, suggestions } }`. Journals land under `.ecp/runs/<runId>/`.
+Or copy the echo example from the [monorepo](https://github.com/executioncontrolprotocol/executioncontrolprotocol/tree/development/examples/01-echo). `test.echo` lives in `@executioncontrolprotocol/plugin-test`, not the Node host:
 
-Install a plugin when a workflow needs one:
+```ts
+import { workflow, step, extension } from "@executioncontrolprotocol/core"
+
+export default workflow("Echo test")
+  .with([extension("@executioncontrolprotocol/test")])
+  .run([
+    step("@executioncontrolprotocol/test.echo", "Echo")
+      .with({ value: "hello from fluent API" })
+      .as("echo"),
+  ])
+```
 
 ```bash
-ecp plugins install jsonata
+ecp plugins install test
 ```
+
+The process host is built-in Node plus installed plugins. Optional `config.ecp.ts` holds machine settings.
+
+`--json` prints `{ ok: true, data }` or `{ ok: false, error: { code, message, path, suggestions } }`. Journals land under `.ecp/runs/<runId>/`.
 
 Third-party plugins ask for approval. First-party npm packages install without a prompt.
 

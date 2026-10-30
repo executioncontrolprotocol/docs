@@ -269,7 +269,7 @@ export async function generateCliReference(ecpRoot) {
     "",
     "Generated from oclif manifests in the ECP checkout (`packages/cli` operations and `plugins/plugin-*/oclif.manifest.json`). Do not hand-edit. Learn flags from `ecp <command> --help` when in doubt.",
     "",
-    "Install with `npm install -g @executioncontrolprotocol/cli` (**0.50.0** on `latest`). Contributors who are changing packages can [build from source](/getting-started/build-from-source).",
+    "Install with `npm install -g @executioncontrolprotocol/cli` (**0.51.0** on `latest`). Contributors who are changing packages can [build from source](/getting-started/build-from-source).",
     "",
     "## `--json` envelope",
     "",

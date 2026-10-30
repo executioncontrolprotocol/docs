@@ -24,18 +24,19 @@ npm install -g @executioncontrolprotocol/cli
 npx skills add executioncontrolprotocol/docs
 ```
 
-The field-test is **0.50.0** on `latest` (not 1.0). Contributors who are changing packages can [build from source](/getting-started/build-from-source).
+The field-test is **0.51.0** on `latest` (not 1.0). Contributors who are changing packages can [build from source](/getting-started/build-from-source).
 
 Then:
 
 ```bash
 ecp workflows init brief
+ecp plugins install jsonata
 ecp run brief.ecp.ts
 ```
 
 <CardGroup cols={2}>
   <Card title="Quickstart" href="/getting-started/quickstart">
-    Install the CLI, add the skill, and run the echo workflow.
+    Install the CLI, add the skill, and run a workflow.
   </Card>
   <Card title="The agent loop" href="/guides/agent-loop">
     Author, validate, run, read the journal, rerun.
