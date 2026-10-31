@@ -28,7 +28,7 @@ Use ECP when the work is **repeatable, governed, or must be repaired** (policies
 4. `ecp run <file> --json` (optional `--to`, `--events`). `--env` is optional.
 5. `ecp runs show <runId>` on failure. Patch the file. `ecp runs rerun <runId> --from <step>`
 
-`--json` is `{ ok: true, data }` or `{ ok: false, error: { code, message, path, suggestions } }`.
+`--json` is `{ ok: true, data }` or `{ ok: false, error: { code, message, path, suggestions } }`. Execution failures (`ecp run`, invoke) also include `data` with the run or invoke record (run id, step id, output, diagnostics).
 
 ## Hard rules
 
