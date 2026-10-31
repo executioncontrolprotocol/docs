@@ -1,6 +1,6 @@
 # Error codes
 
-`--json` failure envelope: `{ ok: false, error: { code, message, path, suggestions } }`.
+`--json` failure envelope: `{ ok: false, error: { code, message, path, suggestions } }`. Execution failures also include `data` (the run or invoke record).
 
 | Code | Cause | What you do |
 | ---- | ----- | ----------- |
