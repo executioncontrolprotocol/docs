@@ -7,15 +7,15 @@ description: "Author ECP (Execution Control Protocol) workflows as Fluent TypeSc
 
 A workflow file is Fluent TypeScript (`*.ecp.ts`) that compiles to a portable JSON manifest. Bindings compile separately into a requirements document. The graph never contains secrets or host config.
 
+Workflow files may import only `@executioncontrolprotocol/core` and relative files. The global CLI resolves `core` for you — you do not need a local `npm install` to compile, validate, or run.
+
 ## Shape
 
 ```ts
-import { workflow, step, ref } from "@executioncontrolprotocol/core"
-import jsonataExtension from "@executioncontrolprotocol/plugin-jsonata"
-import { extension } from "@executioncontrolprotocol/core"
+import { workflow, step, ref, extension } from "@executioncontrolprotocol/core"
 
 export default workflow("reshape-payload")
-  .with([extension(jsonataExtension)])
+  .with([extension("@executioncontrolprotocol/jsonata")])
   .run([
     step("@executioncontrolprotocol/jsonata.transform", "Reshape")
       .with({
@@ -30,10 +30,30 @@ export default workflow("reshape-payload")
 ```
 
 - `workflow(id)` starts the builder.
-- `.with([...])` binds extensions and policies for this file.
+- `.with([...])` binds extensions and policies for this file by **string id** (install the plugin with `ecp plugins install`; do not import plugin packages in the workflow file).
 - `.run([...])` lists steps in order (and fan-out via the graph helpers).
 - `.as("id")` names a step for `ref()` and `--to` / `--from`.
 - `.requires(range, pkg?)` pins a plugin version on a binding.
+- `.accepts(schema)` / `.returns(schema)` take JSON Schema objects (do not import `zod` in a workflow file).
+
+## Authoring with only the CLI
+
+```bash
+ecp workflows init brief
+ecp workflows validate brief.ecp.ts
+ecp run brief.ecp.ts
+```
+
+`ecp workflows validate` checks capability ids and step input keys against installed plugins. Secrets are required to **run**, not to validate.
+
+Optional editor wiring (points at `~/.ecp/cache/types`, not a project `.ecp` folder):
+
+```bash
+ecp workflows init brief --tsconfig
+ecp workflows types   # refresh after plugins link / unlink / update / uninstall
+```
+
+`ecp plugins install` refreshes the global types cache automatically.
 
 ## Inference
 
@@ -46,16 +66,16 @@ If you omit `.with()` for a first-party capability the CLI can resolve, compile 
 | Manifest | `@executioncontrolprotocol.workflow` | Graph, steps, schemas |
 | Requirements | `@executioncontrolprotocol.requirements` | Extension/policy ids, package names, placeholder config |
 
-`ecp install brief.ecp.ts` reads requirements and installs missing plugins.
+`ecp workflows install brief.ecp.ts` reads requirements and installs missing plugins.
 
 ## Run from the CLI
 
 ```bash
-ecp validate brief.ecp.ts --json
+ecp workflows validate brief.ecp.ts --json
 ecp run brief.ecp.ts --json
 ```
 
-`--env` is optional. See [Environments](/guides/environments).
+`--config` is optional machine settings. See [Environments](/guides/environments).
 
 ## Next steps
 
