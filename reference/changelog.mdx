@@ -1,35 +1,36 @@
 ---
 title: "Changelog"
-description: "What changed in the ECP (Execution Control Protocol) CLI reset (0.50.0 field-test)."
+description: "What changed in ECP (Execution Control Protocol): the realigned host, JSON executions, three operations, the MCP relay, the App, and the plugin SDK."
 ---
 
-# Changelog
+## Realignment
 
-The reset publishes as **0.50.0** on npm `latest`: a field-test, not 1.0. It is breaking
-versus 0.14. There is no compatibility shim for 0.x APIs. 1.0 (deprecate old package names,
-live dogfood) is later.
+ECP (Execution Control Protocol) was rebuilt around a local host and a JSON execution manifest. This release breaks compatibility with the 0.5x field test; there is no migration shim.
 
-## 0.50.0 (field-test)
+### New
 
-- CLI rebuilt on oclif 5 with generated commands from `defineOperation` and plugin metadata.
-- Workflow files are `*.ecp.ts`; `--env` is optional.
-- Bindings compile to `@executioncontrolprotocol.requirements`, not into the portable manifest.
-- Run journals under `.ecp/runs/<runId>/`; `ecp runs list|show|resume|rerun`.
-- Plugins live in `plugins/plugin-*` with Changesets (`0.50.0`).
-- Types live at `@executioncontrolprotocol/core/types`.
-- MCP: `@executioncontrolprotocol/mcp` `0.50.0`, `ecp mcp serve` (stdio and loopback HTTP).
-- App: `@executioncontrolprotocol/app` and `@executioncontrolprotocol/plugin-app` `0.50.0`, `ecp app` (loopback + pairing token).
-- CLI `oclif.jitPlugins` pins `mcp` and `plugin-app` at `^0.50`.
+- **Execution manifest v2.** Executions are JSON (`*.ecp.json`, `version: "2.0"`) with step, branch, loop, and parallel nodes. One `expr` field controls routing.
+- **Loops.** One `loop` node with `while`, `for`, and `forEach` modes. `forEach` runs items on isolated state copies with `concurrency` and `onError`.
+- **Transforms.** `core.transform` (sandboxed JavaScript) and the optional `jsonata.transform` reshape data as typed steps with their own `accepts` and `returns`.
+- **Layered validation.** Structure, inputs, semantics, data flow, and run input, with JSON Pointer paths, suggestions, and available state paths.
+- **Three operations.** `retrieve`, `execute`, and `commit`, identical across the CLI, MCP, HTTP, and the in-process API.
+- **Background host.** Starts on demand, restarts on plugin changes, stops when idle, and resumes interrupted runs.
+- **MCP relay.** `ecp mcp start` exposes exactly three tools.
+- **The App.** `ecp app` shows a live, hot-reloading graph with validation, runs, and run replay.
+- **Configs and secrets.** Config objects with `$secret` references; values in the OS keychain.
+- **Files.** `FileRef` references, a host file service for plugins, uniform capture of output files into run artifacts, and explicit publish steps.
+- **Plugin SDK.** `definePlugin` and `capability` with zod schemas, lazy handlers, and generated `ecp.manifest.json` and `ecp.schema.json`.
 
-## Removed
+### Removed
 
-- Harnesses, evals, browser demo, Temporal stub
-- `format-eql`, `chrome-ai`, `memory`, `telemetry`, `storage`, `slack`, `browser-secrets`, `image-policy`
-- CLI `serve`, `up`, `encode`, `decode` as root commands
-- `ecp test` (replaced by `ecp run --to` and `ecp runs`)
-- YAML Context / `ECPContext` / `spec.yaml`
+- Fluent TypeScript workflow files (`*.ecp.ts`) and the requirements document
+- Environments, `--env` overlays, and policies
+- `ecp search`, `describe`, `validate`, `run`, `runs`, `init`, `invoke`; use `retrieve` and `execute`
+- `ecp mcp serve`, per-capability MCP tools, and MCP resources; use `ecp mcp start`
+- Plugin-generated CLI commands
+- Run journals under `.ecp/runs`; runs now live under `$ECP_HOME/runs`
 
 ## Next steps
 
-- [Packages](/reference/packages)
-- [CLI](/reference/cli)
+- [Quickstart](/getting-started/quickstart)
+- [Concepts](/learn/concepts)

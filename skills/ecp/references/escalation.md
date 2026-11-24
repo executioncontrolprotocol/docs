@@ -1,24 +1,27 @@
 # Escalation
 
-Stop and ask the user when you cannot proceed safely. Do not guess secrets, approve policies, or install untrusted plugins.
+Stop and ask the user when you cannot proceed safely.
 
 | Situation | Action |
 | --------- | ------ |
-| `ECP_SECRET_MISSING` | Ask the user to run `ecp config secrets add <key>` (or set the OS keychain / CI secret). Never inline the value. |
-| `ECP_RUN_PAUSED` / approval | Tell the user the run is waiting. Resume only after they approve. |
-| Third-party `ecp plugins install` | Show the package name and wait for explicit approval. |
-| `ECP_PLUGIN_DENIED` | Stop. Do not retry with `--yes` or `--allow-source`. |
-| `ECP_POLICY_DENIED` | Explain the denial. Change budget/approval config only if they ask. |
-| Paid model keys (Anthropic, OpenAI, FAL, Firefly, Azure) | Prefer Ollama / jsonata / image-sharp local paths, or ask them to bind secrets. |
-| MCP (`ecp mcp serve`) | Same host as the CLI. Prefer the CLI loop unless the user asked for MCP. |
-| Visual App (`ecp app`) | Same host as the CLI, on loopback. Prefer the CLI loop unless the user asked for the graph. |
+| `ECP_SECRET_MISSING` | User runs `ecp config secrets set <key>` or sets `ECP_SECRET_<KEY>`. Never ask them to paste the value into the execution. |
+| Third-party `ecp plugins install` | Show package name; wait for explicit approval. |
+| Destructive `commit --action delete` | Confirm id and version; prefer showing `retrieve` output first. |
+| `commit --action update` on production ids | Confirm `ifVersion` and diff with the user when impact is unclear. |
+| `onError: "continue"` in `forEach` | Explain partial failures in `state.<into>Errors`; confirm whether to proceed. |
+| `ECP_PROVIDER_ERROR` / auth errors | Do not guess credentials; user fixes config/secrets. |
+| `ECP_PLUGIN_LOAD_FAILED` on user-linked code | User fixes their package; you only adjust executions. |
+| Resume after failure | `--resume <runId>` is **not** always idempotent; confirm with the user before resuming side-effecting runs. |
+| Paid or cloud providers | Prefer local/bundled capabilities when possible; otherwise user supplies secrets via config. |
+| MCP vs CLI | Same operations; prefer CLI unless the user asked for MCP. |
+| App (`ecp app`) | Live graph viewer on loopback; suggest it so the user can watch your edits. Use the CLI or MCP for the loop itself. |
 
-## Monorepo work
+## Monorepo contributors
 
-This skill is for **consumers**. Contributors to the ECP monorepo should install:
+This skill targets **consumers** of ECP. People working in the executioncontrolprotocol repository should install the contributor skill:
 
 ```bash
 npx skills add executioncontrolprotocol/executioncontrolprotocol --skill ecp-core -y
 ```
 
-Do not invent harnesses, YAML Context, `ecp test`, `ecp serve`, `ecp up`, Chrome AI, or EQL.
+Do not document harnesses, YAML Context, `ecp test`, `ecp serve`, `ecp up`, Chrome AI, or EQL here.

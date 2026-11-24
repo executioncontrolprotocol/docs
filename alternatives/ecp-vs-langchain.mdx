@@ -1,26 +1,24 @@
 ---
 title: "ECP vs LangChain"
-description: "When to use ECP (Execution Control Protocol) instead of LangChain."
+description: "When to use ECP (Execution Control Protocol) instead of, or alongside, LangChain: an agent-written JSON execution versus an application framework."
 ---
 
-# ECP vs LangChain
-
-LangChain is a **framework** for building LLM applications (chains, agents, RAG). ECP (Execution Control Protocol) is a **protocol and CLI** an orchestrating agent operates.
-
-## Positioning
+LangChain is a **framework** for building LLM applications in code. ECP (Execution Control Protocol) is a **protocol and local host** that an agent uses to hand off repeatable work as data.
 
 | | LangChain | ECP |
 | --- | --- | --- |
-| Primary user | App developer | Orchestrating agent (and the human who ships plugins) |
-| Unit of work | Chain / graph in application code | Portable `*.ecp.ts` workflow + requirements |
-| Governance | Callbacks, tracing products | Policies, `ECP_*` errors, journals |
-| Extensibility | Integrations in the framework | npm plugins that generate CLI commands |
+| Who writes the graph | A developer, in Python or TypeScript | An agent (or a person), as a JSON execution |
+| Unit of work | Chains and graphs in application code | A portable `*.ecp.json` execution |
+| Checking | Your tests | Built-in validation of inputs, references, and types before the run |
+| Record | Tracing products | A run record with every step's input, output, and error |
+| Extending | Integrations inside the framework | npm plugins with typed capabilities |
+| Interface for agents | Your app's API | `retrieve`, `execute`, `commit` over CLI, MCP, or HTTP |
 
-Use LangChain when you are writing the application. Use ECP when another agent should **delegate** a governed graph, validate it, and rerun from a named step.
+Use LangChain when you are writing an application. Use ECP when an agent should capture, validate, and rerun a sequence of capability calls without you writing code for each one.
 
-They can coexist: a LangChain app can shell out to `ecp run`, and an ECP plugin can wrap a model provider.
+They work together: a LangChain app can call ECP over MCP or HTTP, and an ECP plugin can wrap a model provider or a chain.
 
 ## Next steps
 
 - [Why ECP](/learn/why-ecp)
-- [Writing a plugin](/guides/writing-a-plugin)
+- [Write a plugin](/guides/writing-a-plugin)

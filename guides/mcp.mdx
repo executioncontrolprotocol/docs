@@ -1,121 +1,96 @@
 ---
-title: "MCP"
-description: "Serve ECP (Execution Control Protocol) as MCP tools with ecp mcp serve. Same host as the CLI, over stdio or loopback HTTP."
+title: "Connect over MCP"
+description: "Give Claude, Cursor, or any MCP client the three ECP (Execution Control Protocol) tools, retrieve, execute, and commit, with the ecp mcp start stdio server."
 ---
 
-# MCP
+`ecp mcp start` runs an MCP server over stdio that gives any MCP client the full ECP (Execution Control Protocol) loop through three tools. It forwards every call to the local [host](/guides/host), so an agent in Claude, Cursor, or another client sees the same capabilities, saved executions, and runs as the CLI.
 
-ECP (Execution Control Protocol) exposes the **same process host** the CLI uses as MCP tools. Installed plugins become tools. Meta tools wrap `search`, `describe`, `validate`, `run`, journals, `invoke`, and plugin install. There is no per-capability MCP code.
-
-```bash
-ecp mcp serve
-```
-
-First use installs `@executioncontrolprotocol/mcp` from npm (`oclif.jitPlugins` pins `"^0.50"`). From a source checkout you can still `ecp plugins link packages/mcp`.
-
-`ecp mcp serve` is the MCP surface. There is no root `ecp serve` or `ecp up`.
-
-## stdio (default)
-
-stdout is the protocol stream. Do not log to stdout.
-
-```bash
-ecp mcp serve
-ecp mcp serve --tools meta
-```
-
-`--tools meta` serves only the closed meta set when a client cannot handle a large capability catalogue. Capabilities stay reachable with `ecp_invoke`.
-
-## HTTP
-
-```bash
-ecp mcp serve --http
-```
-
-HTTP binds **127.0.0.1** and requires a bearer token, printed once to stderr at start. Pass that token as `Authorization: Bearer <token>`.
-
-```bash
-ecp mcp serve --http --host 127.0.0.1 --port 3847
-ecp mcp serve --http --host 0.0.0.0 --allow-remote
-```
-
-`--host` and `--port` change the bind. Binding beyond loopback requires `--allow-remote`. Use that only on a trusted network.
-
-## Claude Desktop
-
-Add a stdio server that runs the same `ecp` on your `PATH` (after you have linked or installed the MCP plugin):
-
-```json
-{
-  "mcpServers": {
-    "ecp": {
-      "command": "ecp",
-      "args": ["mcp", "serve"]
-    }
-  }
-}
-```
-
-Use `--tools meta` as an extra arg if the client chokes on the capability list:
-
-```json
-{
-  "mcpServers": {
-    "ecp": {
-      "command": "ecp",
-      "args": ["mcp", "serve", "--tools", "meta"]
-    }
-  }
-}
-```
-
-## Claude Code and other MCP clients
-
-Point the client at `ecp mcp serve` the same way: stdio command `ecp` with args `mcp serve`. The server sees every plugin you already installed for the CLI.
-
-## Tool names
-
-Claude clients require `^[a-zA-Z0-9_-]{1,64}$`, so names use underscores, not dots.
-
-**Meta tools** (always registered unless you pass `--tools meta` only):
+## The three tools
 
 | Tool | Does |
 | ---- | ---- |
-| `ecp_search` | Search capabilities |
-| `ecp_describe` | Describe the environment (`format` for `toon`) |
-| `ecp_validate` | Validate a workflow `path` or Fluent `source` |
-| `ecp_run` | Run a workflow `path` or `source`; returns `runId` |
-| `ecp_runs_show` | Show a journal |
-| `ecp_runs_rerun` | Rerun from a step |
-| `ecp_invoke` | Invoke one capability by id |
-| `ecp_plugins_install` | Install a plugin (`confirm: true`; trust policy applies) |
+| `retrieve` | Read capabilities (with their `accepts` and `returns`), executions, configs, runs, plugins, formatters, and editor schemas |
+| `execute` | Validate or run an execution given inline, by `path`, by `id`, or as `{ id, patch }`; resume or cancel a run |
+| `commit` | Create, update, or delete stored executions and configs |
 
-**Capability tools** are generated from the registry: `<extension>_<capability>`, sanitized. Names longer than 64 characters are truncated and get a 6-character hash. Example: `jsonata_transform`. Format plugins show up as `format_toon_encode`, not root `encode` / `decode`.
+Their input schemas are the [operation](/reference/operations) inputs, so a tool call takes the same JSON as the HTTP API. The tool list is fixed: installing plugins adds capabilities behind `retrieve`, not new tools, so the list stays small no matter how many capabilities you have.
 
-Clients with tool search (Claude Code) load capability tools on demand, so a large catalogue costs nothing up front.
+There are no per-capability tools, no resources, and no prompts.
 
-## Path or source
+## Claude Code
 
-`ecp_validate` and `ecp_run` accept a workflow **file path** or inlined Fluent **source** (for clients that cannot write files). Source is written to a temp `*.ecp.ts` and compiled through the Node loader, so import rules match the CLI.
-
-```json
-{ "name": "ecp_run", "arguments": { "source": "import { workflow, step } from \"@executioncontrolprotocol/core\"\nexport default workflow(\"Echo\").run([\n  step(\"@executioncontrolprotocol/jsonata.transform\", \"T\").with({ expression: \"a\", payload: { a: 1 } }).as(\"out\"),\n])\n" } }
+```bash
+claude mcp add ecp -- ecp mcp start
 ```
 
-Pass `events: true` on `ecp_run` to map the CLI `--events` stream to MCP **progress** notifications. The result still includes `runId`.
+## Claude Desktop
 
-## Live updates
+Add the server to `claude_desktop_config.json`:
 
-Installing or linking a plugin updates `<oclif dataDir>/package.json`. The server rebuilds the host and sends `notifications/tools/list_changed`. New capabilities appear as tools without restarting the client connection.
+```json
+{
+  "mcpServers": {
+    "ecp": {
+      "command": "ecp",
+      "args": ["mcp", "start"]
+    }
+  }
+}
+```
 
-`ecp_plugins_install` requires `confirm: true`. Third-party packages also go through the CLI trust hook (the user must approve).
+## Cursor
 
-## Resources
+Add it to `.cursor/mcp.json` in your project (or the global file):
 
-The server exposes `ecp://environment`, `ecp://capabilities`, `ecp://policies`, `ecp://capability/{id}`, and `ecp://runs/{runId}`. Run resources read the **journal** on disk (`.ecp/runs/<runId>/`), not an in-memory map.
+```json
+{
+  "mcpServers": {
+    "ecp": {
+      "command": "ecp",
+      "args": ["mcp", "start"]
+    }
+  }
+}
+```
+
+## Other clients
+
+Any client that can launch a stdio server works: the command is `ecp`, the arguments are `mcp start`. To keep a separate store for a project, set `ECP_HOME` in the server's environment.
+
+## How a session goes
+
+1. The agent calls `retrieve` with `{ "type": "capability", "query": "csv" }`, then with an `id` to read a capability's schemas.
+2. It writes an execution and calls `execute` with `{ "execution": { "path": "flow.ecp.json" }, "mode": "validate" }`.
+3. It fixes the issues it gets back and validates again until the result is valid.
+4. It runs: `{ "execution": { "path": "flow.ecp.json" }, "input": { ... } }`.
+5. It saves the working execution with `commit`, and runs it by `{ "id": "..." }` next time.
+
+Each tool result has a text rendering and `structuredContent` with the same data. Failed operations come back with `isError: true` and one line per issue:
+
+```text
+ECP_MANIFEST_INVALID — 1 validation error
+/steps/1/uses: ECP_CAPABILITY_UNKNOWN — Capability @executioncontrolprotocol/test.ech is not installed. (did you mean '@executioncontrolprotocol/test.echo'?)
+```
+
+## Paths and large results
+
+- Relative paths, in `execution.path`, `output.path`, and file references in inputs, resolve against the directory the client started `ecp mcp start` in. Prefer paths over inline manifests for local files.
+- Pass `output: { "path": "result.json" }` to write a large result to a file and get a short summary back instead of filling the context window.
+
+## Host restarts
+
+The relay finds the host through `$ECP_HOME/host.json` on every call and starts one if needed. During a restart (for example after a plugin install), it waits and retries. If a run's connection drops mid-call, the relay finds the run when the host is back; an `interrupted` run tells the agent to call `execute` with `resume`.
+
+## Secrets stay out
+
+Secret values never pass through MCP. `retrieve` returns config objects with `$secret` references only, and there is no tool to set a secret. When a run fails with `ECP_SECRET_MISSING`, the agent should ask you to run `ecp config secrets set <key>`.
+
+## Debugging
+
+The relay writes nothing to stdout except MCP messages. Its log is `$ECP_HOME/logs/relay.log`; the host's is `host.log` in the same folder (`ecp host logs`).
 
 ## Next steps
 
-- [Relationship to MCP](/learn/relationship-to-mcp)
 - [The agent loop](/guides/agent-loop)
-- [CLI](/reference/cli)
+- [Operations](/reference/operations)
+- [Relationship to MCP](/learn/relationship-to-mcp)

@@ -1,74 +1,79 @@
 ---
 name: ecp
 description: >-
-  Delegates repeatable work to ECP (Execution Control Protocol): author
-  *.ecp.ts workflow files, validate and run them with --json, install plugins,
-  and repair from run journals. Use when the user needs a governed, deterministic
-  graph instead of a one-off tool call. Do not use for YAML Context, ecp test,
-  ecp serve, ecp up, the browser demo, or root ecp encode.
+  Operates ECP (Execution Control Protocol): discover capabilities, write
+  *.ecp.json executions, validate and run them with retrieve/execute/commit
+  (CLI or MCP), read run records, and save working executions. Use when work is
+  repeatable, moves data between several capability calls, or must be checked
+  before it runs. Do not use for a single one-off tool call, or for legacy
+  Fluent *.ecp.ts workflows (removed).
 ---
 
 # ECP (Execution Control Protocol)
 
-You operate ECP as a **deterministic delegation** capability. Author a workflow file, run it, read structured errors, repair, and rerun. You are not the whole harness.
+You delegate repeatable work to a **JSON execution graph** the host runs deterministically. Author `.ecp.json`, validate, fix structured issues, run, inspect runs, commit when stable. Learn flags from `ecp <command> --help`; do not copy CLI tables here.
 
-Install: `npx skills add executioncontrolprotocol/docs` (this skill). CLI: `npm install -g @executioncontrolprotocol/cli` (**0.50.0** on `latest`, field-test, not 1.0).
-
-Learn flags from `ecp <command> --help`. Do not copy CLI tables into this skill.
+Install CLI: `npm install -g @executioncontrolprotocol/cli`. Install this skill: `npx skills add executioncontrolprotocol/docs`.
 
 ## When to delegate
 
-Use ECP when the work is **repeatable, governed, or must be repaired** (policies, journals, plugins). Do **not** use it for a single throwaway tool call or for chat-only reasoning. MCP is `ecp mcp serve` on the same host as the CLI (see the MCP guide). The visual App is `ecp app <file>` on that same host (see the App guide). Do not copy either catalogue here.
+Use ECP when work is **repeatable, plugin-backed, or must be repaired from validation/run output**. Skip it for a single throwaway call or pure chat reasoning. MCP (`ecp mcp start`) and the App (`ecp app`) expose the same three operations as the CLI.
 
 ## Loop
 
-1. `ecp search "<intent>"` / `ecp describe` / `ecp describe --capability <id>`
-2. Write a `*.ecp.ts` file (`ecp init <name>` for a stub). Bind plugins with `.with([...])` or let inference fill requirements.
-3. `ecp validate <file> --json`
-4. `ecp run <file> --json` (optional `--to`, `--events`). `--env` is optional.
-5. `ecp runs show <runId>` on failure. Patch the file. `ecp runs rerun <runId> --from <step>`
+1. `ecp retrieve --type capability --query "<intent>"` or `--id @scope/plugin.capability`
+2. Write or edit `*.ecp.json` (`schema` + `version: "2.0"` + `steps`)
+3. `ecp execute path.ecp.json --validate --json`
+4. On `ok: false`, fix using `error.path`, `error.code`, `error.suggestions`, and `issues[]` / `available`
+5. `ecp execute path.ecp.json --input '{"..."}' --json` (add `--no-wait` to poll the run)
+6. `ecp retrieve --type run --id <runId> --include steps,events,state`
+7. When stable: `ecp commit --type execution --action create --object @file` (needs `execution.id`); later updates add `--action update --id <id> --if-version <n>`
 
-`--json` is `{ ok: true, data }` or `{ ok: false, error: { code, message, path, suggestions } }`.
+Envelope: `{ ok: true, data }` or `{ ok: false, error: { code, message, path?, suggestions?, issues? } }`. A **failed run** is still `ok: true` with `data.status: "failed"`.
 
 ## Hard rules
 
-- Never put secret **values** in workflow or environment files. Use `secrets("key")`.
-- Install plugins with `ecp plugins install <name>`. Third-party plugins need **user approval** (`ECP_PLUGIN_DENIED` if they refuse).
-- There is no `ecp test`, `ecp serve`, `ecp up`, or root `ecp encode` / `decode`. Format plugins are `ecp format-toon encode`. The graph UI is `ecp app <file>` (see the App guide).
-- Do not import hosts from plugin packages.
+- No secret values, `$secret`, or `$env` in executions; bind secrets in **config objects** (see `references/configs-and-secrets.md`).
+- `expr` is **control only** (gates, branches, loops); never `$expr` in `input`.
+- Data reshaping is a **transform step** (`core.transform` or optional JSONata), not inline expressions.
+- `ecp plugins install` for third-party packages: **ask the user first**.
+- Transforms and capabilities need installed plugins; first-party gaps return `ECP_PLUGINS_MISSING` with an install hint.
 
-## Build a plugin
+## Error codes (agent action)
 
-Scaffold and link; do not paste the SDK into the workflow file:
+| Code | Action |
+| ---- | ------ |
+| `ECP_REQUEST_INVALID` | Fix CLI/MCP flags or operation input |
+| `ECP_EXECUTION_LOAD` | Fix path, JSON, `schema`, or `version` |
+| `ECP_NOT_FOUND` | Fix id; use `retrieve --query` for suggestions |
+| `ECP_MANIFEST_INVALID` | Walk `issues[]`; fix paths in the file |
+| `ECP_CAPABILITY_UNKNOWN` | Install correct plugin or fix `uses` |
+| `ECP_PLUGINS_MISSING` | Run suggested `ecp plugins install <short>`; ask if not first-party |
+| `ECP_INPUT_INVALID` | Fix `input` vs capability or step `accepts` |
+| `ECP_REF_*` | Fix `$ref` paths, `optional`/`fallback`, or ordering |
+| `ECP_COMMIT_CONFLICT` | Fix `mode`/`as`; avoid `create` inside shared loops |
+| `ECP_EXPR_INVALID` / `ECP_SCRIPT_INVALID` | Fix syntax; no `$expr` in inputs |
+| `ECP_CONFIG_UNKNOWN` / `ECP_CONFIG_INVALID` | Fix `config` id or config object |
+| `ECP_PATCH_INVALID` | Fix JSON Patch or `@nodeId` paths |
+| `ECP_ALREADY_EXISTS` / `ECP_VERSION_CONFLICT` | Use update + `ifVersion` or new id |
+| `ECP_SECRET_MISSING` | **Stop.** User runs `ecp config secrets set <key>` |
+| `ECP_STEP_FAILED` / `ECP_OUTPUT_INVALID` | Read step error; fix input or capability usage |
+| `ECP_EXPR_*` / `ECP_SCRIPT_*` (run-time) | Fix `expr` or transform `script` |
+| `ECP_PROVIDER_ERROR` | Read the failed step's `error.details` (`status`, `body`) in the run; fix input/config, or escalate auth and quota problems |
+| `ECP_PLUGIN_LOAD_FAILED` | Plugin is broken or half-installed; tell the user (`ecp plugins`, `ecp host logs`) |
+| `ECP_RUN_CANCELLED` | Expected after `--cancel`; do not treat as bug |
+| `ECP_HOST_RESTARTING` | Retry after `retryAfterMs` |
+| `ECP_HOST_UNAVAILABLE` / `ECP_UNAUTHORIZED` | `ecp host status`; check token and logs |
 
-```bash
-ecp plugins new my-transform
-ecp plugins link plugins/plugin-my-transform
-ecp plugins build
-```
-
-For the contract, open GitHub (jsonata is the reference plugin). See `references/plugins.md`.
-
-## Error codes (what to do)
-
-| Code | Agent action |
-| ---- | ------------ |
-| `ECP_PLUGINS_MISSING` | `ecp plugins install <name>` (ask before third-party) |
-| `ECP_INPUT_INVALID` / `ECP_REF_UNRESOLVED` | Fix `ref()` / payload; re-validate |
-| `ECP_STEP_FAILED` | Read the message; fix the expression or capability input |
-| `ECP_SECRET_MISSING` | Stop. Ask the user to set the secret (`ecp config secrets add`) |
-| `ECP_POLICY_DENIED` | Stop or adjust policy config with the user |
-| `ECP_RUN_PAUSED` | `ecp runs resume` after the user approves |
-| `ECP_PLUGIN_DENIED` | Stop. Do not install untrusted plugins |
-| `ECP_RERUN_INCOMPATIBLE` | Run a new `ecp run` instead of `--from` |
-
-Full list: `references/errors.md`.
+Full catalogue: `references/errors.md`. Exits: `0` success (including valid `--validate`), `1` failed run/internal, `2` invalid request/manifest, `3` missing plugins, `4` host unavailable.
 
 ## References
 
-- `references/workflow-files.md`
-- `references/environments.md`
+- `references/executions.md` — manifest and node kinds
+- `references/transforms.md` — `core.transform`, JSONata, `$script` in inputs
+- `references/operations.md` — retrieve / execute / commit (CLI + MCP)
+- `references/configs-and-secrets.md`
 - `references/plugins.md`
 - `references/errors.md`
-- `references/examples.md` — three dogfood workflows
-- `references/escalation.md` — when to stop and ask the user
+- `references/examples.md` — small verified manifests
+- `references/escalation.md`

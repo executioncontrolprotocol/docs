@@ -1,0 +1,82 @@
+---
+title: "Files and artifacts"
+description: "Pass files through ECP (Execution Control Protocol) executions with FileRef references, run artifacts, uniform capture, and explicit publish steps."
+---
+
+Executions move JSON, not bytes. ECP (Execution Control Protocol) represents every file as a small JSON **file reference** (`FileRef`) that steps pass around through state. The host reads, downloads, and stores the actual bytes when a capability asks for them.
+
+## File references
+
+A `FileRef` has one of three kinds:
+
+| Kind | Shape | Points at |
+| ---- | ----- | --------- |
+| `file` | `{ "kind": "file", "path": "data/input.csv", "mediaType"?: "text/csv" }` | A file on the host's disk |
+| `url` | `{ "kind": "url", "url": "https://...", "mediaType"?: "image/png" }` | A file reachable over HTTP(S) |
+| `artifact` | `{ "kind": "artifact", "uri": "ecp://runs/<runId>/artifacts/<name>", "mediaType"?: "..." }` | A file stored with a run |
+
+Use them anywhere a capability's schema expects a file:
+
+```json
+{
+  "id": "rows",
+  "uses": "@executioncontrolprotocol/core.parse-csv",
+  "input": { "file": { "kind": "file", "path": "data/week.csv" } },
+  "as": "table"
+}
+```
+
+Relative `file` paths resolve from the directory of the `.ecp.json` file (or the saved execution's location). Inline executions sent over MCP or HTTP need absolute paths.
+
+## How capabilities read and write files
+
+Plugins never open paths or fetch URLs themselves. They ask the host's file service for the form they need: bytes, a stream, a local path, or a URL. When they produce a file, they hand back bytes, a stream, a path, or a URL, and get a `FileRef` in return. This keeps file handling, size limits, and media-type detection in one place.
+
+The host:
+
+- Sniffs the first bytes of a file and corrects a wrong `mediaType`, noting the correction on the step record.
+- Enforces size caps per access method (512 MiB by default).
+- Cleans up temporary copies when the step ends.
+
+## Uniform capture
+
+After a step succeeds, the host saves every `FileRef` in its output into the run's artifact store, whatever its kind: URLs are downloaded and local files are copied. The reference keeps its original `kind` and gains an `archive` field pointing at the stored copy:
+
+```json
+{
+  "kind": "url",
+  "url": "https://example.test/output.png",
+  "mediaType": "image/png",
+  "archive": { "kind": "artifact", "uri": "ecp://runs/run-20261124T192842Z-25a3ef/artifacts/render-image.png", "mediaType": "image/png" }
+}
+```
+
+That means short-lived URLs from a provider stay available after they expire, and every run has a complete record of what it produced. A capture that fails or exceeds the size cap is recorded with its reason and doesn't fail the step. Set `"persist": false` on a step to skip capture.
+
+Artifacts live under `$ECP_HOME/runs/<runId>/artifacts/`. The App previews captured images in the run panel.
+
+## Declared access
+
+A capability's schema can say what kind of file it needs, for example "a URL to an image". Validation checks this before the run: binding a local `file` or `artifact` to a URL-only input fails with `ECP_TYPE_MISMATCH` and suggests adding a publish step. The host checks again at run time, since a transform can produce a reference that validation couldn't see.
+
+In the App, these ports are labelled `file` or `url`, so you can see where a publish step is needed.
+
+## Publishing is a step
+
+Turning a local file into a URL means sending it somewhere. ECP never does that silently: publishing is always an explicit step in the execution, using a capability marked as a publisher (for example an upload to object storage). The run record lists every publish, with the source file, the published URL (query string removed), and, if a later cleanup step deletes it, when.
+
+```json
+{ "id": "publish", "uses": "<scope>/<storage-plugin>.upload", "input": { "file": { "$ref": "state.render.png" } }, "as": "published" }
+```
+
+The next step binds `state.published.file`, which is a `url` reference.
+
+## Transforms and files
+
+Transform scripts see file references as plain JSON. They can pick, rename, or route references (`state.images.0`, `ref.mediaType`) but can't read file contents. Returning bytes or base64 from a transform fails with `ECP_OUTPUT_INVALID`.
+
+## Next steps
+
+- [Transforms, expressions, and scripts](/guides/transforms-and-scripts)
+- [Run records](/reference/run-records)
+- [Write a plugin](/guides/writing-a-plugin#files)

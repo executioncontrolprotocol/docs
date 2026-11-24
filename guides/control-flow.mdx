@@ -1,0 +1,238 @@
+---
+title: "Control flow"
+description: "Branch, loop, and run in parallel in ECP (Execution Control Protocol) executions: expr gates, branch arms, while, for, and forEach loops, and parallel lines."
+---
+
+Steps in a `steps` array run in order. ECP (Execution Control Protocol) adds three node types for everything else: `branch`, `loop`, and `parallel`. Small JavaScript expressions decide which way the graph goes. They never reshape data.
+
+Every example on this page uses only the bundled `core.transform` capability, so you can run it on a fresh install.
+
+## Expressions
+
+An `expr` is a string holding one JavaScript function with at most one parameter, the state:
+
+```json
+"expr": "(state) => state.items.length > 0 && state.mode !== 'dry-run'"
+```
+
+- In control positions (step gates, branch arms, `while` loops) it must return a boolean, or the run fails with `ECP_EXPR_RESULT_INVALID`.
+- Syntax is checked during validation, with line and column (`ECP_EXPR_INVALID`).
+- It runs in a QuickJS sandbox on a frozen copy of state, with a 50 ms CPU budget and no I/O.
+- `async` functions and generators aren't allowed.
+
+## Gate a step
+
+Add `expr` to any step. When it returns `false`, the step is `skipped` and writes nothing:
+
+```json
+{
+  "id": "notify",
+  "uses": "@executioncontrolprotocol/core.transform",
+  "expr": "(state) => state.urgent === true",
+  "accepts": { "type": "object", "properties": {} },
+  "returns": { "type": "object", "properties": { "sent": { "type": "boolean" } }, "required": ["sent"] },
+  "script": { "lang": "js", "source": "return { sent: true }" },
+  "as": "notified"
+}
+```
+
+Anything that reads `state.notified` afterwards must handle it being missing, with `"optional": true` and a `fallback` on the `$ref`.
+
+## Branch
+
+A branch runs the **first** arm whose `expr` returns `true`. An arm without `expr` is the default and must come last. If nothing matches and there's no default, nothing runs.
+
+```json
+{
+  "type": "branch",
+  "id": "priority",
+  "branches": [
+    {
+      "label": "urgent",
+      "expr": "(state) => state.urgent === true",
+      "steps": [
+        {
+          "id": "flag-urgent",
+          "uses": "@executioncontrolprotocol/core.transform",
+          "accepts": { "type": "object", "properties": { "text": { "type": "string" } }, "required": ["text"] },
+          "returns": { "type": "object", "properties": { "text": { "type": "string" } }, "required": ["text"] },
+          "input": { "text": { "$ref": "state.subject.text" } },
+          "script": { "lang": "js", "source": "return { text: `URGENT: ${input.text}` }" },
+          "as": "headline"
+        }
+      ]
+    },
+    {
+      "label": "normal",
+      "steps": [
+        {
+          "id": "plain",
+          "uses": "@executioncontrolprotocol/core.transform",
+          "accepts": { "type": "object", "properties": { "text": { "type": "string" } }, "required": ["text"] },
+          "returns": { "type": "object", "properties": { "text": { "type": "string" } }, "required": ["text"] },
+          "input": { "text": { "$ref": "state.subject.text" } },
+          "script": { "lang": "js", "source": "return { text: input.text }" },
+          "as": "headline"
+        }
+      ]
+    }
+  ]
+}
+```
+
+Both arms write `headline`, and one always runs because of the default arm, so later steps can read `state.headline` without `optional`.
+
+## Loops
+
+One `loop` node type has three modes. Every loop is driven by exactly one of `ref` (a state path, such as `"state.rows"`) or `expr` (a function).
+
+| Mode | Driver | Body runs | Required |
+| ---- | ------ | --------- | -------- |
+| `while` (default) | Boolean, checked before every round | Until the driver is `false` or `maxRounds` is reached | `maxRounds` (1 to 1000) |
+| `for` | Integer, read once | That many times (0 to 1000); `state.<as>` is the index | `as` |
+| `forEach` | Array, read once | Once per item (up to 10,000); `state.<as>` is the item | `as`, `collect`, `into` |
+
+### `while`
+
+Repeat until a condition is met. The body shares state with the run, so update values with `replace` or `merge`:
+
+```json
+{
+  "type": "loop",
+  "id": "count-up",
+  "expr": "(state) => state.counter.n < state.count",
+  "maxRounds": 100,
+  "steps": [
+    {
+      "id": "increment",
+      "uses": "@executioncontrolprotocol/core.transform",
+      "accepts": { "type": "object", "properties": { "n": { "type": "integer" } }, "required": ["n"] },
+      "returns": { "type": "object", "properties": { "n": { "type": "integer" } }, "required": ["n"] },
+      "input": { "n": { "$ref": "state.counter.n" } },
+      "script": { "lang": "js", "source": "return { n: input.n + 1 }" },
+      "as": "counter",
+      "mode": "replace"
+    }
+  ]
+}
+```
+
+`maxRounds` is a safety cap. When the loop stops because of it, the run continues and records a `loop.exhausted` event. A refine-until-good loop around a model call is a typical use.
+
+### `for`
+
+Run the body a fixed number of times. `state.<as>` holds the index (from 0) during the loop and is removed afterwards:
+
+```json
+{
+  "type": "loop",
+  "mode": "for",
+  "id": "ticks",
+  "ref": "state.count",
+  "as": "i",
+  "steps": [
+    {
+      "id": "tick",
+      "uses": "@executioncontrolprotocol/core.transform",
+      "accepts": { "type": "object", "properties": { "i": { "type": "integer" } }, "required": ["i"] },
+      "returns": { "type": "object", "properties": { "label": { "type": "string" } }, "required": ["label"] },
+      "input": { "i": { "$ref": "state.i" } },
+      "script": { "lang": "js", "source": "return { label: `tick ${input.i}` }" },
+      "as": "log",
+      "mode": "append"
+    }
+  ]
+}
+```
+
+### `forEach`
+
+Run the body once per array item. Each item gets its **own copy** of state, with the item at `state.<as>` and its index at `state.<as>Index`. Writes inside the body stay in that copy (so `create` is fine). After the body, `collect` picks one value from the item's copy, and when every item is done, `state.<into>` holds the collected values in item order.
+
+```json
+{
+  "type": "loop",
+  "mode": "forEach",
+  "id": "each-title",
+  "ref": "state.titles",
+  "as": "title",
+  "concurrency": 4,
+  "onError": "continue",
+  "steps": [
+    {
+      "id": "slugify",
+      "uses": "@executioncontrolprotocol/core.transform",
+      "accepts": { "type": "object", "properties": { "title": { "type": "string" } }, "required": ["title"] },
+      "returns": { "type": "object", "properties": { "slug": { "type": "string" } }, "required": ["slug"] },
+      "input": { "title": { "$ref": "state.title" } },
+      "script": { "lang": "js", "source": "return { slug: input.title.toLowerCase().replace(/[^a-z0-9]+/g, '-') }" },
+      "as": "item"
+    }
+  ],
+  "collect": "state.item.slug",
+  "into": "slugs"
+}
+```
+
+| Field | Meaning |
+| ----- | ------- |
+| `concurrency` | Items running at once, 1 to 32. Default 1. |
+| `onError` | `"fail"` (default): stop starting items and fail with the lowest-index error; nothing is committed. `"continue"`: a failed item collects `null` and its error goes to `state.<into>Errors`. |
+
+Use `ref` rather than `expr` to drive a `forEach`, so validation knows the item type. An `expr` driver works, but item types are unknown until run time (`ECP_LOOP_UNTYPED` warning).
+
+On resume after an interruption, finished items are reused and only unfinished items run again.
+
+## Parallel
+
+A `parallel` node runs two or more **lines** at the same time. Each line is an array of nodes that runs in order.
+
+```json
+{
+  "type": "parallel",
+  "id": "prepare",
+  "maxConcurrency": 2,
+  "branches": [
+    [
+      {
+        "id": "subject",
+        "uses": "@executioncontrolprotocol/core.transform",
+        "accepts": { "type": "object", "properties": { "n": { "type": "integer" } }, "required": ["n"] },
+        "returns": { "type": "object", "properties": { "text": { "type": "string" } }, "required": ["text"] },
+        "input": { "n": { "$ref": "state.counter.n" } },
+        "script": { "lang": "js", "source": "return { text: `Counted to ${input.n}` }" },
+        "as": "subject"
+      }
+    ],
+    [
+      {
+        "id": "footer",
+        "uses": "@executioncontrolprotocol/core.transform",
+        "accepts": { "type": "object", "properties": {} },
+        "returns": { "type": "object", "properties": { "text": { "type": "string" } }, "required": ["text"] },
+        "script": { "lang": "js", "source": "return { text: 'Sent by ECP' }" },
+        "as": "footer"
+      }
+    ]
+  ]
+}
+```
+
+- Lines can't read each other's outputs or write the same key; validation checks both.
+- `maxConcurrency` defaults to the host setting (4).
+- If one line fails, the others are cancelled and the run fails with the first error.
+
+## Nesting
+
+Nodes nest freely: loops inside branch arms, parallel lines inside a `forEach` body, and so on. Ids stay unique across the whole document. In run records, steps inside loops are keyed by round (`increment#2`) or item (`slugify#i3`).
+
+## Failure behavior
+
+- Any failed step fails the run. Remaining nodes don't run. There are no try/catch nodes; use `onError: "continue"` on a `forEach` when partial results are useful.
+- The executor never retries a capability. Retries belong inside plugins.
+
+## Next steps
+
+- [Transforms and scripts](/guides/transforms-and-scripts)
+- [Execution manifest](/guides/executions)
+- [Run records](/reference/run-records)

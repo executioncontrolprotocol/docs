@@ -1,41 +1,50 @@
 ---
 title: "Why ECP"
-description: "Why ECP (Execution Control Protocol) exists: deterministic delegation instead of one-off tool calls."
+description: "Why ECP (Execution Control Protocol) exists: capture repeatable agent work once as a validated execution instead of re-reasoning through tool calls every time."
 ---
 
-# Why ECP
+Agents are good at working out how to do something. They are expensive and inconsistent at doing the same thing over and over. ECP (Execution Control Protocol) separates the two: the agent reasons once, captures the approach as an execution, and a host runs it the same way every time.
 
-Agents already call tools. What they rarely do well is **delegate a plan** that another process can validate, govern, replay, and repair.
+## The problem with tool calls alone
 
-ECP (Execution Control Protocol) is that delegation layer. You keep reasoning in the model. You put the repeatable part in a workflow file and run it through a host that plugins and policies can audit.
+A single tool call is cheap. A sequence of them, repeated across sessions, is not:
 
-## The problem
-
-A one-off tool call is cheap. A sequence of calls with secrets, cost limits, and media is not. Without a protocol you get:
-
-- Hidden bindings mixed into the graph
-- Failures that only exist as chat text
-- No way to resume or rerun from a named step
-- No shared language for “this plugin is missing” vs “this input is invalid”
+- **Every run is re-planned.** The model re-reads the task, picks tools again, and can pick differently.
+- **Data moves through the model.** Intermediate results pass through the context window even when nothing needs judgment.
+- **Failures are prose.** A broken step comes back as chat text, not as a code and a location you can fix.
+- **Nothing is reusable.** A sequence that worked lives only in a transcript.
 
 ## What ECP adds
 
-| Need | Mechanism |
-| ---- | --------- |
-| Portable graph | Workflow manifest (`@executioncontrolprotocol.workflow`) |
-| Host bindings | Requirements document (`@executioncontrolprotocol.requirements`) |
-| Structured failure | `ECP_*` codes and `--json` envelopes |
-| Replay | Run journals under `.ecp/runs/<runId>/` |
-| Governance | Policies (budget, approval, state-control, registry-control) |
-| Extensibility | npm plugins that generate CLI commands |
+| Need | How ECP answers it |
+| ---- | ------------------ |
+| A plan you can keep | The [execution manifest](/guides/executions): portable JSON, versioned when you commit it |
+| Errors before running | [Validation](/guides/agent-loop#validate) of structure, inputs, references, and types, with paths and suggestions |
+| Typed boundaries | Every capability and transform declares `accepts` and `returns` schemas |
+| Data that skips the model | Steps pass data to each other through `$ref` bindings on the host |
+| Control flow without prompts | Branches, loops, and parallel lines, gated by small JavaScript expressions |
+| A record of what happened | [Run records](/reference/run-records) with every step's input, output, timing, and error |
+| Secrets kept out of plans | Config objects reference secrets stored in your OS keychain |
+| One surface everywhere | The same `retrieve`, `execute`, and `commit` from the CLI, MCP, the App, and HTTP |
+
+## The determinism spectrum
+
+Work rarely splits cleanly into "needs a model" and "doesn't". ECP lets you place each part where it belongs:
+
+1. **Author time.** The agent explores capabilities, writes the execution, and repairs it until it validates. This is where reasoning happens.
+2. **Run time, deterministic.** Most steps are plain capability calls and transforms. Given the same input they do the same thing.
+3. **Run time, reasoning.** When a step does need judgment, it is a capability call to a model provider, with typed input and output like any other step. The rest of the graph stays deterministic around it.
+
+The more of a task you move into steps 2 and 3, the cheaper, faster, and more predictable it gets.
 
 ## What ECP is not
 
-- Not a full agent harness. The CLI is a capability the harness operates.
-- Not MCP. MCP is how models talk to tools; ECP is how an agent **delegates** a governed graph. See [Relationship to MCP](/learn/relationship-to-mcp).
-- Not a prompt. The workflow file is source of truth; the model authors and repairs it.
+- **Not an agent harness.** ECP is something an agent operates, not a chat loop or memory system.
+- **Not a replacement for MCP.** MCP connects a model to tools. ECP is how an agent hands off a graph of work. They stack; see [Relationship to MCP](/learn/relationship-to-mcp).
+- **Not a prompt format.** The execution is the source of truth. The model writes and repairs it; the host runs it.
 
 ## Next steps
 
 - [Concepts](/learn/concepts)
-- [The agent loop](/guides/agent-loop)
+- [Architecture](/learn/architecture)
+- [Quickstart](/getting-started/quickstart)

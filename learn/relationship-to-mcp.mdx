@@ -1,33 +1,35 @@
 ---
 title: "Relationship to MCP"
-description: "How ECP (Execution Control Protocol) relates to MCP: complementary layers, not competitors."
+description: "How ECP (Execution Control Protocol) relates to MCP: MCP connects a model to tools; ECP lets an agent delegate a validated graph of capability calls. ECP ships its own MCP server."
 ---
 
-# Relationship to MCP
+MCP (Model Context Protocol) standardizes **how a model calls a tool**. ECP (Execution Control Protocol) standardizes **how an agent delegates a graph of capability calls** that a host validates, runs, and records. They work at different layers and fit together.
 
-MCP (Model Context Protocol) standardizes **how a model talks to tools**. ECP (Execution Control Protocol) standardizes **how an agent delegates a governed graph of those tools**.
+## Different jobs
 
-They stack:
+| | MCP | ECP |
+| --- | --- | --- |
+| Unit of work | One tool call | An execution: a graph of steps |
+| Who decides the next step | The model, every time | The execution, written once |
+| Where intermediate data goes | Back through the model's context | Through run state on the host |
+| When errors surface | When the call fails | Before the run, in validation |
+| What's left afterwards | A transcript | A run record and a saved, versioned execution |
 
-1. MCP exposes tools (and, later, ECP itself as an MCP server).
-2. The orchestrating agent reasons about an approach.
-3. The agent authors a `*.ecp.ts` workflow and runs it through the ECP CLI.
-4. ECP records a journal, returns structured errors, and lets the agent repair and rerun.
+Use a plain MCP tool when a model should explore or make a one-off call. Use ECP when the sequence is worth keeping: it repeats, it moves data the model doesn't need to see, or it needs to be checked before it runs.
 
-## Complementary, not competing
+## ECP as an MCP server
 
-| Layer | Job |
-| ----- | --- |
-| MCP | Discover and call tools from a model session |
-| ECP | Compile, validate, govern, journal, and rerun a workflow |
+`ecp mcp start` is a stdio MCP server with exactly three tools: `retrieve`, `execute`, and `commit`. Through them, any MCP client can discover capabilities, write and validate executions, run them, and save them. The tool list never changes as you install plugins, so it stays small however many capabilities you have. See [Connect over MCP](/guides/mcp).
 
-Use MCP when the model should poke at a live tool. Use ECP when the sequence should be portable, policy-bound, and replayable.
+## Typical flow
 
-## MCP as an ECP plugin
-
-`ecp mcp serve` exposes the same host as the CLI: meta tools plus one tool per installed capability. See [MCP](/guides/mcp) for stdio, HTTP, tool names, and client snippets.
+1. The agent calls `retrieve` to find capabilities and read their schemas.
+2. It writes an execution and calls `execute` with `mode: "validate"` until there are no issues.
+3. It calls `execute` to run it and reads the result or the failed step's error.
+4. It calls `commit` to save the execution, so the next session runs it by id instead of re-planning.
 
 ## Next steps
 
+- [Connect over MCP](/guides/mcp)
+- [The agent loop](/guides/agent-loop)
 - [Why ECP](/learn/why-ecp)
-- [MCP](/guides/mcp)

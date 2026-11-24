@@ -1,36 +1,108 @@
-# Dogfood workflows
+# Examples
 
-Three tasks used to prove this skill. Copy the shape from `examples/` and `plugins/plugin-*/examples` on `development`. Do not invent old `ecp test` sessions.
+Small executions that run on a fresh install: they use only the bundled core plugin (`core.transform`, `core.parse-csv`). Each was validated and run against the host.
 
-## 1. JSONata reshape
+## Transform
 
-Plugins: `jsonata`. Injected failure: wrong JSONata path → `ECP_STEP_FAILED`.
+`hello.ecp.json`:
 
-```ts
-import { workflow, step } from "@executioncontrolprotocol/core"
-
-export default workflow("dogfood-reshape").run([
-  step("@executioncontrolprotocol/jsonata.transform", "Reshape")
-    .with({
-      expression: "{ title: payload.items[0].title, count: $count(payload.items) }",
-      payload: { items: [{ title: "Widget" }, { title: "Gadget" }] },
-    })
-    .as("summary"),
-])
+```json
+{
+  "schema": "@executioncontrolprotocol.execution",
+  "version": "2.0",
+  "steps": [
+    {
+      "id": "greet",
+      "uses": "@executioncontrolprotocol/core.transform",
+      "accepts": { "type": "object", "properties": { "name": { "type": "string" } }, "required": ["name"] },
+      "returns": { "type": "object", "properties": { "greeting": { "type": "string" } }, "required": ["greeting"] },
+      "input": { "name": "world" },
+      "script": { "lang": "js", "source": "return { greeting: `Hello, ${input.name}!` }" },
+      "as": "hello"
+    }
+  ]
+}
 ```
 
-Fix the expression if it points at a missing field, then `ecp run --json` again.
+Run: `ecp execute hello.ecp.json --json`
 
-## 2. Resize, upload, approve
+## forEach over run input
 
-Plugins: `image-sharp`, `azure-blob-storage`, `approval`. Injected failure: wrong `ref()` on upload → `ECP_INPUT_INVALID`.
+`titles.ecp.json` (run input `titles`, one transform per item, collected into `slugs`):
 
-Sequence: resize a product photo → upload with approval → return a share URL. Wire `ref("resize")` (or the actual `.as()` id) into the upload input. Secrets stay as `secrets("key")`.
+```json
+{
+  "schema": "@executioncontrolprotocol.execution",
+  "version": "2.0",
+  "execution": {
+    "id": "slug-titles",
+    "accepts": {
+      "type": "object",
+      "properties": { "titles": { "type": "array", "items": { "type": "string" } } },
+      "required": ["titles"]
+    },
+    "returns": {
+      "type": "object",
+      "properties": { "slugs": { "type": "array" } }
+    }
+  },
+  "steps": [
+    {
+      "type": "loop",
+      "mode": "forEach",
+      "id": "each-title",
+      "ref": "state.titles",
+      "as": "title",
+      "steps": [
+        {
+          "id": "slugify",
+          "uses": "@executioncontrolprotocol/core.transform",
+          "accepts": { "type": "object", "properties": { "title": { "type": "string" } }, "required": ["title"] },
+          "returns": { "type": "object", "properties": { "slug": { "type": "string" } }, "required": ["slug"] },
+          "input": { "title": { "$ref": "state.title" } },
+          "script": {
+            "lang": "js",
+            "source": "return { slug: input.title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '') }"
+          },
+          "as": "item"
+        }
+      ],
+      "collect": "state.item.slug",
+      "into": "slugs"
+    }
+  ]
+}
+```
 
-## 3. Caption and Mermaid
+Validate: `ecp execute titles.ecp.json --validate --json`
 
-Plugins: `anthropic` **or** `ollama`, `format-mermaid`. Injected failure: plugin not installed → `ECP_PLUGINS_MISSING`.
+Run: `ecp execute titles.ecp.json --input '{"titles":["Hello World","Second title"]}' --json`
 
-Generate a caption with a model step, then `ecp format-mermaid encode --input <file>`. If encode fails with `ECP_PLUGINS_MISSING`, install `format-mermaid` (first-party; no extra approval) and retry.
+Always pass `--input` (use `'{}'` when there is none) so `execution.accepts` defaults are applied.
 
-Prefer Ollama when no paid API key is available.
+## Parse CSV from disk
+
+Place `sample.csv` beside the execution (relative paths resolve from the execution file's folder) or use an absolute path:
+
+```json
+{
+  "schema": "@executioncontrolprotocol.execution",
+  "version": "2.0",
+  "steps": [
+    {
+      "id": "rows",
+      "uses": "@executioncontrolprotocol/core.parse-csv",
+      "input": {
+        "file": { "kind": "file", "path": "sample.csv", "mediaType": "text/csv" }
+      },
+      "as": "csv"
+    }
+  ]
+}
+```
+
+Output: `{ "csv": { "columns": [...], "rows": [{...}] } }`; every value is a string. Validation checks the shape only; the file is read at run time.
+
+## More patterns
+
+The ECP repository's `examples/` folder has larger executions (branches, loops, plugins): https://github.com/executioncontrolprotocol/executioncontrolprotocol/tree/development/examples

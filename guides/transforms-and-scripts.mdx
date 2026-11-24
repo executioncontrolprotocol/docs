@@ -1,0 +1,166 @@
+---
+title: "Transforms, expressions, and scripts"
+description: "Reshape data inside ECP (Execution Control Protocol) executions with sandboxed JavaScript and JSONata transform steps, gate the graph with expressions, and pass code to capabilities with $script."
+---
+
+Real executions rarely pass one capability's output straight into the next. Fields need renaming, lists need filtering, and prompts need assembling. ECP (Execution Control Protocol) handles this inside the execution, with three tools for three jobs:
+
+| Tool | Job | Where it goes |
+| ---- | --- | ------------- |
+| **Transform step** | Reshape data: compute a new value from earlier outputs | A step that uses `core.transform` (JavaScript) or `jsonata.transform` |
+| **Expression** (`expr`) | Control: decide whether a step runs, which arm, how many rounds | `expr` on a step, branch arm, or loop |
+| **`$script` marker** | Pass code as data to a capability that runs it somewhere else | Inside a step's `input` |
+
+The rule behind this split: **every transformation is a visible node with typed inputs and outputs.** Nothing reshapes data on an edge, so validation can check every connection and the App can draw it.
+
+## JavaScript transforms
+
+`@executioncontrolprotocol/core.transform` runs a JavaScript function body in the host's QuickJS sandbox. It ships with the host, so it is always available.
+
+```json
+{
+  "id": "prompt",
+  "uses": "@executioncontrolprotocol/core.transform",
+  "accepts": {
+    "type": "object",
+    "properties": {
+      "headline": { "type": "string" },
+      "locale": { "type": "string" }
+    },
+    "required": ["headline", "locale"]
+  },
+  "returns": {
+    "type": "object",
+    "properties": { "prompt": { "type": "string" } },
+    "required": ["prompt"]
+  },
+  "input": {
+    "headline": { "$ref": "state.doc.headline" },
+    "locale": { "$ref": "state.locale" }
+  },
+  "script": {
+    "lang": "js",
+    "source": "return { prompt: `Translate into ${input.locale}: ${input.headline}` }"
+  },
+  "as": "prompt"
+}
+```
+
+How it fits together:
+
+- **`accepts`** names and types the transform's inputs. Each one is bound in `input`, usually with `$ref`, and every binding is checked like any other step input.
+- **`script`** is the function body. It reads a frozen `input` object and `return`s the output. It can't see state directly, so every dependency is a visible `$ref`.
+- **`returns`** types the output. Later steps' `$ref`s are checked against it, and the host validates the script's actual result against it at run time (`ECP_OUTPUT_INVALID` on a mismatch).
+- Keep `returns` as specific as you can. A property typed loosely (for example `{ "type": "object" }`) still validates, but later steps lose type checking on anything beneath it.
+
+### Scripts in files
+
+Long scripts read better in their own file. Use `path` instead of `source`; it resolves relative to the execution file:
+
+```json
+"script": { "lang": "js", "path": "scripts/build-rows.js" }
+```
+
+```js scripts/build-rows.js
+const rows = input.table.rows.filter((row) => row.status === "active")
+return { rows, count: rows.length }
+```
+
+The App reloads when a script file changes, and the run record keeps the exact source that ran.
+
+### Sandbox and limits
+
+Transform scripts run in QuickJS (WebAssembly), not Node:
+
+- No `require`, `import`, `process`, `fetch`, timers, or file access.
+- Default limits per step: 1000 ms (`ECP_SCRIPT_TIMEOUT`), 32 MiB of memory, and a 4 MiB result.
+- A thrown error fails the step with `ECP_SCRIPT_FAILED` and the error message.
+- Syntax is checked during validation, with line and column (`ECP_SCRIPT_INVALID`).
+- File references pass through as plain JSON. Scripts can route and inspect them (`kind`, `url`, `mediaType`) but never read file contents. Returning raw bytes fails with `ECP_OUTPUT_INVALID`.
+
+## JSONata transforms
+
+If you prefer [JSONata](https://jsonata.org/) for querying and reshaping JSON, install the optional plugin:
+
+```bash
+ecp plugins install jsonata
+```
+
+A JSONata transform has the same `accepts` and `returns` contract, with an `expression` instead of a `script`:
+
+```json
+{
+  "id": "pick-names",
+  "uses": "@executioncontrolprotocol/jsonata.transform",
+  "accepts": {
+    "type": "object",
+    "properties": {
+      "people": { "type": "array", "items": { "type": "object", "properties": { "name": { "type": "string" } } } }
+    },
+    "required": ["people"]
+  },
+  "returns": {
+    "type": "object",
+    "properties": { "names": { "type": "array", "items": { "type": "string" } } },
+    "required": ["names"]
+  },
+  "input": { "people": { "$ref": "state.team.people" } },
+  "expression": "{ \"names\": people.name[] }",
+  "as": "result"
+}
+```
+
+Each evaluation runs in a short-lived child process with its own memory cap and a 1000 ms timeout, so a runaway expression fails the step without affecting the host. Process start adds roughly 75 ms per step; use `core.transform` where that matters.
+
+## Expressions
+
+Expressions are for control only. They are one-argument JavaScript functions that read state and return a boolean (or, for `for` and `forEach` loop drivers, a count or an array):
+
+```json
+{ "id": "translate", "uses": "@executioncontrolprotocol/anthropic.generate", "expr": "(state) => state.locale !== 'en'", "input": { "prompt": { "$ref": "state.prompt.prompt" } }, "as": "translation" }
+```
+
+If you find yourself wanting an expression to produce a value for an input, add a transform step instead. Inline `$expr` markers in `input` are rejected with `ECP_EXPR_INVALID`. See [Control flow](/guides/control-flow#expressions) for the rules.
+
+## Passing code with `$script`
+
+Some capabilities take a **program** as an input field, for example a script that a remote service runs for you. The `$script` marker loads that code, checks its syntax, and passes it to the capability as a string. ECP never runs it.
+
+```json
+"input": {
+  "code": {
+    "$script": {
+      "lang": "js",
+      "path": "scripts/resize-layers.js",
+      "params": { "width": { "$ref": "state.target.width" }, "label": "hero" }
+    }
+  }
+}
+```
+
+The capability receives `const params = {"width":1200,"label":"hero"};` followed by the file's contents.
+
+- Exactly one of `source` or `path`. `path` resolves relative to the execution file.
+- `params` values can be literals or `$ref`s, and must serialize to JSON.
+- `$script` is only allowed where the capability's `accepts` expects a string, and the final text is checked against that schema (for example a `maxLength`).
+- `ecmaVersion` (default 2020) sets the syntax level for the check.
+
+`$script` and a transform's plain `script` field look alike but do different things: a transform's `script` runs on the host and produces a value; a `$script` marker is code handed to a capability as data.
+
+## Choosing the right tool
+
+| You want to | Use |
+| ----------- | --- |
+| Rename, filter, combine, or format values between steps | `core.transform` or `jsonata.transform` |
+| Build a prompt from several earlier outputs | `core.transform` |
+| Skip a step under a condition | `expr` on the step |
+| Pick one of several paths | `branch` with arm `expr`s |
+| Repeat until good enough | `while` loop with an `expr` |
+| Process each row of a list | `forEach` loop with a transform in the body |
+| Send a script to a service that runs it | `$script` in the capability's input |
+
+## Next steps
+
+- [Control flow](/guides/control-flow)
+- [Files and artifacts](/guides/files)
+- [Write a plugin](/guides/writing-a-plugin)

@@ -4,12 +4,13 @@ This repository contains the documentation site for **ECP (Execution Control Pro
 
 **Live site:** https://executioncontrolprotocol.io/
 
-The live site is the 0.50.0 field-test rewrite. Mintlify publishes `main`.
+Mintlify publishes `main`. The content documents the realigned ECP (JSON executions, the local host, `retrieve` / `execute` / `commit`) as of ECP `development`.
 
 ## What’s in here
 
 - **Site config**: `docs.json`
-- **Pages**: `**/*.mdx` (workflow files, environments, CLI, plugins)
+- **Pages**: `**/*.mdx` (getting started, concepts, execution guides, host / MCP / App, plugin SDK, reference)
+- **Generated**: `reference/cli.mdx` and `llms.txt` (`npm run generate:reference -- --ecp-root ../executioncontrolprotocol`)
 - **Agent skills**: `skills/ecp/` (consumer skill `ecp`; `npx skills add executioncontrolprotocol/docs`). `.mintlify/skills/ecp/` is a pointer only.
 - **Project writing rules**: `AGENTS.md` and `.cursor/rules/docs-voice-seo.mdc`
 

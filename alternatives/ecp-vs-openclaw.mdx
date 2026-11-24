@@ -1,23 +1,20 @@
 ---
 title: "ECP vs OpenClaw"
-description: "When to use ECP (Execution Control Protocol) instead of a personal-agent product."
+description: "When to use ECP (Execution Control Protocol) instead of, or inside, a personal-agent product like OpenClaw."
 ---
 
-# ECP vs OpenClaw
-
-OpenClaw-style products are **personal agents** with connectors and a chat UI. ECP (Execution Control Protocol) is the delegation capability those products (or any harness) can call.
-
-## Positioning
+OpenClaw-style products are **personal agents**: a chat interface, connectors, and memory in one package. ECP (Execution Control Protocol) is a **delegation layer** that any agent, including a personal one, can use to hand off repeatable work.
 
 | | Personal-agent product | ECP |
 | --- | --- | --- |
-| Surface | Chat, connectors, memory | CLI, workflow files, journals |
-| Scope | The whole harness | One capability inside a harness |
-| Replay | Session history | `ecp runs show` / `rerun --from` |
+| Surface | Chat, connectors, memory | CLI, MCP tools, HTTP API, and a graph App |
+| Scope | The whole assistant | One capability an assistant uses |
+| Repeating a task | The model plans it again | Run the saved execution by id |
+| Record | Conversation history | Run records with each step's input, output, and error |
 
-Use the product when you want an assistant. Use ECP when the assistant should hand off a **repeatable, policy-bound** graph instead of re-prompting.
+Use the product when you want an assistant. Give that assistant ECP when it should stop re-planning the same task and run a checked, recorded execution instead.
 
 ## Next steps
 
 - [The agent loop](/guides/agent-loop)
-- [Relationship to MCP](/learn/relationship-to-mcp)
+- [Connect over MCP](/guides/mcp)

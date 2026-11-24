@@ -1,0 +1,162 @@
+---
+title: "Operations"
+description: "Reference for the three ECP (Execution Control Protocol) operations, retrieve, execute, and commit: inputs, outputs, the response envelope, JSON Patch with node ids, and the local HTTP API."
+---
+
+ECP (Execution Control Protocol) has exactly three operations. They take and return the same JSON on every surface: CLI commands, MCP tools, HTTP routes, and the in-process API.
+
+| Operation | CLI | MCP tool | HTTP |
+| --------- | --- | -------- | ---- |
+| retrieve | `ecp retrieve` | `retrieve` | `POST /v1/retrieve` |
+| execute | `ecp execute` | `execute` | `POST /v1/execute` |
+| commit | `ecp commit` | `commit` | `POST /v1/commit` |
+
+## Envelope
+
+Every response is one of:
+
+```ts
+{ ok: true, data: T }
+{ ok: false, error: { code, message, path?, suggestions?, issues?, retryAfterMs? } }
+```
+
+`ok: false` means the operation was refused: a bad request, an invalid execution, a missing object, a version conflict, or a host problem. A run that **fails** is still `ok: true`, with `data.status: "failed"` and `data.error`. See [Error codes](/reference/error-codes).
+
+## retrieve
+
+Read objects. Nothing changes.
+
+```ts
+interface RetrieveInput {
+  type: "capability" | "execution" | "config" | "run" | "plugin" | "formatter" | "schema"
+  id?: string             // one item in full
+  query?: string          // search: capability, execution, config
+  filter?: { plugin?: string; executionId?: string; status?: RunStatus; clientRequestId?: string }
+  include?: Array<"steps" | "events" | "manifest" | "state" | "document">
+  limit?: number          // default 10, max 100
+  format?: string         // formatter id; default JSON
+  output?: { path: string }   // write the full result to a file, respond with a summary
+}
+```
+
+- `id` and `query` can't be combined. With neither, you get a list: runs and executions newest first, everything else alphabetical.
+- Search tokenizes the query and scores matches in ids, summaries, and use cases. It is deterministic.
+- An unknown id fails with `ECP_NOT_FOUND` and suggests close ids.
+
+| `type` | With `id` | List columns |
+| ------ | --------- | ------------ |
+| `capability` | Full entry: `accepts`, `returns`, `configSchema`, `timeoutMs`, use cases | `id`, `plugin`, `summary` |
+| `execution` | `{ id, version, manifest, warnings, updatedAt }` | `id`, `version`, `updatedAt` |
+| `config` | The stored object, secret references only | `id`, `plugin` |
+| `run` | The run record; `include` adds `steps`, `events`, `state`, `manifest` | `id`, `status`, `startedAt` |
+| `plugin` | `{ package, id, version, source, capabilities, loaded, manifestOk, issues? }` | `package`, `version`, `source`, `manifest` |
+| `formatter` | `{ id, mediaType, default }` | `id`, `mediaType`, `default` |
+| `schema` | Editor schema `{ id, path, bytes, document? }` | — |
+
+`type: "schema"` returns the path of the editor JSON Schema for `*.ecp.json` files (`$ECP_HOME/schema/execution.schema.json`), or with `id`, a plugin's editor schema. `include: ["document"]` inlines the JSON up to 256 KiB.
+
+```bash
+ecp retrieve --type run --filter status=failed --limit 5
+ecp retrieve --type run --id <runId> --include steps,events
+ecp retrieve --type capability --query csv --json
+```
+
+## execute
+
+Validate or run an execution, or control a run.
+
+```ts
+interface ExecuteInput {
+  execution?: ExecutionManifest | { id: string } | { path: string } | { id: string; patch: PatchOp[] }
+  input?: object              // run input, checked against execution.accepts
+  mode?: "run" | "validate"   // default "run"
+  wait?: boolean              // default true
+  waitTimeoutMs?: number      // default 120000 over MCP and HTTP; unlimited in the CLI
+  output?: { path: string }
+  resume?: string             // runId of an interrupted run
+  cancel?: string             // runId of a running run
+}
+```
+
+Exactly one of `execution`, `resume`, or `cancel`.
+
+- **`path`** must end in `.ecp.json`. The CLI and MCP relay resolve relative paths against their working directory.
+- **`mode: "validate"`** returns `{ validation: { valid, issues, manifestHash, schemaHash } }` and never creates a run. Invalid executions come back as `ok: false` with every issue.
+- **A run** returns `{ runId, status, validation, result?, error?, steps, warnings? }`, where `steps` lists each node's status and duration.
+- **`wait: false`**, or a run still going at `waitTimeoutMs`, returns `status: "running"`. Poll with `retrieve { type: "run", id }`.
+- **`{ id, patch }`** runs a patched copy of a saved execution without saving it.
+- **`cancel`** returns once the run settles (at most 10 seconds).
+- **`resume`** continues an `interrupted` run: completed steps are skipped, and the step that was in progress runs again from the start.
+
+```bash
+ecp execute flow.ecp.json --validate
+ecp execute my-flow --input @input.json --out result.json
+ecp execute --resume <runId>
+```
+
+In the CLI, a positional argument that ends in `.ecp.json` or contains a path separator is a path; anything else is an id.
+
+## commit
+
+Create, update, or delete stored executions and configs.
+
+```ts
+interface CommitInput {
+  type: "execution" | "config"
+  action: "create" | "update" | "delete"
+  id?: string            // required for update and delete
+  object?: unknown       // create: the object; update: a full replacement
+  patch?: PatchOp[]      // update only; instead of object
+  ifVersion?: number     // required for update and delete
+}
+// → { type, id, version, warnings? }   (version is null after delete)
+```
+
+- Executions are fully validated before saving. They need `execution.id`.
+- Configs are validated against the plugin's config schema; the plugin must be installed.
+- Creating an existing id fails with `ECP_ALREADY_EXISTS`. A stale `ifVersion` fails with `ECP_VERSION_CONFLICT`, which names the current version.
+- Capabilities, runs, plugins, formatters, and schemas are read-only.
+
+```bash
+ecp commit --type execution --action create --object @flow.ecp.json
+ecp commit --type execution --action update --id my-flow --patch @fix.json --if-version 2
+ecp commit --type config --action delete --id anthropic/old --if-version 3
+```
+
+## Patch format
+
+Updates and `{ id, patch }` runs use [RFC 6902 JSON Patch](https://datatracker.ietf.org/doc/html/rfc6902) (`add`, `remove`, `replace`, `move`, `copy`, `test`) with one extension: `@<nodeId>` as the first segment after `/steps` selects that node wherever it is nested. This patch edits the [quickstart](/getting-started/quickstart) execution: `slugify` sits inside the `each-title` loop.
+
+```json fix.json
+[
+  { "op": "replace", "path": "/steps/@slugify/script/source", "value": "return { slug: input.title.toUpperCase() }" },
+  { "op": "add", "path": "/steps/@each-title/concurrency", "value": 4 }
+]
+```
+
+An unknown node id or a patch that doesn't apply fails with `ECP_PATCH_INVALID`, naming the operation index. The patched result is then validated as usual.
+
+## HTTP API
+
+The host listens on `127.0.0.1` at the port in `$ECP_HOME/host.json`. Every route except health and the App's static files needs `Authorization: Bearer <token>` with the token from the same file. `Host` and `Origin` headers must name the loopback address.
+
+| Route | Body and response |
+| ----- | ----------------- |
+| `GET /v1/health` | `{ status, version, pid, startedAt, plugins, activeRuns, lastActivityAt, openStreams }`. No auth. |
+| `POST /v1/retrieve` | `RetrieveInput` → envelope |
+| `POST /v1/execute` | `ExecuteInput` → envelope |
+| `POST /v1/commit` | `CommitInput` → envelope |
+| `GET /v1/watch?types=run,execution,config&runId=…` | Server-sent events: storage changes and run events. Heartbeat every 15 seconds. |
+| `GET /v1/runs/:runId/artifacts/:name` | Streams a captured artifact. |
+| `GET /app/` | The App. |
+
+- Request bodies are JSON, up to 10 MB.
+- HTTP status follows the error code (400, 401, 404, 409, 422, 500, 503). A run that failed is still `200`.
+- Every response has an `X-Ecp-Request-Id` header, which also appears in the host log.
+- During a restart, `execute` returns `503` with `ECP_HOST_RESTARTING` and `retryAfterMs`; retrieve and commit keep working.
+
+## Next steps
+
+- [Error codes](/reference/error-codes)
+- [CLI reference](/reference/cli)
+- [Connect over MCP](/guides/mcp)

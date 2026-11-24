@@ -1,76 +1,299 @@
 ---
-title: "Writing a plugin"
-description: "Define an ECP (Execution Control Protocol) plugin with defineExtension, metadata, and generated CLI commands."
+title: "Write a plugin"
+description: "Add your own capabilities to ECP (Execution Control Protocol) with the TypeScript plugin SDK: definePlugin, capability, zod schemas, lazy handlers, file access, and the generated manifest."
 ---
 
-# Writing a plugin
+A plugin is an npm package that adds capabilities to ECP (Execution Control Protocol). You describe each capability with zod schemas, write a handler, and run one build command that generates the manifest and JSON Schemas the host reads. This guide builds a small working plugin, `@acme/text-stats`, with two capabilities.
 
-A plugin packages an extension or policy as an npm package. The CLI loads it, registers the definition, and generates commands from metadata.
+## What a plugin is
 
-## Scaffold
+- **Capabilities only.** Storage, secrets, formatting, and auth are host services; a plugin never reimplements them.
+- **Described by data.** `ecp.manifest.json` and `ecp.schema.json` tell the host what each capability accepts and returns. The host lists and validates capabilities without importing your code.
+- **Loaded lazily.** Handler code loads the first time one of its capabilities runs.
+- **Plain ESM JavaScript.** Write it in TypeScript or JavaScript; the host imports the built `dist/index.js`.
 
-```bash
-ecp plugins new jsonata
-ecp plugins link plugins/plugin-jsonata
-ecp plugins build
+## Project layout
+
+```text
+text-stats/
+├── package.json
+├── tsconfig.json
+└── src/
+    ├── index.ts            plugin definition: metadata and schemas, no handler code
+    ├── schemas.ts          zod schemas shared by the definition and the handlers
+    ├── stats.ts
+    └── capabilities/
+        ├── count.ts        one handler per capability
+        └── count-file.ts
 ```
 
-Package name is `plugin-` plus the extension or policy name. The protocol **id** (for example `@executioncontrolprotocol/jsonata`) stays unchanged.
+## `package.json`
 
-## Definition
+```json package.json
+{
+  "name": "@acme/text-stats",
+  "version": "1.0.0",
+  "description": "Count words and lines in text or a text file.",
+  "type": "module",
+  "keywords": ["ecosystem:ecp-plugin"],
+  "oclif": {},
+  "ecp": { "manifest": "./ecp.manifest.json", "schema": "./ecp.schema.json" },
+  "exports": {
+    ".": "./dist/index.js",
+    "./ecp.manifest.json": "./ecp.manifest.json",
+    "./ecp.schema.json": "./ecp.schema.json"
+  },
+  "files": ["dist", "ecp.manifest.json", "ecp.schema.json"],
+  "scripts": {
+    "build": "tsc && ecp-plugin-manifest",
+    "check:manifest": "ecp-plugin-manifest --check"
+  },
+  "peerDependencies": {
+    "@executioncontrolprotocol/plugin-sdk": "*",
+    "zod": "^4.0.0"
+  },
+  "devDependencies": {
+    "@executioncontrolprotocol/plugin-sdk": "*",
+    "typescript": "^5.7.0",
+    "zod": "^4.0.0"
+  }
+}
+```
 
-```ts
-import { defineExtension, capabilityFor } from "@executioncontrolprotocol/core"
+The parts that matter:
+
+- **`name` is the plugin id.** Capability ids are `<name>.<capability>`, here `@acme/text-stats.count`. The build fails if the id in your code differs from `name`.
+- `"oclif": {}` and the `ecp` field let `ecp plugins install` find the manifest.
+- The manifest and schema files must be exported and included in `files`.
+- The SDK and zod are peer dependencies, so the host's copies are used at run time.
+
+## Schemas
+
+Keep schemas in their own module so the definition and the handlers can both import them:
+
+```ts src/schemas.ts
+import { fileRefSchema } from "@executioncontrolprotocol/plugin-sdk"
 import { z } from "zod"
 
-export default defineExtension({
-  id: "@executioncontrolprotocol/jsonata",
-  name: "jsonata",
+export const Stats = z.object({
+  words: z.number().int(),
+  lines: z.number().int(),
+  characters: z.number().int(),
 })
-  .withMetadata({
-    summary: "Evaluate JSONata expressions over JSON payloads.",
-    description: "Pure JS transform. Runs in Node and browser.",
-    useCases: ["Reshape a payload before a later step"],
-    projections: {
-      mermaid: { kind: "transform" },
-    },
-    topicAlias: "jsonata",
-  })
-  .capability(
-    capabilityFor("@executioncontrolprotocol/jsonata.transform")
-      .input(z.object({ expression: z.string(), payload: z.unknown() }))
-      .output(z.object({ result: z.unknown() }))
-  )
+
+export const CountInput = z.object({ text: z.string() })
+
+export const CountFileInput = z.object({
+  file: fileRefSchema({ access: "bytes", mediaTypes: ["text/*"] }),
+})
+
+export type Stats = z.infer<typeof Stats>
 ```
 
-- Import zod from `"zod"` directly.
-- Write product prose in `.withMetadata({ summary, description, useCases, projections })`. Projections are required.
-- `.supports(environmentId, range?)` when the plugin is host-specific.
-- Use `resolveFile` / `writeMediaArtifact` for binary I/O.
+Design schemas for the workflow, not for the API you call:
 
-Hosts register the default-exported definition with `registry.registerExtension(definition)` or `registerPolicy`. Plugins never import `@executioncontrolprotocol/node`, `browser`, `cli`, or `mcp`.
+- **Return the product, not the envelope.** If a call produces a document, return the document. If it produces images, return file references, not job JSON the next step has to dig through.
+- **Prefer specific types.** Strings, integers, and arrays of strings make connections checkable. An untyped `{}` switches off checking for every step downstream.
+- **Every file is a `FileRef`.** Use `fileRefSchema()` for any file-like field, including nested ones. Never accept raw paths, URLs, or base64.
 
-## Commands
+## The definition
 
-`ecp plugins build` generates oclif files via `toCommands` from `@executioncontrolprotocol/plugin-sdk`. Capability metadata becomes `ecp <topic> <capability>` (for example `ecp jsonata transform`). Optional `metadata.topicAlias` shortens the topic (Adobe Firefly uses `firefly`).
+```ts src/index.ts
+import { capability, definePlugin } from "@executioncontrolprotocol/plugin-sdk"
+import { CountFileInput, CountInput, Stats } from "./schemas.js"
 
-## Install
+export default definePlugin({
+  id: "@acme/text-stats",
+  summary: "Text statistics.",
+  description: "Word, line, and character counts for strings and text files.",
+  capabilities: {
+    count: capability({
+      summary: "Count words and lines in text.",
+      description: "Returns the number of words, lines, and characters in `text`.",
+      useCases: ["Check the length of generated copy", "Measure a document before summarizing it"],
+      projections: ["Take `words` for length limits; `lines` and `characters` are also returned"],
+      accepts: CountInput,
+      returns: Stats,
+      handler: () => import("./capabilities/count.js"),
+    }),
+    "count-file": capability({
+      summary: "Count words and lines in a text file.",
+      description: "Reads a UTF-8 text file and returns its word, line, and character counts.",
+      useCases: ["Measure a local or downloaded text file"],
+      projections: ["Take `words`"],
+      accepts: CountFileInput,
+      returns: Stats,
+      timeoutMs: 30_000,
+      handler: () => import("./capabilities/count-file.js"),
+    }),
+  },
+})
+```
+
+| Field | Purpose |
+| ----- | ------- |
+| `summary` | One line shown in search results. Agents choose capabilities from it. |
+| `description` | What the capability does and returns. |
+| `useCases` | At least one. When an agent should reach for it; used by `retrieve` search. |
+| `projections` | At least one. Which output fields matter and how to use them. |
+| `accepts` / `returns` | zod schemas, converted to JSON Schema at build time. |
+| `handler` | A lazy `import()` of the handler module. It must be lazy, so listing capabilities never loads handler code. |
+| `timeoutMs` | Optional. Default is 10 minutes. |
+
+Capability names are lowercase with digits and `-`. Add a `config` zod schema to `definePlugin` if your plugin needs settings or credentials. Users then supply them with a [config object](/guides/configs-and-secrets), and secrets arrive already resolved.
+
+## Handlers
+
+A handler's module default-exports an async function that takes the validated input and a context, and returns output matching `returns`:
+
+```ts src/capabilities/count.ts
+import type { HandlerContext } from "@executioncontrolprotocol/plugin-sdk"
+import type { z } from "zod"
+import type { CountInput, Stats } from "../schemas.js"
+import { stats } from "../stats.js"
+
+export default async function count(input: z.infer<typeof CountInput>, _ctx: HandlerContext): Promise<Stats> {
+  return stats(input.text)
+}
+```
+
+```ts src/stats.ts
+import type { Stats } from "./schemas.js"
+
+export function stats(text: string): Stats {
+  const trimmed = text.trim()
+  return {
+    words: trimmed === "" ? 0 : trimmed.split(/\s+/).length,
+    lines: text === "" ? 0 : text.split(/\r?\n/).length,
+    characters: text.length,
+  }
+}
+```
+
+The host validates the output against `returns` before committing it.
+
+### Files
+
+Ask the host for a file in the form you need instead of opening paths or fetching URLs yourself:
+
+```ts src/capabilities/count-file.ts
+import type { FileRef, HandlerContext } from "@executioncontrolprotocol/plugin-sdk"
+import type { z } from "zod"
+import type { CountFileInput, Stats } from "../schemas.js"
+import { stats } from "../stats.js"
+
+export default async function countFile(input: z.infer<typeof CountFileInput>, ctx: HandlerContext): Promise<Stats> {
+  const { bytes } = await ctx.files.bytes(input.file as FileRef)
+  ctx.logger.debug("read file", { bytes: bytes.byteLength })
+  return stats(new TextDecoder().decode(bytes))
+}
+```
+
+| Method | Gives you |
+| ------ | --------- |
+| `ctx.files.bytes(ref)` | The contents as a `Uint8Array` |
+| `ctx.files.stream(ref)` | A `ReadableStream` |
+| `ctx.files.path(ref)` | A local path (a temporary copy for URLs and artifacts, removed after the step) |
+| `ctx.files.url(ref)` | The URL of a `url` reference; anything else fails with a hint to publish first |
+| `ctx.files.fromBytes(bytes, { mediaType, name })` | Stores bytes as a run artifact and returns its `FileRef` |
+| `ctx.files.fromStream`, `fromPath`, `fromUrl` | The same, from a stream, a local file, or a URL |
+
+The host handles relative paths, size caps, and media-type sniffing. Declare what your handler needs with `fileRefSchema({ access, mediaTypes })`; validation then rejects the wrong kind of reference before the run.
+
+### The handler context
+
+| Member | Use |
+| ------ | --- |
+| `ctx.config` | The resolved config, with secrets in place. `undefined` if the plugin has no config. |
+| `ctx.signal` | An `AbortSignal` fired on cancel, timeout, or a parallel sibling failing. Pass it to `fetch` and check it in loops. |
+| `ctx.run.id`, `ctx.step.id` | Ids for naming and logging. |
+| `ctx.state` | A read-only snapshot of state at step start. |
+| `ctx.store` | Staged writes against `$state` handles; applied only if the step succeeds. |
+| `ctx.call(id, input)` | Call another capability through the host, with full validation and config resolution. |
+| `ctx.logger` | `debug`, `info`, `warn`, `error` into the host log. |
+| `ctx.usage.record(...)` | Record usage, such as tokens or API calls, on the step record. |
+
+### Errors
+
+Throw an `Error` when the capability can't do its job. The run records the message on the failed step, so make it useful to the agent reading it:
+
+- Include the upstream service's own error text, not just a status: `"Example API returned HTTP 429: rate limit exceeded"`.
+- Set `error.code = "ECP_PROVIDER_ERROR"` for upstream failures.
+- Set `error.details` to a plain object with at least `status` and `body`, plus useful context such as the method and the URL without its query string.
+- Never put secret values in messages or details.
+- Retry transient failures inside the handler if that makes sense; the executor never retries.
+
+## Build
 
 ```bash
-ecp plugins install jsonata
-ecp jsonata transform --expression '$.a' --input payload.json --json
+npm install
+npm run build
 ```
 
-See the [plugin catalogue](/reference/plugins) for first-party packages.
+`ecp-plugin-manifest` (from the SDK) imports your built definition and writes:
 
-## See it in the repo
+- `ecp.manifest.json`: plugin metadata and a light index of capabilities, with a hash of the schema file.
+- `ecp.schema.json`: the JSON Schemas for every capability's `accepts` and `returns`, and for `config`.
 
-- Reference plugin: [`plugins/plugin-jsonata`](https://github.com/executioncontrolprotocol/executioncontrolprotocol/tree/development/plugins/plugin-jsonata)
-- Contract: [`.cursor/rules/extensions.mdc`](https://github.com/executioncontrolprotocol/executioncontrolprotocol/blob/development/.cursor/rules/extensions.mdc)
-- Contributor skill: `npx skills add executioncontrolprotocol/executioncontrolprotocol --skill ecp-core -y`
+Commit both. Output is deterministic, so they diff cleanly. `npm run check:manifest` fails if they are stale, which is useful in CI.
+
+## Try it locally
+
+```bash
+ecp plugins link .
+ecp plugins
+```
+
+```text
+package                         version  source  manifest
+@acme/text-stats                1.0.0    link    ok
+@executioncontrolprotocol/core  0.60.0   core    ok
+```
+
+Linking restarts the host automatically. Now use it:
+
+```json stats.ecp.json
+{
+  "schema": "@executioncontrolprotocol.execution",
+  "version": "2.0",
+  "steps": [
+    {
+      "id": "notes",
+      "uses": "@acme/text-stats.count-file",
+      "input": { "file": { "kind": "file", "path": "notes.txt", "mediaType": "text/plain" } },
+      "as": "notes"
+    },
+    {
+      "id": "headline",
+      "uses": "@acme/text-stats.count",
+      "input": { "text": "Ship it" },
+      "as": "headline"
+    }
+  ]
+}
+```
+
+```bash
+ecp execute stats.ecp.json
+```
+
+After changing the plugin, rebuild and run `ecp host restart`. If the manifest shows a problem instead of `ok`, `ecp plugins` names the first issue and `ecp retrieve --type plugin --id @acme/text-stats` lists them all.
+
+## Publish
+
+Publish to npm like any package, then install by name:
+
+```bash
+npm publish --access public
+ecp plugins install @acme/text-stats
+```
+
+## More examples
+
+The first-party plugins in the [ECP repository](https://github.com/executioncontrolprotocol/executioncontrolprotocol/tree/development/plugins) are complete references. `plugin-test` exercises every part of the handler context in small capabilities.
 
 ## Next steps
 
-- [Formats and converters](/guides/formats)
-- [Plugin catalogue](/reference/plugins)
-- [Fluent API](/guides/fluent-api)
+- [Plugins](/reference/plugins)
+- [Files and artifacts](/guides/files)
+- [Configs and secrets](/guides/configs-and-secrets)

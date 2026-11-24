@@ -1,66 +1,148 @@
 ---
 title: "Quickstart"
-description: "Install the ECP (Execution Control Protocol) CLI and skill, then run your first workflow file."
+description: "Install the ECP (Execution Control Protocol) CLI, run your first JSON execution, and read the run record in a few minutes."
 ---
 
-# Quickstart
-
-Get ECP (Execution Control Protocol) running in a few minutes: install the CLI, add the agent skill, and run a workflow file.
+This page takes you from install to a validated, recorded run of an ECP (Execution Control Protocol) execution. You need about five minutes.
 
 ## Prerequisites
 
-- Node.js 22+
+- Node.js 22.12 or later
 - npm
 
-## Install
+## Install the CLI
 
 ```bash
 npm install -g @executioncontrolprotocol/cli
-npx skills add executioncontrolprotocol/docs
-```
-
-The field-test is **0.50.0** on `latest` (not 1.0). Contributors who are changing packages can [build from source](/getting-started/build-from-source).
-
-Confirm the binary:
-
-```bash
 ecp --help
 ```
 
-## Author and run
+<Note>
+  Until the realigned CLI is published to npm, [build from source](/getting-started/build-from-source) and link the `ecp` binary instead. Every command on this page is the same either way.
+</Note>
 
-Scaffold a workflow, or copy the echo example from the [monorepo](https://github.com/executioncontrolprotocol/executioncontrolprotocol/tree/development/examples/01-echo):
-
-```ts
-import { workflow, step } from "@executioncontrolprotocol/core"
-
-export default workflow("Echo test").run([
-  step("@executioncontrolprotocol/test.echo", "Echo")
-    .with({ value: "hello from fluent API" })
-    .as("echo"),
-])
-```
-
-`--env` is optional. Omit it to use the process host (built-in Node plus installed plugins):
+Optionally, add the ECP skill so coding agents (Claude Code, Cursor, Windsurf) know the loop:
 
 ```bash
-ecp init brief
-ecp validate brief.ecp.ts --json
-ecp run brief.ecp.ts --json
+npx skills add executioncontrolprotocol/docs
 ```
 
-`--json` prints `{ ok: true, data }` or `{ ok: false, error: { code, message, path, suggestions } }`. Journals land under `.ecp/runs/<runId>/`.
+## Check what is installed
 
-Install a plugin when a workflow needs one:
+The core plugin ships with the host, so a fresh install already has two capabilities: `core.transform` (a sandboxed JavaScript transform) and `core.parse-csv`.
 
 ```bash
-ecp plugins install jsonata
+ecp plugins
 ```
 
-Third-party plugins ask for approval. First-party npm packages install without a prompt.
+```text
+host: started http://127.0.0.1:36169 (idle 15m)
+package                         version  source  manifest
+@executioncontrolprotocol/core  0.60.0   core    ok
+```
+
+The first command that needs the host starts it in the background. It stops on its own after 15 idle minutes. See [Run the host](/guides/host).
+
+## Write an execution
+
+Save this as `titles.ecp.json`. It takes a list of titles as run input, turns each into a URL slug with a transform step, and returns the slugs.
+
+```json titles.ecp.json
+{
+  "schema": "@executioncontrolprotocol.execution",
+  "version": "2.0",
+  "execution": {
+    "id": "slug-titles",
+    "accepts": {
+      "type": "object",
+      "properties": { "titles": { "type": "array", "items": { "type": "string" } } },
+      "required": ["titles"]
+    },
+    "returns": {
+      "type": "object",
+      "properties": { "slugs": { "type": "array" } }
+    }
+  },
+  "steps": [
+    {
+      "type": "loop",
+      "mode": "forEach",
+      "id": "each-title",
+      "ref": "state.titles",
+      "as": "title",
+      "steps": [
+        {
+          "id": "slugify",
+          "uses": "@executioncontrolprotocol/core.transform",
+          "accepts": { "type": "object", "properties": { "title": { "type": "string" } }, "required": ["title"] },
+          "returns": { "type": "object", "properties": { "slug": { "type": "string" } }, "required": ["slug"] },
+          "input": { "title": { "$ref": "state.title" } },
+          "script": {
+            "lang": "js",
+            "source": "return { slug: input.title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '') }"
+          },
+          "as": "item"
+        }
+      ],
+      "collect": "state.item.slug",
+      "into": "slugs"
+    }
+  ]
+}
+```
+
+## Validate it
+
+```bash
+ecp execute titles.ecp.json --validate
+```
+
+```text
+valid
+```
+
+Validation checks structure, each step's input against its schema, every `$ref`, and types along the data flow. Try breaking it: change `state.item.slug` to `state.item.slugg` and validate again. You get the JSON path of the problem, an error code, and the exit code `2`.
+
+## Run it
+
+```bash
+ecp execute titles.ecp.json --input '{"titles": ["Hello World", "ECP: Execution Control Protocol"]}'
+```
+
+```text
+slugify  completed
+slugify  completed
+{
+  "slugs": [
+    "hello-world",
+    "ecp-execution-control-protocol"
+  ]
+}
+```
+
+Add `--json` to any command for a machine-readable envelope: `{ "ok": true, "data": ... }` or `{ "ok": false, "error": { "code", "message", "path", "issues", "suggestions" } }`.
+
+## Inspect the run
+
+Every run is recorded. List recent runs, then open one with its step records:
+
+```bash
+ecp retrieve --type run --limit 5
+ecp retrieve --type run --id <runId> --include steps
+```
+
+## Save it
+
+Saved executions can be run by id from anywhere, including MCP clients and the App:
+
+```bash
+ecp commit --type execution --action create --object @titles.ecp.json
+ecp execute slug-titles --input '{"titles": ["Saved and reusable"]}'
+```
 
 ## Next steps
 
-- [The agent loop](/guides/agent-loop)
-- [Workflow files](/guides/workflow-files)
-- [Error codes](/reference/error-codes)
+- [Concepts](/learn/concepts): the objects behind what you just ran.
+- [The agent loop](/guides/agent-loop): how an agent uses validation to repair its own executions.
+- [Plugins](/reference/plugins): install capabilities beyond the core plugin.
+- [Connect over MCP](/guides/mcp): give Claude, Cursor, or another client the same three operations.

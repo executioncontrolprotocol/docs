@@ -1,68 +1,85 @@
 ---
 title: "Build from source"
-description: "Clone the ECP (Execution Control Protocol) monorepo and build packages when you are changing the CLI or plugins."
+description: "Clone the ECP (Execution Control Protocol) monorepo, build the CLI, host, and plugins, and link a local ecp binary."
 ---
 
-# Build from source
-
-Use this path when you are **changing** ECP (Execution Control Protocol) packages. Day-to-day usage should [install the CLI from npm](/getting-started/quickstart) (`0.50.0` on `latest`).
+Build ECP (Execution Control Protocol) from source when you want the latest `development` code, or when you are changing the CLI, the host, or a plugin. Everything else in these docs works the same with a source build.
 
 ## Prerequisites
 
-- Node.js 22+
-- pnpm 10 (install from the **repo root**, never inside individual packages)
+- Node.js 22.12 or later
+- pnpm 10 (`corepack enable` picks the pinned version)
+- Git
 
 ## Clone and build
-
-Work from `development`. Pushes to `main` publish to npm.
 
 ```bash
 git clone https://github.com/executioncontrolprotocol/executioncontrolprotocol.git
 cd executioncontrolprotocol
-git checkout development
+corepack enable
 pnpm install
 pnpm run build
 ```
 
-Link the CLI for local commands:
+Always run `pnpm install` from the repository root. The build compiles every package, regenerates the CLI manifest, and bundles the App.
+
+## Link the `ecp` binary
 
 ```bash
 cd packages/cli
 pnpm link --global
+cd ../..
+ecp --help
 ```
 
-Prove a clean install from packed tarballs (core, node, plugin-sdk, CLI, and every plugin):
+Without linking, run the CLI directly with `node packages/cli/bin/ecp.js`.
+
+## Install plugins from the checkout
+
+Optional first-party plugins live under [`plugins/`](https://github.com/executioncontrolprotocol/executioncontrolprotocol/tree/development/plugins). Link one to use it without publishing:
 
 ```bash
-pnpm run test:plugin-pack
+ecp plugins link plugins/plugin-test --no-install
+ecp retrieve --type capability --query echo
 ```
 
-## Layout
+`plugins/plugin-test` provides small harness capabilities such as `@executioncontrolprotocol/test.echo`, which is handy for experiments. Linked plugins reload their schemas from source, so rebuilding a linked plugin and running `ecp host restart` picks up your changes.
 
-| Path | Package |
-| ---- | ------- |
-| `packages/core` | `@executioncontrolprotocol/core` (Fluent API, engine, `./types`) |
-| `packages/environments/node` | `@executioncontrolprotocol/node` |
-| `packages/environments/browser` | `@executioncontrolprotocol/browser` |
-| `packages/cli` | `@executioncontrolprotocol/cli` |
-| `packages/plugin-sdk` | `@executioncontrolprotocol/plugin-sdk` |
-| `packages/mcp` | `@executioncontrolprotocol/mcp` (`ecp mcp serve`) |
-| `packages/app` | `@executioncontrolprotocol/app` (graph encoder, `HostAdapter`, `dist/web`) |
-| `plugins/plugin-*` | First-party plugins including `plugin-app` (`ecp app`) |
+## Run the examples
 
-Versions for core, hosts, CLI, plugin-sdk, MCP, App, and plugins are `0.50.0` (field-test, not 1.0). In-repo dependencies use `workspace:^`, never `file:`.
+The repository's [`examples/`](https://github.com/executioncontrolprotocol/executioncontrolprotocol/tree/development/examples) folder holds ready-to-run executions:
 
-Release tooling is Changesets (`pnpm exec changeset`). The field-test publishes `latest` from `main`. See the monorepo `RELEASING.md`.
+```bash
+ecp execute examples/echo/echo.ecp.json
+ecp execute examples/transform/greet.ecp.json
+ecp app examples/branch-loop/branch-loop.ecp.json
+```
 
 ## Checks
 
 ```bash
-pnpm run check
-pnpm run test:browser
+pnpm run check   # build, manifests, lint, secret scan, unit, integration, e2e, and App tests
 ```
+
+## Repository layout
+
+| Path | Contents |
+| ---- | -------- |
+| `packages/protocol` | Types, JSON Schemas, service tokens, error catalogue |
+| `packages/engine` | Executor, validation, operations, service container |
+| `packages/quickjs` | Sandboxed expression and script engine (QuickJS-WASM) |
+| `packages/local` | Disk storage, OS keychain secrets, plugin loading |
+| `packages/formatters` | JSON and TOON output formatters |
+| `packages/host` | Host process, HTTP API, supervisor |
+| `packages/cli` | The `ecp` CLI |
+| `packages/mcp-relay` | Stdio MCP server with the three ECP tools |
+| `packages/app` | The visual App served by the host |
+| `packages/plugin-sdk` | `definePlugin`, `capability`, and `ecp-plugin-manifest` |
+| `plugins/plugin-*` | First-party plugins |
+| `examples/` | Example executions |
 
 ## Next steps
 
 - [Quickstart](/getting-started/quickstart)
+- [Write a plugin](/guides/writing-a-plugin)
 - [Packages](/reference/packages)
-- [Writing a plugin](/guides/writing-a-plugin)

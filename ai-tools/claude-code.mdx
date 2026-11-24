@@ -1,17 +1,33 @@
 ---
 title: "Claude Code"
-description: "Use ECP (Execution Control Protocol) from Claude Code with the consumer skill."
+description: "Use ECP (Execution Control Protocol) from Claude Code: add the ECP skill, connect the MCP relay, and let Claude write, validate, and run executions."
 ---
 
-# Claude Code
+Claude Code can drive ECP (Execution Control Protocol) two ways: through the `ecp` CLI in its terminal, guided by the ECP skill, or through the three MCP tools. Set up both; Claude uses whichever fits the task.
+
+## Add the skill
 
 ```bash
 npx skills add executioncontrolprotocol/docs
 ```
 
-Point Claude Code at a project that has the `ecp` CLI on `PATH` (global **0.50.0**, or a [source build](/getting-started/build-from-source)). The skill teaches the loop: `search` → author `*.ecp.ts` → `validate --json` → `run --json` → `runs show` → `runs rerun --from`.
+The skill teaches the loop: retrieve capabilities, write an `*.ecp.json` file, validate with `--json`, fix issues by path and code, run, inspect the run, and commit. It also tells Claude when to stop and ask you, for example before installing a third-party plugin or when a secret is missing.
 
-Claude Code can also attach to `ecp mcp serve` (stdio). Capability tools load on demand through tool search. See [MCP](/guides/mcp).
+## Connect MCP
+
+```bash
+claude mcp add ecp -- ecp mcp start
+```
+
+Claude then has `retrieve`, `execute`, and `commit` as tools. See [Connect over MCP](/guides/mcp).
+
+## Try it
+
+Ask Claude something like:
+
+> Write an ECP execution that reads `data/orders.csv`, keeps rows where status is "open", and returns their ids. Validate it, run it, and save it as `open-orders`.
+
+Keep `ecp app open-orders.ecp.json` open in a browser to watch the graph update as Claude edits the file.
 
 ## Next steps
 
