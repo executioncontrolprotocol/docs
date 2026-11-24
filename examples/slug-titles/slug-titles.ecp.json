@@ -1,0 +1,78 @@
+{
+  "schema": "@executioncontrolprotocol.execution",
+  "version": "2.0",
+  "execution": {
+    "id": "slug-titles",
+    "accepts": {
+      "type": "object",
+      "properties": {
+        "titles": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "required": [
+        "titles"
+      ]
+    },
+    "returns": {
+      "type": "object",
+      "properties": {
+        "slugs": {
+          "type": "array"
+        }
+      }
+    }
+  },
+  "steps": [
+    {
+      "type": "loop",
+      "mode": "forEach",
+      "id": "each-title",
+      "ref": "state.titles",
+      "as": "title",
+      "steps": [
+        {
+          "id": "slugify",
+          "uses": "@executioncontrolprotocol/core.transform",
+          "accepts": {
+            "type": "object",
+            "properties": {
+              "title": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "title"
+            ]
+          },
+          "returns": {
+            "type": "object",
+            "properties": {
+              "slug": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "slug"
+            ]
+          },
+          "input": {
+            "title": {
+              "$ref": "state.title"
+            }
+          },
+          "script": {
+            "lang": "js",
+            "source": "return { slug: input.title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '') }"
+          },
+          "as": "item"
+        }
+      ],
+      "collect": "state.item.slug",
+      "into": "slugs"
+    }
+  ]
+}

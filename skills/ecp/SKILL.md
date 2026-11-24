@@ -1,79 +1,206 @@
 ---
 name: ecp
 description: >-
-  Operates ECP (Execution Control Protocol): discover capabilities, write
-  *.ecp.json executions, validate and run them with retrieve/execute/commit
-  (CLI or MCP), read run records, and save working executions. Use when work is
-  repeatable, moves data between several capability calls, or must be checked
-  before it runs. Do not use for a single one-off tool call, or for legacy
-  Fluent *.ecp.ts workflows (removed).
+  Use ECP (Execution Control Protocol) to turn repeatable agent work into a JSON
+  execution that a local host validates, runs, and records. Use when the user
+  mentions ECP, ecp, *.ecp.json, executions, or capabilities, or when a task
+  repeats, chains several capability calls, or should be checked before it
+  runs. Covers discovering capabilities, writing executions (steps, branches,
+  loops, parallel, transforms), validating and repairing them, running them,
+  reading run records, configs and secrets, MCP, and the App. If the ecp CLI is
+  not installed yet, use the ecp-setup skill first.
+license: Apache-2.0
+compatibility: Requires Node.js 22.12+ and the ecp CLI (npm install -g @executioncontrolprotocol/cli).
+metadata:
+  version: "0.60.0"
+  homepage: "https://executioncontrolprotocol.io"
 ---
 
 # ECP (Execution Control Protocol)
 
-You delegate repeatable work to a **JSON execution graph** the host runs deterministically. Author `.ecp.json`, validate, fix structured issues, run, inspect runs, commit when stable. Learn flags from `ecp <command> --help`; do not copy CLI tables here.
+ECP lets you capture a sequence of capability calls once, as a JSON **execution** (`*.ecp.json`), and hand it to a local **host** that validates it, runs it, and records every step. Reason once; run the execution many times.
 
-Install CLI: `npm install -g @executioncontrolprotocol/cli`. Install this skill: `npx skills add executioncontrolprotocol/docs`.
+Everything goes through three operations, identical on every surface:
 
-## When to delegate
+| Operation | CLI | MCP tool | Does |
+| --------- | --- | -------- | ---- |
+| retrieve | `ecp retrieve` | `retrieve` | Read capabilities, executions, configs, runs, plugins |
+| execute | `ecp execute` | `execute` | Validate or run an execution; resume or cancel a run |
+| commit | `ecp commit` | `commit` | Create, update, delete stored executions and configs |
 
-Use ECP when work is **repeatable, plugin-backed, or must be repaired from validation/run output**. Skip it for a single throwaway call or pure chat reasoning. MCP (`ecp mcp start`) and the App (`ecp app`) expose the same three operations as the CLI.
+## Before you start
 
-## Loop
+1. `ecp --version` must print 0.60.0 or later. If `ecp` is missing or older, follow the **ecp-setup** skill.
+2. Examples on disk: if `./ecp-examples/index.json` is missing, or its `ecpVersion` differs from this skill's `metadata.version`, download them (this also refreshes them after `npx skills update`):
 
-1. `ecp retrieve --type capability --query "<intent>"` or `--id @scope/plugin.capability`
-2. Write or edit `*.ecp.json` (`schema` + `version: "2.0"` + `steps`)
-3. `ecp execute path.ecp.json --validate --json`
-4. On `ok: false`, fix using `error.path`, `error.code`, `error.suggestions`, and `issues[]` / `available`
-5. `ecp execute path.ecp.json --input '{"..."}' --json` (add `--no-wait` to poll the run)
-6. `ecp retrieve --type run --id <runId> --include steps,events,state`
-7. When stable: `ecp commit --type execution --action create --object @file` (needs `execution.id`); later updates add `--action update --id <id> --if-version <n>`
+   ```bash
+   mkdir -p ecp-examples && curl -fsSL https://codeload.github.com/executioncontrolprotocol/docs/tar.gz/refs/heads/main | tar -xz --strip-components=2 -C ecp-examples docs-main/examples
+   ```
 
-Envelope: `{ ok: true, data }` or `{ ok: false, error: { code, message, path?, suggestions?, issues? } }`. A **failed run** is still `ok: true` with `data.status: "failed"`.
+   Windows PowerShell:
 
-## Hard rules
+   ```powershell
+   mkdir ecp-examples -Force; curl.exe -fsSL https://codeload.github.com/executioncontrolprotocol/docs/tar.gz/refs/heads/main -o ecp-examples.tgz; tar -xzf ecp-examples.tgz --strip-components=2 -C ecp-examples docs-main/examples; Remove-Item ecp-examples.tgz
+   ```
 
-- No secret values, `$secret`, or `$env` in executions; bind secrets in **config objects** (see `references/configs-and-secrets.md`).
-- `expr` is **control only** (gates, branches, loops); never `$expr` in `input`.
-- Data reshaping is a **transform step** (`core.transform` or optional JSONata), not inline expressions.
-- `ecp plugins install` for third-party packages: **ask the user first**.
-- Transforms and capabilities need installed plugins; first-party gaps return `ECP_PLUGINS_MISSING` with an install hint.
+[//]: # (examples:start)
 
-## Error codes (agent action)
+Examples for ECP 0.60.0 (`ecp-examples/index.json` lists every file and run command):
+
+| Example | What it shows | Plugins |
+| ------- | ------------- | ------- |
+| `hello` | One core.transform step: the smallest useful execution. | core only |
+| `slug-titles` | Run input, a forEach loop with a transform per item, and collect/into. | core only |
+| `control-flow` | A while loop, a for loop, a parallel node, and a branch with a default arm. | core only |
+| `open-orders` | Parse a CSV file next to the execution, then filter and total the open rows. | core only |
+| `reshape-items` | Reshape an items array into a title and count with one transform step. | core only |
+| `jsonata-names` | Pick names from a list with a JSONata expression instead of JavaScript. | `jsonata` |
+| `weekly-brief` | One model call that turns a list of signals into a short leadership brief. | `anthropic` |
+| `caption` | A single model call with a fixed prompt; the smallest model-backed execution. | `anthropic` |
+
+[//]: # (examples:end)
+
+Start new executions by copying the closest example. Each example folder has a README with setup and run commands.
+
+## The loop
+
+1. **Discover.** `ecp retrieve --type capability --query "<short keywords>"`, then `ecp retrieve --type capability --id <id>` to read its `accepts` and `returns`. Never guess field names.
+2. **Write** a `*.ecp.json` file. Start small (one or two steps) and grow it.
+3. **Validate.** `ecp execute flow.ecp.json --validate --json`. Fix each issue by `path` (JSON Pointer into the file), `code`, `suggestions`, and `available` (valid state paths). Repeat until `valid`.
+4. **Run.** `ecp execute flow.ecp.json --input '{...}' --json`. Always pass `--input` (use `'{}'` when there is none).
+5. **Inspect.** On `status: "failed"`, read `data.error` (it names the `nodeId`; provider errors carry `details.status` and `details.body`). More: `ecp retrieve --type run --id <runId> --include steps`.
+6. **Save.** When it works, give it `execution.id` and `ecp commit --type execution --action create --object @flow.ecp.json`. Later updates: `--action update --id <id> --object @file --if-version <n>`.
+
+`--json` prints `{ "ok": true, "data": ... }` or `{ "ok": false, "error": { "code", "message", "path", "suggestions", "issues" } }`. A failed **run** is still `ok: true` with `data.status: "failed"`. Exit codes: 0 ok, 1 run failed, 2 invalid request or execution, 3 plugin missing, 4 host unavailable.
+
+## Execution cheat sheet
+
+```json
+{
+  "schema": "@executioncontrolprotocol.execution",
+  "version": "2.0",
+  "execution": {
+    "id": "my-flow",
+    "accepts": { "type": "object", "properties": { "name": { "type": "string" } }, "required": ["name"] },
+    "returns": { "type": "object", "properties": { "hello": { "type": "object" } } }
+  },
+  "steps": [
+    {
+      "id": "greet",
+      "uses": "@executioncontrolprotocol/core.transform",
+      "accepts": { "type": "object", "properties": { "name": { "type": "string" } }, "required": ["name"] },
+      "returns": { "type": "object", "properties": { "greeting": { "type": "string" } }, "required": ["greeting"] },
+      "input": { "name": { "$ref": "state.name" } },
+      "script": { "lang": "js", "source": "return { greeting: `Hello, ${input.name}!` }" },
+      "as": "hello"
+    }
+  ]
+}
+```
+
+- **Document:** `schema` and `version` are constants. `execution.accepts` property names become state keys (run input); `execution.returns` picks the result keys. `execution.id` (`^[a-z0-9][a-z0-9-]{0,63}$`) is needed to commit. Unknown fields are errors.
+- **Step:** `id` (unique in the whole file), `uses` (capability id), `input`, `as` (state key for the output), optional `mode` (`create` default, `replace`, `merge`, `append`), `expr` gate, `config` id, `label`.
+- **State:** read with `{ "$ref": "state.key.path.0" }`. A value that may be missing (gated step, one branch arm) needs `"optional": true` and usually a `"fallback"`.
+- **Markers** (`$ref`, `$state`, `$script`) only appear inside `input` values. Node fields (`uses`, `as`, `expr`, loop `ref`) are plain.
+- **Never** put secrets, `$secret`, or `$env` in an execution.
+
+### Control flow
+
+```json
+{ "type": "branch", "id": "route", "branches": [
+  { "label": "big", "expr": "(state) => state.count > 10", "steps": [ ... ] },
+  { "label": "default", "steps": [ ... ] } ] }
+```
+
+```json
+{ "type": "loop", "id": "refine", "expr": "(state) => state.draft.score < 0.8", "maxRounds": 3, "steps": [ ... ] }
+{ "type": "loop", "mode": "for", "id": "repeat", "ref": "state.count", "as": "i", "steps": [ ... ] }
+{ "type": "loop", "mode": "forEach", "id": "each", "ref": "state.rows", "as": "row", "steps": [ ... ],
+  "collect": "state.item", "into": "results", "concurrency": 4, "onError": "continue" }
+```
+
+```json
+{ "type": "parallel", "id": "both", "branches": [ [ ...nodes... ], [ ...nodes... ] ] }
+```
+
+- Branch: first arm whose `expr` is true runs; an arm without `expr` is the default and must be last.
+- `while` (default): `maxRounds` 1 to 1000 required. Inside `while`/`for` bodies use `replace`/`merge`/`append`, not `create`.
+- `forEach`: each item runs on its own copy of state with `state.<as>` and `state.<as>Index`; `collect` is read per item; `state.<into>` gets the results in order. Drive it with `ref` (typed), not `expr`.
+- Parallel lines can't read each other's outputs or write the same key.
+- `expr` is one JS function `(state) => boolean`, sandboxed, 50 ms. **Control only**: never compute data with it.
+
+### Transforms (reshaping data)
+
+Reshape data with a transform **step**, never inline. `@executioncontrolprotocol/core.transform` is always installed: the step declares `accepts` and `returns` (both `type: "object"` with `properties`), binds inputs with `$ref`, and has a plain `script` (`{ "lang": "js", "source": "..." }` or `"path": "scripts/x.js"` relative to the file). The script reads `input` and `return`s an object; it can't access files, network, or state directly. Limits: 1000 ms, 32 MiB.
+
+JSONata alternative (`ecp plugins install jsonata`): `"uses": "@executioncontrolprotocol/jsonata.transform"` with `"expression": "{ \"names\": people.name[] }"` instead of `script`.
+
+`$script` in `input` is different: it passes code **as a string** to a capability that runs it elsewhere (`{ "$script": { "lang": "js", "path": "x.js", "params": { ... } } }`).
+
+### Files
+
+Files are JSON references: `{ "kind": "file", "path": "data.csv", "mediaType": "text/csv" }`, `{ "kind": "url", "url": "https://..." }`, or run artifacts. Relative paths resolve from the execution file's folder. Output files are captured into the run automatically. A URL-only input needs a publish step first (`ECP_TYPE_MISMATCH` says so).
+
+## Configs and secrets
+
+Plugins that need settings use a config object, committed once:
+
+```json
+{ "schema": "@executioncontrolprotocol.config", "version": "1.0", "id": "anthropic/default",
+  "plugin": "@executioncontrolprotocol/anthropic",
+  "values": { "model": "claude-sonnet-4-5", "apiKey": { "$secret": "anthropic.apiKey" } } }
+```
+
+```bash
+ecp commit --type config --action create --object @anthropic.default.json
+ecp config secrets set anthropic.apiKey      # the USER runs this and types the value
+```
+
+A step uses `<plugin>/default` automatically, or `"config": "<plugin>/<name>"`. Read a plugin's config schema with `ecp retrieve --type capability --id <capability>` (`configSchema`). Secret values live in the OS keychain (or `ECP_SECRET_<KEY>` env vars in CI) and never pass through MCP, executions, or chat.
+
+## Plugins
+
+`ecp plugins` lists what is installed. The core plugin (`core.transform`, `core.parse-csv`) is bundled. Install others with `ecp plugins install <short-name or npm package>`. A missing first-party plugin fails validation with `ECP_PLUGINS_MISSING` and the exact install command. First-party plugins: https://github.com/executioncontrolprotocol/executioncontrolprotocol/tree/development/plugins
+
+## Host, MCP, App
+
+- The host starts on demand and stops after 15 idle minutes. `ecp host status`, `ecp host logs`, `ecp host restart`.
+- MCP: `ecp mcp start` (stdio) exposes exactly `retrieve`, `execute`, `commit`. Their JSON matches the CLI operations; pass `execution: { "path": "flow.ecp.json" }` and `mode: "validate"` to validate.
+- App: `ecp app flow.ecp.json` opens a live graph that reloads when the file changes. Suggest it so the user can watch your edits.
+
+## Errors: what to do
 
 | Code | Action |
 | ---- | ------ |
-| `ECP_REQUEST_INVALID` | Fix CLI/MCP flags or operation input |
-| `ECP_EXECUTION_LOAD` | Fix path, JSON, `schema`, or `version` |
-| `ECP_NOT_FOUND` | Fix id; use `retrieve --query` for suggestions |
-| `ECP_MANIFEST_INVALID` | Walk `issues[]`; fix paths in the file |
-| `ECP_CAPABILITY_UNKNOWN` | Install correct plugin or fix `uses` |
-| `ECP_PLUGINS_MISSING` | Run suggested `ecp plugins install <short>`; ask if not first-party |
-| `ECP_INPUT_INVALID` | Fix `input` vs capability or step `accepts` |
-| `ECP_REF_*` | Fix `$ref` paths, `optional`/`fallback`, or ordering |
-| `ECP_COMMIT_CONFLICT` | Fix `mode`/`as`; avoid `create` inside shared loops |
-| `ECP_EXPR_INVALID` / `ECP_SCRIPT_INVALID` | Fix syntax; no `$expr` in inputs |
-| `ECP_CONFIG_UNKNOWN` / `ECP_CONFIG_INVALID` | Fix `config` id or config object |
-| `ECP_PATCH_INVALID` | Fix JSON Patch or `@nodeId` paths |
-| `ECP_ALREADY_EXISTS` / `ECP_VERSION_CONFLICT` | Use update + `ifVersion` or new id |
-| `ECP_SECRET_MISSING` | **Stop.** User runs `ecp config secrets set <key>` |
-| `ECP_STEP_FAILED` / `ECP_OUTPUT_INVALID` | Read step error; fix input or capability usage |
-| `ECP_EXPR_*` / `ECP_SCRIPT_*` (run-time) | Fix `expr` or transform `script` |
-| `ECP_PROVIDER_ERROR` | Read the failed step's `error.details` (`status`, `body`) in the run; fix input/config, or escalate auth and quota problems |
-| `ECP_PLUGIN_LOAD_FAILED` | Plugin is broken or half-installed; tell the user (`ecp plugins`, `ecp host logs`) |
-| `ECP_RUN_CANCELLED` | Expected after `--cancel`; do not treat as bug |
-| `ECP_HOST_RESTARTING` | Retry after `retryAfterMs` |
-| `ECP_HOST_UNAVAILABLE` / `ECP_UNAUTHORIZED` | `ecp host status`; check token and logs |
+| `ECP_CAPABILITY_UNKNOWN` | Use the suggested id, or search with `retrieve` |
+| `ECP_PLUGINS_MISSING` | Run the `ecp plugins install` command from the message (first-party; tell the user) |
+| `ECP_INPUT_INVALID` | Compare `input` with `expected` / the capability's `accepts` |
+| `ECP_REF_UNRESOLVED` / `ECP_REF_PATH_INVALID` | Pick a path from `available` or the suggestion; fix step order |
+| `ECP_REF_MAYBE_MISSING` | Add `"optional": true` and a `"fallback"` |
+| `ECP_TYPE_MISMATCH` | Add a transform step, or a publish step for files |
+| `ECP_COMMIT_CONFLICT` | Use `replace`/`merge`/`append`, or a different `as` |
+| `ECP_EXPR_INVALID` / `ECP_SCRIPT_INVALID` | Fix syntax at `line`/`column`; move data logic into a transform |
+| `ECP_CONFIG_UNKNOWN` / `ECP_CONFIG_INVALID` | Create or fix the config object |
+| `ECP_SECRET_MISSING` | **Stop.** Ask the user to run `ecp config secrets set <key>` |
+| `ECP_STEP_FAILED` / `ECP_PROVIDER_ERROR` | Read `error.message` and `error.details`; fix input or config; auth and quota problems go to the user |
+| `ECP_OUTPUT_INVALID` / `ECP_SCRIPT_FAILED` | Fix the transform script or its `returns` |
+| `ECP_VERSION_CONFLICT` | Re-read the object, reapply the change, retry with the current version |
+| `ECP_HOST_UNAVAILABLE` | `ecp host logs`; `ecp host start` |
 
-Full catalogue: `references/errors.md`. Exits: `0` success (including valid `--validate`), `1` failed run/internal, `2` invalid request/manifest, `3` missing plugins, `4` host unavailable.
+## Ask the user first
 
-## References
+- Before installing any third-party (non `@executioncontrolprotocol`) plugin.
+- Whenever a secret is needed. Never ask them to paste it into the chat or a file.
+- Before `commit --action delete`, or updating a saved execution someone else owns.
+- Before resuming (`ecp execute --resume <runId>`) a run whose interrupted step has side effects (uploads, messages, payments).
 
-- `references/executions.md` — manifest and node kinds
-- `references/transforms.md` — `core.transform`, JSONata, `$script` in inputs
-- `references/operations.md` — retrieve / execute / commit (CLI + MCP)
-- `references/configs-and-secrets.md`
-- `references/plugins.md`
-- `references/errors.md`
-- `references/examples.md` — small verified manifests
-- `references/escalation.md`
+## Full documentation
+
+Every page is available as Markdown: append `.md` to its URL. Index: https://executioncontrolprotocol.io/llms.txt
+
+- Execution manifest: https://executioncontrolprotocol.io/guides/executions.md
+- Control flow: https://executioncontrolprotocol.io/guides/control-flow.md
+- Transforms: https://executioncontrolprotocol.io/guides/transforms-and-scripts.md
+- Operations and patches: https://executioncontrolprotocol.io/reference/operations.md
+- Error codes: https://executioncontrolprotocol.io/reference/error-codes.md
+- Write a plugin: https://executioncontrolprotocol.io/guides/writing-a-plugin.md

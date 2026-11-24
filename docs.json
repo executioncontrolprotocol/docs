@@ -40,8 +40,8 @@
     ],
     "primary": {
       "type": "button",
-      "label": "Quickstart",
-      "href": "/getting-started/quickstart"
+      "label": "Set up with an agent",
+      "href": "/getting-started/agents"
     }
   },
   "navigation": {
@@ -53,6 +53,7 @@
             "group": "Get started",
             "pages": [
               "index",
+              "getting-started/agents",
               "getting-started/quickstart",
               "getting-started/build-from-source"
             ]

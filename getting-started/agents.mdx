@@ -1,0 +1,110 @@
+---
+title: "Set up with an AI agent"
+description: "Let Claude Code, Cursor, Codex, or any coding agent install and configure ECP (Execution Control Protocol) for you: Node.js, the ecp CLI, the ECP skills, examples, plugins, and secrets in one conversation."
+---
+
+The fastest way to start with ECP (Execution Control Protocol) is to let your coding agent do the setup. Paste one prompt, answer a couple of questions, and you end up with Node.js, the `ecp` CLI, the ECP skills, runnable examples, your first plugins, and an API key stored safely in your keychain.
+
+## Paste this into your agent
+
+```text Prompt wrap
+Set up ECP (Execution Control Protocol) on this machine.
+Install the ECP agent skills with: npx skills add https://executioncontrolprotocol.io -g -y
+Then follow the ecp-setup skill step by step, and use the ecp skill afterwards.
+If you can't install skills, read https://executioncontrolprotocol.io/getting-started/agents.md and follow it instead.
+```
+
+This works in any agent that can run shell commands: Claude Code, Cursor, Windsurf, Codex, Gemini CLI, and others. If Node.js isn't installed yet, the agent installs it first (it may need you to open a new terminal on Windows).
+
+## What the agent does
+
+<Steps>
+  <Step title="Checks your machine">
+    Runs `node --version` and `ecp --version`, and detects your operating system.
+  </Step>
+  <Step title="Installs Node.js if needed">
+    Node.js 22.12 or later is required; the agent installs the current LTS with nvm (macOS, Linux) or winget (Windows).
+  </Step>
+  <Step title="Installs the ECP CLI">
+    `npm install -g @executioncontrolprotocol/cli`, then confirms `ecp --version`.
+  </Step>
+  <Step title="Downloads the examples">
+    Puts ready-to-run executions in `./ecp-examples`, matched to your ECP version.
+  </Step>
+  <Step title="Runs a first execution">
+    Runs `hello.ecp.json`, which starts the local host, then shows validation catching a deliberate mistake.
+  </Step>
+  <Step title="Adds plugins, configs, and secrets">
+    Installs the JSONata plugin, and, if you want model steps, the Anthropic plugin with a config object. You type the API key into a hidden prompt in your own terminal; it goes to your OS keychain, never into the chat.
+  </Step>
+  <Step title="Connects MCP (optional)">
+    Registers `ecp mcp start` with your agent so it can call `retrieve`, `execute`, and `commit` as tools.
+  </Step>
+</Steps>
+
+## The ECP skills
+
+Skills are Markdown instructions your agent loads when a task needs them. The ECP site publishes two:
+
+| Skill | Use |
+| ----- | --- |
+| `ecp-setup` | Install and configure ECP from scratch |
+| `ecp` | Everything after setup: discover capabilities, write and validate executions, run them, read runs, configs and secrets, MCP, the App |
+
+```bash
+npx skills add https://executioncontrolprotocol.io -g -y   # install for every agent on this machine
+npx skills add https://executioncontrolprotocol.io          # or for this project only
+npx skills update                                           # pull the latest version
+npx skills check                                            # see whether an update is available
+```
+
+Each skill carries the ECP version it documents in its `metadata.version`. `npx skills update` compares content digests with the site, so you get new versions as soon as the docs publish them. The skills are also discoverable directly at [`/.well-known/agent-skills/index.json`](https://executioncontrolprotocol.io/.well-known/agent-skills/index.json).
+
+## Examples on disk
+
+The `ecp` skill keeps a set of runnable examples in `./ecp-examples`, from the [docs repository](https://github.com/executioncontrolprotocol/docs/tree/main/examples). `ecp-examples/index.json` records the ECP version they were checked against; when you update the skills to a new version, the agent sees the mismatch and downloads them again.
+
+<CodeGroup>
+
+```bash macOS and Linux
+mkdir -p ecp-examples && curl -fsSL https://codeload.github.com/executioncontrolprotocol/docs/tar.gz/refs/heads/main | tar -xz --strip-components=2 -C ecp-examples docs-main/examples
+```
+
+```powershell Windows
+mkdir ecp-examples -Force; curl.exe -fsSL https://codeload.github.com/executioncontrolprotocol/docs/tar.gz/refs/heads/main -o ecp-examples.tgz; tar -xzf ecp-examples.tgz --strip-components=2 -C ecp-examples docs-main/examples; Remove-Item ecp-examples.tgz
+```
+
+</CodeGroup>
+
+| Example | Shows | Plugins |
+| ------- | ----- | ------- |
+| `hello` | The smallest useful execution: one transform step | core |
+| `slug-titles` | Run input, a `forEach` loop, `collect` and `into` | core |
+| `control-flow` | `while` and `for` loops, `parallel`, and a `branch` | core |
+| `open-orders` | Parse a CSV next to the execution and total the open rows | core |
+| `reshape-items` | Reshape a list with one transform | core |
+| `jsonata-names` | A JSONata transform | `jsonata` |
+| `weekly-brief` | A model call with a config object and a secret | `anthropic` |
+| `caption` | The smallest model-backed execution | `anthropic` |
+
+## For agents reading this page
+
+If you are an agent setting up ECP without the skills, do the following, checking each result before moving on. Ask the user before anything that needs their input.
+
+1. **Check.** Run `node --version` and `ecp --version`. Node.js must be 22.12 or later. If `ecp` reports 0.60.0 or later, skip to step 4.
+2. **Install Node.js** if it's missing or too old.
+   - macOS and Linux: `curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.41.0/install.sh | bash`, then `export NVM_DIR="$HOME/.nvm"; . "$NVM_DIR/nvm.sh"; nvm install --lts; nvm alias default 'lts/*'`.
+   - Windows: `winget install --id OpenJS.NodeJS.LTS -e --accept-source-agreements --accept-package-agreements`, then open a new terminal.
+   - Anything else: https://nodejs.org/en/download.
+3. **Install the CLI.** `npm install -g @executioncontrolprotocol/cli`, then `ecp --version`. If it's below 0.60.0, [build from source](/getting-started/build-from-source).
+4. **Download the examples** with the command above, into the user's working folder.
+5. **Run** `cd ecp-examples/hello && ecp execute hello.ecp.json --input '{}'`. Expect `greet  completed`.
+6. **Plugins.** `ecp plugins install jsonata`. If the user wants Claude models: `ecp plugins install anthropic`, then `ecp commit --type config --action create --object @ecp-examples/configs/anthropic.default.json`, then ask the **user** to run `ecp config secrets set anthropic.apiKey` in their own terminal. Never ask for the key in chat.
+7. **MCP** (optional). Claude Code: `claude mcp add ecp -- ecp mcp start`. Other clients: a stdio server with command `ecp` and arguments `mcp start`.
+8. **Next.** Read the [agent loop](https://executioncontrolprotocol.io/guides/agent-loop.md) and the [execution manifest](https://executioncontrolprotocol.io/guides/executions.md) before writing executions.
+
+## Next steps
+
+- [Quickstart](/getting-started/quickstart): the same setup, by hand.
+- [The agent loop](/guides/agent-loop)
+- [Connect over MCP](/guides/mcp)

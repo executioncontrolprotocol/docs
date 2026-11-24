@@ -1,31 +1,69 @@
 ---
 title: "Quickstart"
-description: "Install the ECP (Execution Control Protocol) CLI, run your first JSON execution, and read the run record in a few minutes."
+description: "Install Node.js and the ECP (Execution Control Protocol) CLI, add the agent skills, run your first JSON execution, and configure a plugin with a secret."
 ---
 
-This page takes you from install to a validated, recorded run of an ECP (Execution Control Protocol) execution. You need about five minutes.
+This page takes you from a bare machine to a validated, recorded run of an ECP (Execution Control Protocol) execution, with a plugin configured and a secret stored. You need about ten minutes.
 
-## Prerequisites
+<Tip>
+  Using Claude Code, Cursor, or another coding agent? [Let it do this for you](/getting-started/agents) with one prompt.
+</Tip>
 
-- Node.js 22.12 or later
-- npm
+## Install Node.js
+
+ECP needs **Node.js 22.12 or later**. Install the current LTS release; ECP works on Node.js 22, 24, and 26. Check what you have:
+
+```bash
+node --version
+```
+
+If it's missing or older, install it:
+
+<Tabs>
+  <Tab title="macOS and Linux">
+    Use [nvm](https://github.com/nvm-sh/nvm), which needs no admin rights and keeps global npm installs working:
+
+    ```bash
+    curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.41.0/install.sh | bash
+    export NVM_DIR="$HOME/.nvm"; . "$NVM_DIR/nvm.sh"
+    nvm install --lts
+    nvm alias default 'lts/*'
+    ```
+  </Tab>
+  <Tab title="Windows">
+    In PowerShell:
+
+    ```powershell
+    winget install --id OpenJS.NodeJS.LTS -e
+    ```
+
+    Then open a new terminal so `node` and `npm` are on your `PATH`.
+  </Tab>
+  <Tab title="Other">
+    Use an installer or package manager from [nodejs.org/en/download](https://nodejs.org/en/download), or `brew install node` with Homebrew.
+  </Tab>
+</Tabs>
 
 ## Install the CLI
 
 ```bash
 npm install -g @executioncontrolprotocol/cli
-ecp --help
+ecp --version
 ```
 
 <Note>
   Until the realigned CLI is published to npm, [build from source](/getting-started/build-from-source) and link the `ecp` binary instead. Every command on this page is the same either way.
 </Note>
 
-Optionally, add the ECP skill so coding agents (Claude Code, Cursor, Windsurf) know the loop:
+## Add the agent skills
+
+The ECP skills teach coding agents (Claude Code, Cursor, Windsurf, Codex, and others) how to set up, write, and run executions. Install them from this site:
 
 ```bash
-npx skills add executioncontrolprotocol/docs
+npx skills add https://executioncontrolprotocol.io -g -y
 ```
+
+Refresh them later with `npx skills update`. See [Set up with an AI agent](/getting-started/agents#the-ecp-skills).
 
 ## Check what is installed
 
@@ -122,6 +160,40 @@ slugify  completed
 
 Add `--json` to any command for a machine-readable envelope: `{ "ok": true, "data": ... }` or `{ "ok": false, "error": { "code", "message", "path", "issues", "suggestions" } }`.
 
+## Add a plugin with a config and a secret
+
+Most real executions call plugins. Install the JSONata transform plugin; it needs no configuration:
+
+```bash
+ecp plugins install jsonata
+```
+
+Plugins that call an external service read their settings from a **config object**, and their credentials from your OS keychain. For example, to call Claude models, install the Anthropic plugin and save a config that refers to a secret by name:
+
+```bash
+ecp plugins install anthropic
+```
+
+```json anthropic.default.json
+{
+  "schema": "@executioncontrolprotocol.config",
+  "version": "1.0",
+  "id": "anthropic/default",
+  "plugin": "@executioncontrolprotocol/anthropic",
+  "values": {
+    "model": "claude-sonnet-4-5",
+    "apiKey": { "$secret": "anthropic.apiKey" }
+  }
+}
+```
+
+```bash
+ecp commit --type config --action create --object @anthropic.default.json
+ecp config secrets set anthropic.apiKey
+```
+
+The last command asks for the key at a hidden prompt and stores it in your keychain. Any step that uses an Anthropic capability now gets the `anthropic/default` config, with the key filled in at run time and redacted everywhere it's recorded. See [Configs and secrets](/guides/configs-and-secrets).
+
 ## Inspect the run
 
 Every run is recorded. List recent runs, then open one with its step records:
@@ -144,5 +216,6 @@ ecp execute slug-titles --input '{"titles": ["Saved and reusable"]}'
 
 - [Concepts](/learn/concepts): the objects behind what you just ran.
 - [The agent loop](/guides/agent-loop): how an agent uses validation to repair its own executions.
+- [Examples](/getting-started/agents#examples-on-disk): download runnable executions, including ones that use the plugin you just configured.
 - [Plugins](/reference/plugins): install capabilities beyond the core plugin.
 - [Connect over MCP](/guides/mcp): give Claude, Cursor, or another client the same three operations.

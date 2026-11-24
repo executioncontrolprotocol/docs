@@ -7,8 +7,9 @@ Public documentation for ECP (Execution Control Protocol): installing, configuri
 - Pages are MDX files with YAML frontmatter (`title`, `description`). No H1 in the body; Mintlify renders the title.
 - Stack: Mintlify. Navigation and redirects: `docs.json`. Removing or renaming a page needs a redirect.
 - Source of truth for behaviour: the ECP monorepo on `development`, `realignment/spec/` first, then the shipped CLI (`ecp <command> --help`). When the docs and the spec disagree, check the running CLI and say which one is wrong.
-- Generated files (never hand-edit): `reference/cli.mdx` and `llms.txt`. Regenerate with `npm run generate:reference -- --ecp-root <ecp checkout>`.
-- Agent skill: `skills/ecp/` (consumer skill `ecp`; `npx skills add executioncontrolprotocol/docs`). `.mintlify/skills/ecp/` is a pointer only. Monorepo contributors use `ecp-core` from the core repo.
+- Generated files (never hand-edit): `reference/cli.mdx`, `llms.txt`, `examples/index.json`, `examples/*/README.md`, examples copied from the ECP repo, the examples table and `metadata.version` in `skills/*/SKILL.md`. Regenerate with `npm run generate:reference -- --ecp-root <ecp checkout>`, then `npm run check:examples -- --ecp-root <built ecp checkout>`.
+- Agent skills: `skills/ecp/` (operate ECP) and `skills/ecp-setup/` (install from scratch). `.mintlify/skills` is a symlink to `skills/`, so Mintlify serves them at `/.well-known/agent-skills/` and `npx skills add https://executioncontrolprotocol.io` installs them. Mintlify serves only `SKILL.md` per skill: keep each skill self-contained (no `references/` folder) and link to page `.md` URLs for depth. Skill files are parsed as MDX: no HTML comments. Monorepo contributors use `ecp-core` from the core repo.
+- Examples: `examples/catalog.json` is the source of truth. Entries with an `ecp` block are copied from the ECP repo; the rest live here. Agents download `examples/` from GitHub `main`; `index.json` carries the ECP version so a skills update triggers a re-download.
 
 ## Terminology
 

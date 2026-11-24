@@ -56,10 +56,16 @@ npm run lint
 npm run secrets:scan
 ```
 
-The CLI reference and `llms.txt` are generated. From a sibling ECP checkout:
+The CLI reference, `llms.txt`, the examples index, and the skill versions are generated. From a sibling ECP checkout:
 
 ```bash
 npm run generate:reference -- --ecp-root ../executioncontrolprotocol
 ```
 
-Do not hand-edit `reference/cli.mdx` or `llms.txt`. CI regenerates them from ECP `development` and fails if they are stale.
+Then validate every example and every execution in the skills against a built ECP checkout:
+
+```bash
+npm run check:examples -- --ecp-root ../executioncontrolprotocol
+```
+
+Do not hand-edit generated files: `reference/cli.mdx`, `llms.txt`, `examples/index.json`, `examples/*/README.md`, and the examples table and `metadata.version` in `skills/*/SKILL.md`. To add an example, add an entry to `examples/catalog.json`. CI regenerates them from ECP `development` and fails if they are stale.

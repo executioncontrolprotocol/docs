@@ -5,6 +5,16 @@ description: "ECP (Execution Control Protocol) lets an agent hand off repeatable
 
 ECP (Execution Control Protocol) is the **deterministic delegation** layer for agents. Your agent works out an approach once and writes it down as a JSON **execution**: which capabilities run, in what order, with which data. A local **host** validates it, runs it, and records every step. The next time the same work comes up, you run the execution again instead of prompting a model again.
 
+<Tip>
+  **Using a coding agent?** Paste this into Claude Code, Cursor, or any agent that can run commands, and it sets everything up for you: Node.js, the CLI, the skills, examples, plugins, and secrets.
+
+  ```text wrap
+  Set up ECP on this machine. Install the skills with `npx skills add https://executioncontrolprotocol.io -g -y`, then follow the ecp-setup skill.
+  ```
+
+  More in [Set up with an AI agent](/getting-started/agents).
+</Tip>
+
 MCP standardizes how a model calls one tool. ECP standardizes how an agent delegates a **graph** of capability calls: typed, checked before it runs, recorded when it runs, and repairable when it fails.
 
 ## How it works
@@ -63,17 +73,20 @@ greet  completed
 ```
 
 <CardGroup cols={2}>
-  <Card title="Quickstart" icon="rocket" href="/getting-started/quickstart">
-    Install the CLI and run your first execution in a few minutes.
+  <Card title="Set up with an AI agent" icon="robot" href="/getting-started/agents">
+    One prompt: your agent installs Node.js, the CLI, skills, examples, and plugins.
   </Card>
-  <Card title="Concepts" icon="book-open" href="/learn/concepts">
-    Executions, capabilities, plugins, the host, configs, and runs.
+  <Card title="Quickstart" icon="rocket" href="/getting-started/quickstart">
+    Install by hand and run your first execution in a few minutes.
   </Card>
   <Card title="The agent loop" icon="rotate" href="/guides/agent-loop">
     Retrieve, validate, run, inspect, repair, commit.
   </Card>
   <Card title="Connect over MCP" icon="plug" href="/guides/mcp">
     Give any MCP client the three ECP tools with `ecp mcp start`.
+  </Card>
+  <Card title="Concepts" icon="book-open" href="/learn/concepts">
+    Executions, capabilities, plugins, the host, configs, and runs.
   </Card>
 </CardGroup>
 
@@ -90,6 +103,7 @@ greet  completed
 
 ## Next steps
 
+- [Set up with an AI agent](/getting-started/agents)
 - [Quickstart](/getting-started/quickstart)
 - [Why ECP](/learn/why-ecp)
 - [Execution manifest](/guides/executions)
