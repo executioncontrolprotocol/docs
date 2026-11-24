@@ -76,7 +76,7 @@ ecp host stop --force
 
 A restart **drains** first: the host stops accepting new runs (clients get `ECP_HOST_RESTARTING` and retry automatically), waits up to 30 seconds for active runs, and marks anything still running as `interrupted`. Resume those with `ecp execute --resume <runId>`.
 
-You rarely need to restart by hand: installing, linking, updating, or removing a plugin restarts the host automatically.
+Installing, linking, updating, or removing a plugin restarts the host automatically, within a second or two. When the very next command needs the change, run `ecp host stop` first: it returns once the host has exited, and the next command starts a fresh one. (`ecp host restart` returns as soon as the restart is requested.)
 
 ## Logs
 

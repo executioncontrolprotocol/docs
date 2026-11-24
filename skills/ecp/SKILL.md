@@ -50,6 +50,7 @@ Examples for ECP 0.60.0 (`ecp-examples/index.json` lists every file and run comm
 | Example | What it shows | Plugins |
 | ------- | ------------- | ------- |
 | `hello` | One core.transform step: the smallest useful execution. | core only |
+| `list-stats` | Run input as an object wrapping a list, and one transform that computes sum, max, and mean. | core only |
 | `slug-titles` | Run input, a forEach loop with a transform per item, and collect/into. | core only |
 | `control-flow` | A while loop, a for loop, a parallel node, and a branch with a default arm. | core only |
 | `open-orders` | Parse a CSV file next to the execution, then filter and total the open rows. | core only |
@@ -64,10 +65,10 @@ Start new executions by copying the closest example. Each example folder has a R
 
 ## The loop
 
-1. **Discover.** `ecp retrieve --type capability --query "<short keywords>"`, then `ecp retrieve --type capability --id <id>` to read its `accepts` and `returns`. Never guess field names.
+1. **Discover.** `ecp retrieve --type capability --query "<short keywords>"`, then `ecp retrieve --type capability --id <id>` to read its `accepts` and `returns`. Never guess field names. Exception: transforms (`core.transform`, `jsonata.transform`, marked `"contract": "step"`) have no schemas of their own; the step declares `accepts` and `returns` (copy the shape from the `hello` or `list-stats` example).
 2. **Write** a `*.ecp.json` file. Start small (one or two steps) and grow it.
 3. **Validate.** `ecp execute flow.ecp.json --validate --json`. Fix each issue by `path` (JSON Pointer into the file), `code`, `suggestions`, and `available` (valid state paths). Repeat until `valid`.
-4. **Run.** `ecp execute flow.ecp.json --input '{...}' --json`. Always pass `--input` (use `'{}'` when there is none).
+4. **Run.** `ecp execute flow.ecp.json --input '{...}' --json`. When running, always pass `--input` (use `'{}'` when there is none) so `accepts` defaults apply. Run input is always a JSON **object** keyed by `execution.accepts` properties: wrap a list as `{"numbers": [3, 9, 4]}`.
 5. **Inspect.** On `status: "failed"`, read `data.error` (it names the `nodeId`; provider errors carry `details.status` and `details.body`). More: `ecp retrieve --type run --id <runId> --include steps`.
 6. **Save.** When it works, give it `execution.id` and `ecp commit --type execution --action create --object @flow.ecp.json`. Later updates: `--action update --id <id> --object @file --if-version <n>`.
 
@@ -160,7 +161,7 @@ A step uses `<plugin>/default` automatically, or `"config": "<plugin>/<name>"`. 
 
 ## Plugins
 
-`ecp plugins` lists what is installed. The core plugin (`core.transform`, `core.parse-csv`) is bundled. Install others with `ecp plugins install <short-name or npm package>`. A missing first-party plugin fails validation with `ECP_PLUGINS_MISSING` and the exact install command. First-party plugins: https://github.com/executioncontrolprotocol/executioncontrolprotocol/tree/development/plugins
+`ecp plugins` lists what is installed. The core plugin (`core.transform`, `core.parse-csv`) is bundled. Install others with `ecp plugins install <short-name or npm package>`, then `ecp host stop` so your next command starts a fresh host that has them (the running host reloads in the background, and a command sent too soon can still fail with `ECP_PLUGINS_MISSING`). A missing first-party plugin fails validation with `ECP_PLUGINS_MISSING` and the exact install command. First-party plugins: https://github.com/executioncontrolprotocol/executioncontrolprotocol/tree/development/plugins
 
 ## Host, MCP, App
 

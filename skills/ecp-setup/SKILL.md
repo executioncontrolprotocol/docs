@@ -27,7 +27,7 @@ ecp --version
 ```
 
 - Node.js **22.12 or later** is required. Any current LTS release (22, 24, or 26) works.
-- If `ecp --version` already shows **0.60.0 or later**, skip to step 4.
+- If `ecp --version` already shows **0.60.0 or later**, skip steps 2 and 3. If you are reading this skill, step 4 is done too.
 - Detect the OS (`uname -s`, or `$env:OS` in PowerShell) and use the matching commands below.
 
 ## 2. Install Node.js (only if missing or older than 22.12)
@@ -104,16 +104,17 @@ cd ecp-examples/hello && ecp execute hello.ecp.json --input '{}'; cd ../..
 
 Expected: `host: started http://127.0.0.1:<port> (idle 15m)` on the first run, then `greet  completed` and a JSON result with `"greeting": "Hello, world!"`. The host is a local background process; it stops by itself after 15 idle minutes.
 
-Then show the user validation catching a mistake: copy `hello.ecp.json` to a scratch file, change `"as": "hello"` to `"as": "hello world"`, and run `ecp execute <scratch file> --validate`. It fails with a JSON path and a code. Delete the scratch file.
+Then show the user validation catching a mistake: copy `hello.ecp.json` to a scratch file, change `"as": "hello"` to `"as": "hello world"`, and run `ecp execute <scratch file> --validate`. It fails with a JSON path and a code (validation needs no `--input`). Delete the scratch file.
 
 ## 7. Add the first plugins
 
-`ecp plugins` lists what is installed; `core` (transforms and CSV parsing) is bundled.
+`ecp plugins` lists what is installed; `core` (transforms and CSV parsing) is bundled. After installing plugins, run `ecp host stop` before using them. The running host reloads plugins by itself, but in the background: a command sent in the next second or two can still reach the old host and fail with `ECP_PLUGINS_MISSING`. `ecp host stop` returns once the host has exited (and is a no-op when none is running); the next command starts a fresh host that loads every installed plugin.
 
 **JSONata transforms** (no configuration):
 
 ```bash
 ecp plugins install jsonata
+ecp host stop
 cd ecp-examples/jsonata-names && ecp execute names.ecp.json --input '{}'; cd ../..
 ```
 
@@ -121,23 +122,28 @@ cd ecp-examples/jsonata-names && ecp execute names.ecp.json --input '{}'; cd ../
 
 ```bash
 ecp plugins install anthropic
+ecp host stop
 ecp commit --type config --action create --object @ecp-examples/configs/anthropic.default.json
 ```
 
-The config refers to the secret `anthropic.apiKey`; it never contains the key itself. Ask the **user** to store the key in their OS keychain by running this in their own terminal and pasting the key at the hidden prompt:
+The config refers to the secret `anthropic.apiKey`; it never contains the key itself. Ask the **user** to store the key in their OS keychain by running this in their own terminal. In a terminal it shows a hidden `value:` prompt; piped input (`... | ecp config secrets set <key>`) is read from stdin instead:
 
 ```bash
 ecp config secrets set anthropic.apiKey
 ```
 
-Never ask them to paste the key into the chat, and never write it to a file. On a machine without a keychain (CI, containers, headless Linux), the user sets `ECP_SECRET_ANTHROPIC_APIKEY` in the environment the host starts from instead. Check with:
+Never ask them to paste the key into the chat, and never write it to a file.
+
+No keychain (CI, containers, headless Linux without a Secret Service): the user exports an environment variable instead. Its name is `ECP_SECRET_` plus the key upper-cased, with every character that isn't a letter or digit replaced by `_` (`anthropic.apiKey` becomes `ECP_SECRET_ANTHROPIC_APIKEY`). The host reads it when it starts, so in that same shell run `ecp host stop` after exporting it.
+
+If the user has no key yet, skip the run below; it would fail with `ECP_SECRET_MISSING`, which is expected. Otherwise check with:
 
 ```bash
 ecp config secrets list
 cd ecp-examples/weekly-brief && ecp execute weekly-brief.ecp.json --input '{"signals": ["Shipped onboarding", "Churn down 2%"]}'; cd ../..
 ```
 
-For any other plugin: `ecp plugins install <name>`, read its settings with `ecp retrieve --type capability --id <capability id>` (`configSchema`), write a config object like `ecp-examples/configs/anthropic.default.json`, commit it, and have the user set each `$secret`. Ask before installing third-party plugins.
+For any other plugin: `ecp plugins install <name>` and `ecp host stop`, read its settings with `ecp retrieve --type capability --id <capability id>` (`configSchema`), write a config object like `ecp-examples/configs/anthropic.default.json`, commit it, and have the user set each `$secret`. Ask before installing third-party plugins.
 
 ## 8. Connect an MCP client (optional)
 
@@ -159,7 +165,7 @@ Tell the user what is installed (Node version, `ecp --version`, plugins from `ec
 | `ecp: command not found` after install | Open a new terminal; with nvm run `. "$NVM_DIR/nvm.sh"`; check `npm prefix -g` is on `PATH` |
 | `EACCES` on `npm install -g` | Install Node with nvm (step 2) instead of a system package |
 | `ECP_HOST_UNAVAILABLE` (exit 4) | `ecp host logs` and `ecp host logs --supervisor`; then `ecp host start` |
-| `ECP_PLUGINS_MISSING` (exit 3) | Run the `ecp plugins install` command from the message |
+| `ECP_PLUGINS_MISSING` (exit 3) | Run the `ecp plugins install` command from the message. Right after an install, run `ecp host stop` first |
 | `ECP_SECRET_MISSING` | The user runs `ecp config secrets set <key>` (or sets `ECP_SECRET_<KEY>`) |
 | Keychain errors on Linux | No Secret Service running; use `ECP_SECRET_<KEY>` environment variables |
 | Behind a proxy | Set `HTTPS_PROXY` for npm and the host |

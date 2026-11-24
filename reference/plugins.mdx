@@ -40,7 +40,7 @@ ecp plugins install @acme/text-stats        # any npm package
 ecp plugins install ./acme-text-stats-1.0.0.tgz
 ```
 
-Short names resolve to `@executioncontrolprotocol/<name>`. Installing an existing plugin is a no-op unless you pass `--force`. After every install, update, link, or removal, the host restarts automatically to load the change.
+Short names resolve to `@executioncontrolprotocol/<name>`. Installing an existing plugin is a no-op unless you pass `--force`. After every install, update, link, or removal, the host restarts automatically to load the change, usually within a second or two. In scripts, run `ecp host stop` right after installing: it returns once the old host has exited, and the next command starts a fresh host that has the plugin.
 
 Plugins run inside the host with your permissions. Install third-party plugins only from sources you trust. See [Security](/learn/security#plugins-run-with-your-permissions).
 

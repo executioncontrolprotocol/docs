@@ -26,6 +26,22 @@
       ]
     },
     {
+      "name": "list-stats",
+      "title": "Sum and max of a list",
+      "description": "Run input as an object wrapping a list, and one transform that computes sum, max, and mean.",
+      "shows": [
+        "execution.accepts",
+        "run input is an object",
+        "core.transform"
+      ],
+      "plugins": [],
+      "run": "ecp execute list-stats.ecp.json --input '{\"numbers\": [3, 9, 4]}'",
+      "source": "executioncontrolprotocol/docs",
+      "files": [
+        "list-stats.ecp.json"
+      ]
+    },
+    {
       "name": "slug-titles",
       "title": "Slugify a list of titles",
       "description": "Run input, a forEach loop with a transform per item, and collect/into.",

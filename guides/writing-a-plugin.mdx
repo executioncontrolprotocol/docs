@@ -250,7 +250,13 @@ package                         version  source  manifest
 @executioncontrolprotocol/core  0.60.0   core    ok
 ```
 
-Linking restarts the host automatically. Now use it:
+Linking restarts the host automatically, in the background. To use the plugin straight away, stop the host first; the next command starts a fresh one with your plugin:
+
+```bash
+ecp host stop
+```
+
+Now use it:
 
 ```json stats.ecp.json
 {

@@ -79,6 +79,7 @@ mkdir ecp-examples -Force; curl.exe -fsSL https://codeload.github.com/executionc
 | Example | Shows | Plugins |
 | ------- | ----- | ------- |
 | `hello` | The smallest useful execution: one transform step | core |
+| `list-stats` | Run input wrapping a list; sum, max, and mean in one transform | core |
 | `slug-titles` | Run input, a `forEach` loop, `collect` and `into` | core |
 | `control-flow` | `while` and `for` loops, `parallel`, and a `branch` | core |
 | `open-orders` | Parse a CSV next to the execution and total the open rows | core |
@@ -99,7 +100,7 @@ If you are an agent setting up ECP without the skills, do the following, checkin
 3. **Install the CLI.** `npm install -g @executioncontrolprotocol/cli`, then `ecp --version`. If it's below 0.60.0, [build from source](/getting-started/build-from-source).
 4. **Download the examples** with the command above, into the user's working folder.
 5. **Run** `cd ecp-examples/hello && ecp execute hello.ecp.json --input '{}'`. Expect `greet  completed`.
-6. **Plugins.** `ecp plugins install jsonata`. If the user wants Claude models: `ecp plugins install anthropic`, then `ecp commit --type config --action create --object @ecp-examples/configs/anthropic.default.json`, then ask the **user** to run `ecp config secrets set anthropic.apiKey` in their own terminal. Never ask for the key in chat.
+6. **Plugins.** `ecp plugins install jsonata`. If the user wants Claude models: `ecp plugins install anthropic` and `ecp host stop` (so the next command starts a host that has it), then `ecp commit --type config --action create --object @ecp-examples/configs/anthropic.default.json`, then ask the **user** to run `ecp config secrets set anthropic.apiKey` in their own terminal. Never ask for the key in chat.
 7. **MCP** (optional). Claude Code: `claude mcp add ecp -- ecp mcp start`. Other clients: a stdio server with command `ecp` and arguments `mcp start`.
 8. **Next.** Read the [agent loop](https://executioncontrolprotocol.io/guides/agent-loop.md) and the [execution manifest](https://executioncontrolprotocol.io/guides/executions.md) before writing executions.
 

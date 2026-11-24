@@ -1,0 +1,45 @@
+{
+  "schema": "@executioncontrolprotocol.execution",
+  "version": "2.0",
+  "execution": {
+    "id": "list-stats",
+    "label": "Sum and max of a list",
+    "accepts": {
+      "type": "object",
+      "properties": {
+        "numbers": { "type": "array", "items": { "type": "number" }, "minItems": 1 }
+      },
+      "required": ["numbers"]
+    },
+    "returns": {
+      "type": "object",
+      "properties": { "stats": { "type": "object" } }
+    }
+  },
+  "steps": [
+    {
+      "id": "stats",
+      "uses": "@executioncontrolprotocol/core.transform",
+      "accepts": {
+        "type": "object",
+        "properties": { "numbers": { "type": "array", "items": { "type": "number" } } },
+        "required": ["numbers"]
+      },
+      "returns": {
+        "type": "object",
+        "properties": {
+          "sum": { "type": "number" },
+          "max": { "type": "number" },
+          "mean": { "type": "number" }
+        },
+        "required": ["sum", "max", "mean"]
+      },
+      "input": { "numbers": { "$ref": "state.numbers" } },
+      "script": {
+        "lang": "js",
+        "source": "const sum = input.numbers.reduce((a, b) => a + b, 0)\nreturn { sum, max: Math.max(...input.numbers), mean: sum / input.numbers.length }"
+      },
+      "as": "stats"
+    }
+  ]
+}

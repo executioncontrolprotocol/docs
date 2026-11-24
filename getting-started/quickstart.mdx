@@ -172,7 +172,10 @@ Plugins that call an external service read their settings from a **config object
 
 ```bash
 ecp plugins install anthropic
+ecp host stop
 ```
+
+Installing a plugin makes the background host reload within a second or two. `ecp host stop` returns once the old host has exited, so the next command starts a fresh host that is guaranteed to see the plugin.
 
 ```json anthropic.default.json
 {
