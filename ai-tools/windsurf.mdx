@@ -1,19 +1,36 @@
 ---
 title: "Windsurf"
-description: "Use ECP (Execution Control Protocol) from Windsurf with the consumer skill."
+description: "Use ECP (Execution Control Protocol) from Windsurf: add the ECP skill and connect the MCP relay."
 ---
 
-# Windsurf
+Windsurf's agent can write and run ECP (Execution Control Protocol) executions through the `ecp` CLI or the three MCP tools.
+
+## Add the skills
 
 ```bash
-npx skills add executioncontrolprotocol/docs
+npx skills add https://executioncontrolprotocol.io -g -y
 ```
 
-Install the CLI, then let the agent operate `ecp` from the terminal. Workflow files are ordinary TypeScript the editor can typecheck once `@executioncontrolprotocol/core` is a dependency.
+To have the agent install Node.js, the CLI, examples, and plugins for you, see [Set up with an AI agent](/getting-started/agents).
 
-MCP is `ecp mcp serve` on the same host as the CLI. See [MCP](/guides/mcp).
+## Connect MCP
+
+Add the relay to Windsurf's MCP configuration (`~/.codeium/windsurf/mcp_config.json`):
+
+```json
+{
+  "mcpServers": {
+    "ecp": {
+      "command": "ecp",
+      "args": ["mcp", "start"]
+    }
+  }
+}
+```
+
+See [Connect over MCP](/guides/mcp) for the tools and how a session goes.
 
 ## Next steps
 
+- [The agent loop](/guides/agent-loop)
 - [Quickstart](/getting-started/quickstart)
-- [Workflow files](/guides/workflow-files)

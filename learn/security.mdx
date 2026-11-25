@@ -1,39 +1,52 @@
 ---
 title: "Security"
-description: "Secrets, plugins, and policies in ECP (Execution Control Protocol)."
+description: "How ECP (Execution Control Protocol) keeps secrets out of executions, protects the local host API, and what to consider before installing plugins."
 ---
 
-# Security
+ECP (Execution Control Protocol) is built so the artifacts you share, executions and run records, are safe to share, and the host that runs them is reachable only from your own user account. This page covers what ECP protects and what stays your responsibility.
 
-ECP (Execution Control Protocol) keeps secrets out of portable graphs and treats third-party plugins as untrusted until you approve them.
+## Secrets never live in executions
 
-## Secrets
+- Executions can't contain secrets. A `$secret` or `$env` reference anywhere in an execution fails validation with `ECP_MANIFEST_INVALID` and a suggestion to move it into a config object.
+- Config objects store **references** (`{ "$secret": "anthropic.apiKey" }`), never values. `retrieve` returns them as stored.
+- Values are written only by `ecp config secrets set` on your machine, into the OS keychain. MCP tools and the HTTP API can't set or read them.
+- In CI and containers, the host reads `ECP_SECRET_<KEY>` environment variables instead. The keychain wins when both exist.
+- During a run, the executor tracks every secret value it resolved and replaces it with `[redacted]` in state, step records, events, logs, and responses, even when a plugin echoes it back.
 
-Never put live values in workflow files, environment files, or git. Reference secrets with `secrets("key")`. Resolve them through:
+See [Configs and secrets](/guides/configs-and-secrets).
 
-- OS keychain (Node host)
-- Process env (`process-env`)
-- CI secrets
+## The local host
 
-Compiled manifests and requirements documents store placeholders only. Pre-commit Secretlint and CI Gitleaks scan the monorepo.
+- The host binds `127.0.0.1` only, never `0.0.0.0`.
+- Every API call needs a 256-bit random bearer token, compared in constant time.
+- `Host` and `Origin` headers must match the loopback address and port, which blocks DNS-rebinding attacks from browser pages. No CORS headers are ever sent.
+- `$ECP_HOME/host.json`, which holds the token, is readable only by your user (mode `0600` on macOS and Linux).
+- The App gets the token through the URL fragment, which browsers don't send to servers, then removes it from the address bar.
 
-## Plugins
+## Sandboxed expressions and scripts
 
-`ecp plugins install <name>` installs a first-party package without a prompt. Third-party plugins require explicit approval (`ECP_PLUGIN_DENIED` if you refuse). Source installs (`--allow-source`) are a separate trust decision.
+Gate expressions and transform scripts run in QuickJS (WebAssembly), not in Node. They have no `require`, `process`, network, timers, or file access, and they run under CPU-time and memory limits. Scripts see file references as plain JSON, never file contents.
 
-Registry-control (always on in the CLI host) pins which ids may load.
+## Plugins run with your permissions
 
-## Policies
+Plugin handlers run inside the host, as you. There is no plugin sandbox and no allowlist today, and the file service has no path or URL sandbox. Treat installing a plugin like installing any npm package:
 
-Attach budget, approval, and state-control so a run pauses or fails instead of spending or mutating without a check. Failures surface as `ECP_POLICY_DENIED` or `ECP_RUN_PAUSED`.
+- Install plugins from sources you trust.
+- Agents should ask before installing a third-party plugin, and never install one because a prompt or a document told them to.
+- Read what a plugin's capabilities do (`ecp retrieve --type capability --id <id>`) before running them on real data.
 
-## What not to do
+## Provider errors without leaks
 
-- Do not commit `.env` files with live keys.
-- Do not pass secret values as step inputs.
-- Do not install a third-party plugin because a prompt asked you to.
+When a plugin calls an external API, the failure the run records includes the provider's own error text and HTTP status, with query strings stripped from URLs and secret values redacted. You can debug from the run record without logging into a provider console.
+
+## Good practice
+
+- Don't commit `.env` files or config exports that contain live values.
+- Don't pass secrets as run input. Use a config object.
+- Review an execution before committing changes that delete stored objects or publish files.
 
 ## Next steps
 
-- [Policies](/guides/policies)
+- [Configs and secrets](/guides/configs-and-secrets)
+- [Run the host](/guides/host)
 - [Error codes](/reference/error-codes)

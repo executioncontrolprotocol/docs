@@ -37,9 +37,10 @@ This file is the guide for **previewing and validating this documentation site**
 - **Follow project voice and SEO rules**: see `AGENTS.md` and `.cursor/rules/docs-voice-seo.mdc`
 - **Public-only content**: no internal ops (analytics, prompt-logging backends, private `.env` catalogs). The App is `ecp app` on loopback, not a hosted demo.
 - **No emojis**: do not use emoji characters in docs
-- **Match the right path**: intended install is **`npm install -g @executioncontrolprotocol/cli`** (0.50.0 field-test on `latest`). [Build from source](/getting-started/build-from-source) is for contributors changing packages.
-- **Authoring surface**: workflow files (`*.ecp.ts`) — not YAML Context
-- **Do not** document harnesses, the browser demo, Chrome AI, EQL, `ecp test`, `ecp serve`, `ecp up`, or root `ecp encode` / `ecp decode`
+- **Install path**: `npm install -g @executioncontrolprotocol/cli`; [build from source](/getting-started/build-from-source) is the alternative.
+- **Authoring surface**: JSON executions (`*.ecp.json`, version `2.0`). Removed concepts are listed in `AGENTS.md`; never document them as current.
+- **Verify examples**: every JSON example must pass `ecp execute <file> --validate` against the latest ECP release (`main` in the ECP repo).
+- **Plugins**: link to the GitHub plugins folder; don't document vendor-specific capabilities.
 - **Use active voice**: “Run the command” not “The command should be run”
 - **Address the reader directly**: use “you”
 - **Keep sentences concise**: one idea per sentence when possible
@@ -55,10 +56,16 @@ npm run lint
 npm run secrets:scan
 ```
 
-CLI and plugin reference pages are generated. From a sibling ECP checkout:
+The CLI reference, `llms.txt`, the examples index, and the skill versions are generated. From a sibling ECP checkout:
 
 ```bash
 npm run generate:reference -- --ecp-root ../executioncontrolprotocol
 ```
 
-Do not hand-edit `reference/cli.mdx`, `reference/plugins.mdx`, or `llms.txt`. CI regenerates them from ECP `development` and fails if they are stale.
+Then validate every example and every execution in the skills against a built ECP checkout:
+
+```bash
+npm run check:examples -- --ecp-root ../executioncontrolprotocol
+```
+
+Do not hand-edit generated files: `reference/cli.mdx`, `llms.txt`, `examples/index.json`, `examples/*/README.md`, and the examples table and `metadata.version` in `skills/*/SKILL.md`. To add an example, add an entry to `examples/catalog.json`. CI regenerates them from ECP `development` and fails if they are stale.

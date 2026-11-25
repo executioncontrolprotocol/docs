@@ -1,30 +1,29 @@
 ---
 title: "Packages"
-description: "Published and in-repo packages for ECP (Execution Control Protocol)."
+description: "The npm packages that make up ECP (Execution Control Protocol): the CLI, host, engine, protocol, MCP relay, App, plugin SDK, and plugins."
 ---
 
-# Packages
+ECP (Execution Control Protocol) is a set of packages under the `@executioncontrolprotocol` npm scope. Most people only install the CLI, which brings the host, the MCP relay, and the App with it. Plugin authors also use the plugin SDK.
 
-Scope: `@executioncontrolprotocol/*`. The CLI reset field-test is **0.50.0** on npm `latest` (not 1.0). Versions below match the monorepo `package.json` values on `development`.
+| Package | Role |
+| ------- | ---- |
+| `@executioncontrolprotocol/cli` | The `ecp` command. Install this one. |
+| `@executioncontrolprotocol/host` | The host process, HTTP API, and supervisor |
+| `@executioncontrolprotocol/engine` | Validation, the executor, operations, and the service container |
+| `@executioncontrolprotocol/protocol` | Types, JSON Schemas, service tokens, and the error catalogue |
+| `@executioncontrolprotocol/local` | Local services: disk storage, OS keychain secrets, plugin loading |
+| `@executioncontrolprotocol/quickjs` | The sandboxed expression and script engine |
+| `@executioncontrolprotocol/formatters` | JSON and TOON output formatters |
+| `@executioncontrolprotocol/mcp-relay` | The stdio MCP server behind `ecp mcp start` |
+| `@executioncontrolprotocol/app` | The visual App served by the host |
+| `@executioncontrolprotocol/plugin-sdk` | `definePlugin`, `capability`, `fileRefSchema`, and `ecp-plugin-manifest` |
 
-## Host-agnostic and hosts
+Plugins are separate packages; the plugin id is the package name, such as `@executioncontrolprotocol/jsonata`. See [Plugins](/reference/plugins).
 
-| Package | Role | Version |
-| ------- | ---- | ------- |
-| `@executioncontrolprotocol/core` | Fluent API, engine, `./types` | `0.50.0` |
-| `@executioncontrolprotocol/node` | Node host, compile, loaders, journals | `0.50.0` |
-| `@executioncontrolprotocol/browser` | Browser host, esbuild-wasm compile | `0.50.0` |
-| `@executioncontrolprotocol/cli` | `ecp` CLI (oclif 5) | `0.50.0` |
-| `@executioncontrolprotocol/plugin-sdk` | `toCommands`, `defineOperation` | `0.50.0` |
-| `@executioncontrolprotocol/mcp` | MCP server + `ecp mcp serve` | `0.50.0` |
-| `@executioncontrolprotocol/app` | Visual App library, graph encoder, `dist/web` | `0.50.0` |
-| `@executioncontrolprotocol/plugin-app` | JIT plugin behind `ecp app` | `0.50.0` |
+## Requirements
 
-## Plugins
-
-Every first-party plugin lives under `plugins/plugin-*` at `0.50.0` (Changesets independent versioning). See the [plugin catalogue](/reference/plugins).
-
-Ids such as `@executioncontrolprotocol/jsonata` are protocol ids, not always npm names. npm names use the `plugin-` prefix.
+- Node.js 22.12 or later
+- macOS, Linux, or Windows
 
 ## Install
 
@@ -32,9 +31,16 @@ Ids such as `@executioncontrolprotocol/jsonata` are protocol ids, not always npm
 npm install -g @executioncontrolprotocol/cli
 ```
 
-Contributors who are changing packages can [build from source](/getting-started/build-from-source).
+For plugin development:
+
+```bash
+npm install --save-dev @executioncontrolprotocol/plugin-sdk zod typescript
+```
+
+To work on ECP itself, [build from source](/getting-started/build-from-source).
 
 ## Next steps
 
-- [Build from source](/getting-started/build-from-source)
+- [Quickstart](/getting-started/quickstart)
+- [Write a plugin](/guides/writing-a-plugin)
 - [Changelog](/reference/changelog)

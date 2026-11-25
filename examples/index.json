@@ -1,0 +1,178 @@
+{
+  "schema": "@executioncontrolprotocol.examples",
+  "ecpVersion": "0.60.0",
+  "download": {
+    "macosLinux": "mkdir -p ecp-examples && curl -fsSL https://codeload.github.com/executioncontrolprotocol/docs/tar.gz/refs/heads/main | tar -xz --strip-components=2 -C ecp-examples docs-main/examples",
+    "windows": "mkdir ecp-examples -Force; curl.exe -fsSL https://codeload.github.com/executioncontrolprotocol/docs/tar.gz/refs/heads/main -o ecp-examples.tgz; tar -xzf ecp-examples.tgz --strip-components=2 -C ecp-examples docs-main/examples; Remove-Item ecp-examples.tgz"
+  },
+  "configs": [
+    "configs/anthropic.default.json"
+  ],
+  "examples": [
+    {
+      "name": "hello",
+      "title": "Hello world transform",
+      "description": "One core.transform step: the smallest useful execution.",
+      "shows": [
+        "core.transform",
+        "accepts / returns on a transform",
+        "as"
+      ],
+      "plugins": [],
+      "run": "ecp execute hello.ecp.json --input '{}'",
+      "source": "executioncontrolprotocol/docs",
+      "files": [
+        "hello.ecp.json"
+      ]
+    },
+    {
+      "name": "list-stats",
+      "title": "Sum and max of a list",
+      "description": "Run input as an object wrapping a list, and one transform that computes sum, max, and mean.",
+      "shows": [
+        "execution.accepts",
+        "run input is an object",
+        "core.transform"
+      ],
+      "plugins": [],
+      "run": "ecp execute list-stats.ecp.json --input '{\"numbers\": [3, 9, 4]}'",
+      "source": "executioncontrolprotocol/docs",
+      "files": [
+        "list-stats.ecp.json"
+      ]
+    },
+    {
+      "name": "slug-titles",
+      "title": "Slugify a list of titles",
+      "description": "Run input, a forEach loop with a transform per item, and collect/into.",
+      "shows": [
+        "execution.accepts / returns",
+        "forEach loop",
+        "$ref",
+        "collect / into"
+      ],
+      "plugins": [],
+      "run": "ecp execute slug-titles.ecp.json --input '{\"titles\": [\"Hello World\", \"Second post\"]}'",
+      "source": "executioncontrolprotocol/docs",
+      "files": [
+        "slug-titles.ecp.json"
+      ]
+    },
+    {
+      "name": "control-flow",
+      "title": "Control-flow tour",
+      "description": "A while loop, a for loop, a parallel node, and a branch with a default arm.",
+      "shows": [
+        "while loop",
+        "for loop",
+        "parallel",
+        "branch",
+        "replace / append modes",
+        "defaults in accepts"
+      ],
+      "plugins": [],
+      "run": "ecp execute control-flow.ecp.json --input '{\"count\": 2, \"urgent\": true}'",
+      "source": "executioncontrolprotocol/docs",
+      "files": [
+        "control-flow.ecp.json"
+      ]
+    },
+    {
+      "name": "open-orders",
+      "title": "Open orders from a CSV",
+      "description": "Parse a CSV file next to the execution, then filter and total the open rows.",
+      "shows": [
+        "core.parse-csv",
+        "file references",
+        "relative paths",
+        "execution.returns"
+      ],
+      "plugins": [],
+      "run": "ecp execute open-orders.ecp.json --input '{}'",
+      "source": "executioncontrolprotocol/docs",
+      "files": [
+        "open-orders.ecp.json",
+        "orders.csv"
+      ]
+    },
+    {
+      "name": "reshape-items",
+      "title": "Reshape items",
+      "description": "Reshape an items array into a title and count with one transform step.",
+      "shows": [
+        "core.transform",
+        "$ref into a transform"
+      ],
+      "plugins": [],
+      "run": "ecp execute reshape.ecp.json --input '{\"items\": [{\"title\": \"First\"}, {\"title\": \"Second\"}]}'",
+      "source": "executioncontrolprotocol/executioncontrolprotocol/examples/dogfood-reshape",
+      "files": [
+        "reshape.ecp.json"
+      ]
+    },
+    {
+      "name": "jsonata-names",
+      "title": "JSONata transform",
+      "description": "Pick names from a list with a JSONata expression instead of JavaScript.",
+      "shows": [
+        "jsonata.transform",
+        "expression"
+      ],
+      "plugins": [
+        "jsonata"
+      ],
+      "run": "ecp execute names.ecp.json --input '{}'",
+      "source": "executioncontrolprotocol/executioncontrolprotocol/examples/transform-jsonata",
+      "files": [
+        "names.ecp.json"
+      ]
+    },
+    {
+      "name": "weekly-brief",
+      "title": "Weekly brief with Claude",
+      "description": "One model call that turns a list of signals into a short leadership brief.",
+      "shows": [
+        "anthropic.generate",
+        "config objects",
+        "secrets"
+      ],
+      "plugins": [
+        "anthropic"
+      ],
+      "configs": [
+        "anthropic.default.json"
+      ],
+      "secrets": [
+        "anthropic.apiKey"
+      ],
+      "run": "ecp execute weekly-brief.ecp.json --input '{\"signals\": [\"Shipped the new onboarding\", \"Churn down 2%\"]}'",
+      "source": "executioncontrolprotocol/executioncontrolprotocol/examples/weekly-brief",
+      "files": [
+        "weekly-brief.ecp.json"
+      ]
+    },
+    {
+      "name": "caption",
+      "title": "One-shot caption with Claude",
+      "description": "A single model call with a fixed prompt; the smallest model-backed execution.",
+      "shows": [
+        "anthropic.generate",
+        "default config"
+      ],
+      "plugins": [
+        "anthropic"
+      ],
+      "configs": [
+        "anthropic.default.json"
+      ],
+      "secrets": [
+        "anthropic.apiKey"
+      ],
+      "run": "ecp execute caption.ecp.json --input '{}'",
+      "source": "executioncontrolprotocol/executioncontrolprotocol/examples/dogfood-caption",
+      "files": [
+        "caption.ecp.json"
+      ]
+    }
+  ]
+}

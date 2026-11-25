@@ -1,4 +1,4 @@
-import { readFile, readdir } from "node:fs/promises"
+import { readFile } from "node:fs/promises"
 import { existsSync } from "node:fs"
 import { dirname, join, resolve } from "node:path"
 import { fileURLToPath } from "node:url"
@@ -35,20 +35,6 @@ export function resolveEcpRoot(argv = process.argv.slice(2)) {
  */
 export async function readJson(path) {
   return JSON.parse(await readFile(path, "utf8"))
-}
-
-/**
- * @param {string} dir
- * @returns {Promise<string[]>}
- */
-export async function listPluginDirs(ecpRoot) {
-  const pluginsRoot = join(ecpRoot, "plugins")
-  if (!existsSync(pluginsRoot)) return []
-  const entries = await readdir(pluginsRoot, { withFileTypes: true })
-  return entries
-    .filter((entry) => entry.isDirectory() && entry.name.startsWith("plugin-"))
-    .map((entry) => join(pluginsRoot, entry.name))
-    .sort()
 }
 
 /**

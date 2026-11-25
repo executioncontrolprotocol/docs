@@ -1,0 +1,148 @@
+---
+title: "Execution manifest"
+description: "Write ECP (Execution Control Protocol) executions: the *.ecp.json document, steps, state and $ref bindings, commit modes, run input and output, and configs."
+---
+
+An execution is a JSON document that describes a graph of work for ECP (Execution Control Protocol). This guide covers the document, steps, how data moves between steps, and how results are assembled. For branches, loops, and parallel lines, see [Control flow](/guides/control-flow). For a field-by-field table, see the [manifest reference](/reference/execution-manifest).
+
+## The document
+
+```jsonc
+{
+  "$schema": "file:///home/you/.ecp/schema/execution.schema.json",
+  "schema": "@executioncontrolprotocol.execution",
+  "version": "2.0",
+  "execution": {
+    "id": "weekly-report",
+    "label": "Weekly report",
+    "description": "Summarize last week's rows into a report.",
+    "accepts": { "type": "object", "properties": { "file": { "type": "object" } }, "required": ["file"] },
+    "returns": { "type": "object", "properties": { "report": { "type": "object" } } }
+  },
+  "steps": [ /* nodes */ ]
+}
+```
+
+| Field | Required | Notes |
+| ----- | -------- | ----- |
+| `schema` | yes | Always `@executioncontrolprotocol.execution` |
+| `version` | yes | Always `"2.0"` |
+| `steps` | yes | At least one node |
+| `execution` | no | Metadata and the run contract. `id` is required to commit. |
+| `$schema` | no | For editors only; the host ignores it. Get the path with `ecp retrieve --type schema`. |
+
+Unknown top-level fields are errors. Files use the `.ecp.json` extension.
+
+## Steps
+
+A step calls one capability. A node without a `type` is a step.
+
+```json
+{
+  "id": "rows",
+  "label": "Read the CSV",
+  "uses": "@executioncontrolprotocol/core.parse-csv",
+  "input": { "file": { "$ref": "state.file" } },
+  "as": "table"
+}
+```
+
+| Field | Purpose |
+| ----- | ------- |
+| `id` | Unique across the whole document. Letters, digits, `-`, `_`; starts with a letter. |
+| `uses` | Capability id, `@scope/plugin.capability`. Must be installed. |
+| `input` | The capability's input. Literals plus `$ref`, `$state`, and `$script` markers. Validated against the capability's `accepts`. |
+| `as` | The state key the output is written to. |
+| `mode` | How the output is written: `create` (default), `replace`, `merge`, or `append`. Needs `as`. |
+| `expr` | Optional gate, `(state) => boolean`. `false` skips the step. |
+| `config` | Config object id, such as `anthropic/default`. Defaults to `<plugin>/default` when one exists. |
+| `label` | Display text in the App. |
+| `persist` | Set `false` to skip archiving output files into the run. Default `true`. |
+
+Transform steps also carry `accepts`, `returns`, and a `script` or `expression`. See [Transforms and scripts](/guides/transforms-and-scripts).
+
+## State and `$ref`
+
+Each run has one JSON state object. Run input seeds it. Steps write to it with `as`, and read from it with `$ref`:
+
+```json
+"input": {
+  "rows": { "$ref": "state.table.rows" },
+  "firstColumn": { "$ref": "state.table.columns.0" }
+}
+```
+
+A path is `state` followed by property names or array indexes. Validation walks the path through the producing step's `returns` schema, so a typo fails before the run, with a suggestion:
+
+```text
+/steps/1/input/value/$ref  ECP_REF_PATH_INVALID  state.greet.text does not match the producer schema.
+```
+
+### Values that might be missing
+
+If a value may not exist when a step runs, for example because the producer is gated by an `expr` or sits in one branch arm, validation reports `ECP_REF_MAYBE_MISSING`. Say what should happen:
+
+```json
+"input": {
+  "note": { "$ref": "state.review.note", "optional": true, "fallback": "No review" }
+}
+```
+
+With `optional` and no `fallback`, the property is left out of the input.
+
+### Rules for data
+
+- Data reaches a step only through `$ref`, `$state`, or literals. To compute a value, add a transform step; don't compute it inline.
+- Node fields such as `uses`, `as`, `mode`, and `expr` are plain values, never markers. The `$` prefix only appears inside `input`, `$script.params`, and config `values`.
+- State must stay JSON. Files travel as [file references](/guides/files), never as bytes.
+
+## Commit modes
+
+| `mode` | Effect on `state[as]` |
+| ------ | --------------------- |
+| `create` (default) | Set it. Fails with `ECP_COMMIT_CONFLICT` if the key already exists. |
+| `replace` | Set it, overwriting any previous value. |
+| `merge` | Shallow-merge the output object into the existing object. |
+| `append` | Append the output to an array, creating it if needed. |
+
+Use `replace` or `merge` for values a loop updates each round, and `append` to collect a log. `create` inside a `while` or `for` loop body is rejected, because the second round would conflict.
+
+## Staged writes with `$state`
+
+Some capabilities write to several state paths at once. They receive a **handle** instead of a value:
+
+```json
+"input": { "target": { "$state": "history" } }
+```
+
+The capability stages writes against the handle. The host applies them only if the step succeeds, before the `as` commit, so a failed step leaves state untouched.
+
+## Run input and result
+
+`execution.accepts` is the run's input contract. Its top-level property names become state keys, so a run started with `--input '{"file": ...}'` can read `state.file`. Run input is validated against it, and `default` values are filled in.
+
+`execution.returns` picks the result. When present, the result is exactly those state keys. Without it, the result is every key a step committed with `as`. A `returns` key that no step produces is a validation error (`ECP_RETURNS_UNRESOLVED`).
+
+```bash
+ecp execute weekly-report.ecp.json --input '{"file": {"kind": "file", "path": "data/week.csv"}}'
+```
+
+## Configs on steps
+
+Capabilities that need settings or credentials read them from a [config object](/guides/configs-and-secrets). A step either names one or gets the plugin's default:
+
+```json
+{ "id": "draft", "uses": "@executioncontrolprotocol/anthropic.generate", "config": "anthropic/drafting", "input": { "prompt": "..." }, "as": "draft" }
+```
+
+Executions never contain secrets or `$secret` references. Validation rejects them and suggests moving them into a config.
+
+## File paths and relative references
+
+When you run an execution from a file, relative paths in `script.path`, `$script.path`, and `file` references resolve from the directory of the `.ecp.json` file. Saved executions resolve from their stored location. Executions sent inline (over MCP or HTTP) must use absolute paths.
+
+## Next steps
+
+- [Control flow](/guides/control-flow)
+- [Transforms and scripts](/guides/transforms-and-scripts)
+- [Execution manifest reference](/reference/execution-manifest)

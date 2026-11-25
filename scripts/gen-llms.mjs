@@ -48,7 +48,15 @@ export async function generateLlms() {
   const lines = [
     `# ${docs.name ?? "ECP (Execution Control Protocol)"}`,
     "",
-    "> ECP (Execution Control Protocol) is the deterministic delegation capability an orchestrating agent operates: author a workflow file, run it, read structured errors, repair, and rerun.",
+    "> ECP (Execution Control Protocol) is the deterministic delegation layer for agents: capture repeatable work as a JSON execution (*.ecp.json) that a local host validates, runs, and records, through three operations (retrieve, execute, commit) on the CLI, MCP, and HTTP.",
+    "",
+    "## Agent instructions",
+    "",
+    "- To set up ECP on this machine, install the ECP skills and follow the ecp-setup skill: `npx skills add https://executioncontrolprotocol.io -g -y`. Without skills support, follow " + `${SITE}/getting-started/agents.md` + ".",
+    "- Requirements: Node.js 22.12 or later (current LTS recommended), then `npm install -g @executioncontrolprotocol/cli`.",
+    "- Skills: `ecp-setup` (install and configure) and `ecp` (write, validate, run executions). Update with `npx skills update`. Discovery: " + `${SITE}/.well-known/agent-skills/index.json` + ".",
+    "- Runnable examples: https://github.com/executioncontrolprotocol/docs/tree/main/examples (index.json lists files, plugins, and run commands).",
+    "- Every page below is Markdown: the links end in .md. Never put secrets in executions or chat; users store them with `ecp config secrets set <key>`.",
     "",
     "## Docs",
     "",
@@ -60,7 +68,7 @@ export async function generateLlms() {
     const meta = frontmatter(await readFile(mdxPath, "utf8"))
     const title = meta.title || page
     const description = meta.description || title
-    lines.push(`- [${title}](${SITE}/${page}): ${description}`)
+    lines.push(`- [${title}](${SITE}/${page}.md): ${description}`)
   }
 
   lines.push("")

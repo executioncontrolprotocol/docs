@@ -1,0 +1,131 @@
+---
+title: "Run records and storage"
+description: "Where ECP (Execution Control Protocol) keeps its data: the ECP_HOME layout, run records, step records, events, state, artifacts, and saved executions and configs."
+---
+
+ECP (Execution Control Protocol) records every run on disk, so you can inspect what happened, resume an interrupted run, or audit what an agent did. This page describes the files. Read them through `ecp retrieve --type run` where you can; the layout can change between versions, but the operation output stays stable.
+
+## `ECP_HOME` layout
+
+Everything lives under `$ECP_HOME`, by default `~/.ecp`:
+
+```text
+$ECP_HOME/
+├── host.json                     port, token, and process ids of the running host (mode 0600)
+├── supervisor.pid
+├── logs/
+│   ├── host.log                  rotated at 5 MB, 3 kept
+│   ├── supervisor.log
+│   └── relay.log                 MCP relay
+├── plugins/                      installed and linked plugins
+├── schema/
+│   ├── execution.schema.json     editor schema for *.ecp.json, from installed plugins
+│   └── plugins/
+├── store/
+│   ├── executions/<id>.ecp.json  saved executions
+│   ├── executions/<id>.meta.json { id, version, manifestHash, createdAt, updatedAt, warnings }
+│   └── configs/<plugin-short>/<name>.json
+└── runs/<runId>/
+    ├── run.json                  the run record
+    ├── manifest.ecp.json         the exact manifest that ran
+    ├── state.json                latest committed state
+    ├── steps/                    one record per step run
+    ├── loop-items/               finished forEach items, for resume
+    ├── events.ndjson             the event stream
+    └── artifacts/                files captured or written during the run
+```
+
+All writes are atomic (write to a temp file, then rename), so a crash never leaves a half-written record.
+
+## Run record
+
+```json run.json
+{
+  "schema": "@executioncontrolprotocol.run",
+  "version": "1.0",
+  "id": "run-20261124T194036Z-c3c1e8",
+  "execution": { "id": "slug-titles", "path": null, "manifestHash": "17ba72…", "executionVersion": 2 },
+  "status": "completed",
+  "input": { "titles": ["Hello World"] },
+  "result": { "slugs": ["hello-world"] },
+  "error": null,
+  "startedAt": "2026-11-24T19:40:36.997Z",
+  "endedAt": "2026-11-24T19:40:37.001Z",
+  "plugins": { "@executioncontrolprotocol/core": "0.60.0" },
+  "host": { "version": "0.60.0", "pid": 311633, "mode": "server" },
+  "cursor": { "completed": ["each-title"], "loops": {}, "branches": {}, "loopItems": {} },
+  "warnings": [],
+  "publishes": []
+}
+```
+
+| Field | Meaning |
+| ----- | ------- |
+| `id` | `run-<UTC timestamp>-<6 hex>` |
+| `execution` | The saved id and version, or the file `path`, plus a hash of the manifest |
+| `status` | `running`, `completed`, `failed`, `cancelled`, or `interrupted` |
+| `result` | The keys named in `execution.returns`, or every key committed with `as` |
+| `error` | For failed runs: the failing step's issue, with `nodeId`, `code`, `message`, and `details` |
+| `plugins` | The plugin versions loaded for the run |
+| `host.mode` | `server` (background host) or `in-process` |
+| `cursor` | Progress used by resume: completed nodes, the node in progress, loop rounds, chosen branch arms |
+| `publishes` | One entry per publish step: the source file, the published URL, and when a cleanup step deleted it |
+
+## Step records
+
+One file per step run, in `steps/`. Steps inside loops are keyed by round (`increment#2.json`) or by item (`slugify#i3.json`; nested items join with `.`).
+
+```json steps/slugify#i0.json
+{
+  "nodeId": "slugify",
+  "capabilityId": "@executioncontrolprotocol/core.transform",
+  "status": "completed",
+  "input": { "title": "Hello World" },
+  "output": { "slug": "hello-world" },
+  "error": null,
+  "script": "return { slug: input.title.toLowerCase() }",
+  "config": null,
+  "startedAt": "…", "durationMs": 2,
+  "staged": [],
+  "captured": []
+}
+```
+
+Step records also carry `items` (the `forEach` indexes), `expression` for JSONata steps, `config` as `{ id, version }`, `usage` entries a plugin recorded, `mediaTypes` corrections, and `captured` entries for every output file archived into the run. Step status is `completed`, `failed`, `skipped`, or `cancelled`.
+
+## Events
+
+`events.ndjson` has one JSON object per line, in order:
+
+```json
+{"seq":2,"at":"2026-11-24T19:40:36.999Z","type":"step.start","data":{"nodeId":"hello","capabilityId":"@executioncontrolprotocol/core.transform"}}
+```
+
+| Type | Data |
+| ---- | ---- |
+| `run.start` | `executionId?`, `path?`, `manifestHash`, `input` |
+| `step.start` / `step.end` / `step.skip` / `step.error` | `nodeId`, `round?`, `items?`, plus `capabilityId`, `durationMs`, `as`, or `error` |
+| `branch.select` | `nodeId`, `arm` (index or `null`) |
+| `loop.round` | `nodeId`, `round` (`while`, `for`) |
+| `loop.exhausted` | `nodeId`, `rounds` (`while` hit `maxRounds`) |
+| `loop.start` / `loop.end` | `nodeId`, `count`, `failed` (`forEach`) |
+| `loop.item.start` / `.end` / `.error` | `nodeId`, `index`, `durationMs` or `error` |
+| `run.interrupted` | `reason`: `host-restart` or `host-crash` |
+| `run.resume` | `rerunNodeId?`: the step that will run again |
+| `run.end` | `status`, `durationMs`, `error?` |
+
+The same events stream live from `GET /v1/watch?runId=<id>`, which is how the App shows progress.
+
+## Redaction
+
+Secrets never reach these files: config values aren't stored with runs (only the config id and version), and every resolved secret value is replaced with `[redacted]` in input, output, state, events, and logs.
+
+## Resume
+
+When the host stops mid-run, the run becomes `interrupted`. `ecp execute --resume <runId>` reloads the stored manifest and `state.json`, skips completed nodes, reuses finished `forEach` items, and runs the step that was in progress again from the start. A capability that isn't idempotent may repeat its side effect; the `run.resume` event names the step.
+
+## Next steps
+
+- [The agent loop](/guides/agent-loop#inspect)
+- [Run the host](/guides/host)
+- [Files and artifacts](/guides/files)

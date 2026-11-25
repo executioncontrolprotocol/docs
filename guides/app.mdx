@@ -1,41 +1,51 @@
 ---
-title: "App"
-description: "Open a live graph of an ECP (Execution Control Protocol) workflow file with ecp app. Same host as the CLI, on loopback with a pairing token."
+title: "The App"
+description: "See an ECP (Execution Control Protocol) execution as a live graph with ecp app: validation issues on the nodes, run it with a generated input form, watch step status, and replay past runs."
 ---
 
-# App
+The App draws an ECP (Execution Control Protocol) execution as a graph and lets you validate it, run it, and replay its runs in the browser. It is served by your local [host](/guides/host) and talks only to the host's API, so what you see is exactly what the CLI and MCP clients see.
 
-`ecp app` opens a live graph of a workflow file on the **same process host** the CLI uses. File edits update the graph. Graph edits rewrite the file. Runs use the same journal as `ecp run`. The App stores no secrets and makes no model calls.
-
-```bash
-ecp app examples/01-echo/workflow.ecp.ts
-```
-
-First use installs `@executioncontrolprotocol/plugin-app` from npm (`oclif.jitPlugins` pins `"^0.50"`). From a source checkout you can still `ecp plugins link plugins/plugin-app`.
-
-There is no hosted browser demo and no `ecp up`. The App is not a chat client and not a secrets host.
-
-## Loopback and token
-
-The server binds **127.0.0.1** on a free port. A pairing token goes in the URL that opens the browser. Every request requires that token (query, `Authorization: Bearer`, or cookie). `--no-open` skips the browser (tests and CI).
+## Open it
 
 ```bash
-ecp app brief.ecp.ts --no-open
-ecp app brief.ecp.ts --port 0
+ecp app flow.ecp.json        # open a file
+ecp app                      # pick from the *.ecp.json files in this folder
+ecp app --id slug-titles     # open a saved execution
+ecp app flow.ecp.json --no-open   # print the URL instead of opening a browser
 ```
 
-## Two-way sync
+`ecp app` starts the host if needed and opens `http://127.0.0.1:<port>/app/` with an access token in the URL fragment. The App stores the token for the browser tab and removes it from the address bar.
 
-- **File → graph:** the server watches the file (150 ms debounce). Disk edits show up in the graph within a second.
-- **Graph → file:** a graph edit patches the manifest, then the file is rewritten with the Fluent encoder.
-- **Read-only:** files that cannot round-trip (relative imports, computed `.with()` values) open with a banner explaining why. Losing comments or formatting on save is a warning, not read-only. Encoder-written files stay editable.
+Without an argument, the home view lists the `*.ecp.json` files under the current folder, your saved executions, and recent runs.
 
-## Runs and palette
+## Hot reload
 
-Runs from the App go through the same host and journal as `ecp run`, so `ecp runs show <id>` works. The palette is the capability catalogue from `ecp describe` on this process.
+Opened files are watched. Save the `.ecp.json`, or any script file it references through `script.path` or `$script.path`, and the App reloads, validates again, and redraws within about half a second, keeping your viewport and selection. If a save leaves the file unparseable, the last good graph stays on screen with the load error until the next good save. A reload never interrupts a run in progress.
+
+That makes the App a good companion to an editor or a coding agent: let the agent edit the file and watch the graph and issues update.
+
+## What you see
+
+| View | Shows |
+| ---- | ----- |
+| **Graph** | Every step with its capability and status. Route edges for branch arms (labelled with the arm), loops, and parallel lines; data edges for every `$ref`, `$state`, and `expr` read. Ports are typed from `accepts` and `returns`; file ports are labelled `file` or `url`. |
+| **Node panel** | The selected step's capability summary, its input bindings, schemas, script or expression, and config id. |
+| **Edge panel** | The selected binding or route: its `$ref` (with `optional` and `fallback`) or gate `expr`, and, after a run, the values that flowed through it. |
+| **Validation** | The issue list with codes, messages, and suggestions. Click an issue to select its node; nodes with errors get a badge. |
+| **Run** | An input form generated from `execution.accepts`, a **Run** button, live step status, loop progress (round, or `done / count` for `forEach`), the chosen branch arm, and the result or error. Captured images preview inline. |
+| **Runs** | Past runs of this execution. Selecting one replays its statuses on the graph and shows step inputs and outputs. |
+| **JSON** | The manifest in a read-only editor. |
+
+## Editing
+
+Route and gate expressions on graph edges can be edited in the edge panel. The App checks the syntax with the host's validator and saves to the file (for executions opened by path) or commits a new version (for saved executions, with a version check). For everything else, edit the file; hot reload brings the change in.
+
+## Security
+
+The App binds loopback only and needs the host token for every API call. It never sees secret values: config objects show `$secret` references, and run data is redacted. It is not a chat client and makes no model calls of its own.
 
 ## Next steps
 
+- [Run the host](/guides/host)
+- [Control flow](/guides/control-flow)
 - [The agent loop](/guides/agent-loop)
-- [MCP](/guides/mcp)
-- [CLI](/reference/cli)

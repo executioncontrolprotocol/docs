@@ -4,13 +4,15 @@ This repository contains the documentation site for **ECP (Execution Control Pro
 
 **Live site:** https://executioncontrolprotocol.io/
 
-The live site is the 0.50.0 field-test rewrite. Mintlify publishes `main`.
+Mintlify publishes `main`. The content documents the realigned ECP (JSON executions, the local host, `retrieve` / `execute` / `commit`) as of the latest ECP release (`main` in the ECP repo).
 
 ## What’s in here
 
 - **Site config**: `docs.json`
-- **Pages**: `**/*.mdx` (workflow files, environments, CLI, plugins)
-- **Agent skills**: `skills/ecp/` (consumer skill `ecp`; `npx skills add executioncontrolprotocol/docs`). `.mintlify/skills/ecp/` is a pointer only.
+- **Pages**: `**/*.mdx` (getting started, concepts, execution guides, host / MCP / App, plugin SDK, reference)
+- **Generated**: `reference/cli.mdx` and `llms.txt` (`npm run generate:reference -- --ecp-root ../executioncontrolprotocol`)
+- **Agent skills**: `skills/ecp/` and `skills/ecp-setup/`, served by Mintlify through the `.mintlify/skills` symlink (`npx skills add https://executioncontrolprotocol.io`)
+- **Examples**: `examples/` (catalogue in `examples/catalog.json`), downloaded by agents from GitHub
 - **Project writing rules**: `AGENTS.md` and `.cursor/rules/docs-voice-seo.mdc`
 
 This repo uses **npm** (`package-lock.json`, `npm ci` in CI). Do not switch to pnpm here.
@@ -53,10 +55,10 @@ npm install -g skills
 npx skills add https://mintlify.com/docs
 ```
 
-Install the ECP consumer skill from this repo:
+Install the ECP skills from the published site:
 
 ```bash
-npx skills add executioncontrolprotocol/docs
+npx skills add https://executioncontrolprotocol.io
 ```
 
 Monorepo contributor skill:

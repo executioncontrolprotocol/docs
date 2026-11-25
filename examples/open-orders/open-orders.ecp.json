@@ -1,0 +1,80 @@
+{
+  "schema": "@executioncontrolprotocol.execution",
+  "version": "2.0",
+  "execution": {
+    "id": "open-orders",
+    "label": "Open orders from a CSV",
+    "returns": {
+      "type": "object",
+      "properties": {
+        "open": {
+          "type": "object"
+        }
+      }
+    }
+  },
+  "steps": [
+    {
+      "id": "read",
+      "uses": "@executioncontrolprotocol/core.parse-csv",
+      "input": {
+        "file": {
+          "kind": "file",
+          "path": "orders.csv",
+          "mediaType": "text/csv"
+        }
+      },
+      "as": "table"
+    },
+    {
+      "id": "filter",
+      "uses": "@executioncontrolprotocol/core.transform",
+      "accepts": {
+        "type": "object",
+        "properties": {
+          "rows": {
+            "type": "array",
+            "items": {
+              "type": "object"
+            }
+          }
+        },
+        "required": [
+          "rows"
+        ]
+      },
+      "returns": {
+        "type": "object",
+        "properties": {
+          "ids": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "count": {
+            "type": "integer"
+          },
+          "total": {
+            "type": "number"
+          }
+        },
+        "required": [
+          "ids",
+          "count",
+          "total"
+        ]
+      },
+      "input": {
+        "rows": {
+          "$ref": "state.table.rows"
+        }
+      },
+      "script": {
+        "lang": "js",
+        "source": "const open = input.rows.filter((row) => row.status === 'open')\nreturn { ids: open.map((row) => row.id), count: open.length, total: open.reduce((sum, row) => sum + Number(row.total), 0) }"
+      },
+      "as": "open"
+    }
+  ]
+}

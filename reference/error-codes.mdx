@@ -1,34 +1,100 @@
 ---
 title: "Error codes"
-description: "ECP_* catalogue returned by the ECP (Execution Control Protocol) CLI and engine."
+description: "Every ECP (Execution Control Protocol) error code with when it happens, its HTTP status, its CLI exit code, and what to do about it."
 ---
 
-# Error codes
+Every ECP (Execution Control Protocol) error and validation issue has a stable `ECP_*` code. Agents should branch on the code, read the `path` to find the problem, and use `suggestions` and `available` to fix it.
 
-Every structured failure uses an `ECP_*` code. `--json` prints it on the error envelope: `{ ok: false, error: { code, message, path, suggestions } }`.
+## Exit codes
 
-Source of truth in the monorepo: `packages/core/src/types/errors.ts`.
+| Exit | Meaning |
+| ---- | ------- |
+| `0` | Success, including a valid validation and a completed run |
+| `1` | The run failed or was cancelled, or an internal error |
+| `2` | Invalid request or execution |
+| `3` | A required plugin is missing |
+| `4` | Host unavailable or unauthorized |
 
-| Code | When |
-| ---- | ---- |
-| `ECP_WORKFLOW_LOAD` | The workflow file could not be loaded or compiled |
-| `ECP_PLUGINS_MISSING` | A required plugin (or `--format` plugin) is not installed |
-| `ECP_CAPABILITY_UNKNOWN` | A step id is not in the registry |
-| `ECP_INPUT_INVALID` | Step input failed schema validation (wrong `ref()`, bad payload) |
-| `ECP_REF_UNRESOLVED` | A `ref()` target does not exist |
-| `ECP_BINDING_INVALID` | An extension or policy binding is malformed |
-| `ECP_ENVIRONMENT_UNSUPPORTED` | A definition's `.supports()` excludes this host |
-| `ECP_SECRET_MISSING` | `secrets("key")` has no resolved value |
-| `ECP_POLICY_DENIED` | A policy rejected the step |
-| `ECP_RUN_PAUSED` | The run is waiting (for example approval). Resume with `ecp runs resume` |
-| `ECP_STEP_FAILED` | The capability threw or returned a failure |
-| `ECP_OUTPUT_INVALID` | Step output failed schema validation |
-| `ECP_PLUGIN_DENIED` | You declined a third-party plugin install |
-| `ECP_RERUN_INCOMPATIBLE` | `runs rerun --from` cannot apply because the graph changed |
+## Issue shape
 
-Process exits: `0` success, `1` failed run, `2` usage, `3` validation, `4` plugin/environment load.
+Validation failures carry an `issues` array. Each issue looks like this:
+
+```ts
+{
+  code: string              // ECP_*
+  severity: "error" | "warning"
+  message: string           // one sentence naming the offending value
+  path: string              // JSON Pointer into the execution, or /input/... for run input
+  nodeId?: string
+  line?: number; column?: number   // for expr and script syntax errors
+  expected?: unknown        // the relevant schema fragment
+  actual?: unknown          // the offending value (secrets never included)
+  suggestions?: string[]    // concrete fixes, e.g. "did you mean 'text'?"
+  available?: string[]      // for reference errors: every valid state path at that point
+}
+```
+
+## Request and lookup
+
+| Code | When | HTTP | Exit | What to do |
+| ---- | ---- | ---- | ---- | ---------- |
+| `ECP_REQUEST_INVALID` | The operation input breaks its schema or rules, such as `id` with `query`, or an update without `ifVersion` | 400 | 2 | Fix the request |
+| `ECP_EXECUTION_LOAD` | The file is missing, not JSON, or has the wrong `schema` or `version` | 400 | 2 | Check the path and the document header |
+| `ECP_NOT_FOUND` | Unknown execution, config, run, capability, or plugin id | 404 | 2 | Use a suggested id or list with `retrieve` |
+| `ECP_ALREADY_EXISTS` | Create on an id that exists | 409 | 2 | Update it instead, or pick a new id |
+| `ECP_VERSION_CONFLICT` | `ifVersion` is stale | 409 | 2 | Re-read, reapply your change, retry with the current version |
+| `ECP_PATCH_INVALID` | A patch doesn't apply or names an unknown node | 422 | 2 | Fix the op named in the message |
+
+## Validation
+
+| Code | When | Exit | What to do |
+| ---- | ---- | ---- | ---------- |
+| `ECP_MANIFEST_INVALID` | Wrapper code for an invalid execution; see `issues`. Also structural problems and secrets in an execution | 2 | Fix each issue by `path` |
+| `ECP_CAPABILITY_UNKNOWN` | `uses` names no installed capability | 2 | Use the suggestion or search with `retrieve` |
+| `ECP_PLUGINS_MISSING` | `uses` belongs to a known first-party plugin that isn't installed | 3 | Run the `ecp plugins install` command in the message |
+| `ECP_INPUT_INVALID` | A step's input doesn't match its `accepts`, or run input doesn't match `execution.accepts` | 2 | Compare with `expected` |
+| `ECP_REF_UNRESOLVED` | A `$ref` names a key nothing produced before this point | 2 | Pick from `available`, or reorder steps |
+| `ECP_REF_MAYBE_MISSING` | A `$ref` names a key that may not exist (gated, or in one branch arm) | 2 | Add `"optional": true` and a `fallback`, or restructure |
+| `ECP_REF_PATH_INVALID` | The path doesn't exist in the producer's `returns` | 2 | Use the suggested property |
+| `ECP_TYPE_MISMATCH` | The referenced type can't fit the target, or a local file goes into a URL-only input | 2 | Add a transform, or a publish step for files |
+| `ECP_COMMIT_CONFLICT` | Two writers for one key, `create` on an existing key, or `create` inside a `while`/`for` body | 2 (1 at run time) | Use `replace`, `merge`, or `append`, or rename `as` |
+| `ECP_RETURNS_UNRESOLVED` | An `execution.returns` key is never produced (error) or might not be (warning) | 2 | Produce the key, or drop it from `returns` |
+| `ECP_EXPR_INVALID` | `expr` syntax error, or an `$expr` marker in `input` | 2 | Fix at `line`/`column`; use a transform step for data |
+| `ECP_SCRIPT_INVALID` | Script syntax error, missing script file, or both or neither of `source`/`path` | 2 (1 at run time) | Fix the script or its path |
+| `ECP_CONFIG_UNKNOWN` | The step's `config` doesn't exist | 2 | Create it with `ecp commit --type config` |
+| `ECP_CONFIG_INVALID` | The config fails the plugin's config schema | 2 | Fix `values` |
+| `ECP_LOOP_UNTYPED` | A `forEach` is driven by `expr`, so item types are unknown (warning) | 0 | Drive it with `ref` |
+
+## Run time
+
+These end a run with `status: "failed"`. The operation itself succeeds (`ok: true`, HTTP 200); the CLI exits `1`.
+
+| Code | When | What to do |
+| ---- | ---- | ---------- |
+| `ECP_STEP_FAILED` | A capability threw | Read the message and `details` on the step |
+| `ECP_PROVIDER_ERROR` | An upstream API or SDK returned an error; `details` has `status` and `body` | Fix the input or config; wait for rate limits |
+| `ECP_STEP_TIMEOUT` | A capability exceeded its timeout | Reduce the work or ask for a longer timeout |
+| `ECP_OUTPUT_INVALID` | Output fails `returns`, isn't JSON, or contains bytes | Fix the transform script, or report the plugin |
+| `ECP_SECRET_MISSING` | A `$secret` has no value | Stop and ask the user to run `ecp config secrets set <key>` |
+| `ECP_EXPR_FAILED` | An expression threw or ran out of memory | Fix the expression |
+| `ECP_EXPR_TIMEOUT` | An expression ran longer than 50 ms | Simplify it; move work into a transform |
+| `ECP_EXPR_RESULT_INVALID` | A control expression returned a non-boolean | Return `true` or `false` |
+| `ECP_SCRIPT_FAILED` | A transform script threw or ran out of memory | Fix the script |
+| `ECP_SCRIPT_TIMEOUT` | A transform script ran longer than its limit (1000 ms by default) | Reduce the work per step; use a `forEach` |
+| `ECP_LIMIT_EXCEEDED` | A run-time cap was hit, such as more than 10,000 `forEach` items | Split the input |
+| `ECP_PLUGIN_LOAD_FAILED` | Plugin code failed to import or has no handler | Reinstall or rebuild the plugin |
+| `ECP_RUN_CANCELLED` | The run was cancelled | — |
+
+## Host
+
+| Code | When | HTTP | Exit | What to do |
+| ---- | ---- | ---- | ---- | ---------- |
+| `ECP_HOST_RESTARTING` | The host is draining for a restart | 503 | 4 | Retry after `retryAfterMs` (the CLI and relay do this for you) |
+| `ECP_HOST_UNAVAILABLE` | No host is reachable and starting one failed | — | 4 | Check `ecp host logs` and `ecp host logs --supervisor` |
+| `ECP_UNAUTHORIZED` | Missing or wrong token, or a bad `Host`/`Origin` header | 401 | 4 | Read the token from `host.json`; call from loopback |
+| `ECP_INTERNAL` | A bug; the message includes a log reference | 500 | 1 | Report it with the request id |
 
 ## Next steps
 
 - [The agent loop](/guides/agent-loop)
-- [Journal](/reference/journal)
+- [Operations](/reference/operations)

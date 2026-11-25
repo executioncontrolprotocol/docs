@@ -1,0 +1,142 @@
+---
+title: "Run the host"
+description: "Start, stop, inspect, and restart the ECP (Execution Control Protocol) host: on-demand auto-start, idle shutdown, logs, ECP_HOME, and running without a background host."
+---
+
+The ECP (Execution Control Protocol) host is the local process that validates and runs executions. Most of the time you never start it yourself: the first command that needs it starts it in the background, and it stops on its own when idle. This page covers what happens behind that and how to take control when you need to.
+
+## Automatic start
+
+These commands start the host if no healthy one is running:
+
+- `ecp retrieve`, `ecp execute`, `ecp commit`
+- `ecp plugins` (the list)
+- `ecp mcp start` and `ecp app` (always)
+
+When a command starts it, you see one line on stderr:
+
+```text
+host: started http://127.0.0.1:36169 (idle 15m)
+```
+
+Later commands reuse the running host and print nothing extra. Startup takes about a second; after that, every command skips plugin loading and schema compilation, which is what makes the CLI fast.
+
+## Start it yourself
+
+```bash
+ecp host start
+```
+
+```text
+started http://127.0.0.1:41949 (idle 15m)
+hostPid=307513 supervisorPid=307501
+logs /home/you/.ecp/logs/host.log
+```
+
+| Flag | Effect |
+| ---- | ------ |
+| `--idle-minutes <n>` | Stop after `n` idle minutes. `0` never stops. |
+| `--foreground` | Run the supervisor and host attached to the terminal, for debugging. |
+
+If a host is already running, `ecp host start` prints its status and exits `0`.
+
+## Idle shutdown
+
+The host stops after 15 minutes with no activity. Activity means operation requests and App file traffic; an active run or an open App live-update stream holds the host open. Health checks don't count.
+
+Change the default for every start with an environment variable:
+
+```bash
+export ECP_HOST_IDLE_MINUTES=60   # 0 = never
+```
+
+## Check status
+
+```bash
+ecp host status
+```
+
+```text
+port=41949 health=ok
+supervisor hostStatus=healthy restarts=0 startedBy=explicit idle=never
+```
+
+`--json` adds `activeRuns`, `plugins`, `lastActivityAt`, `idleShutdownAt`, and `idleBlockedBy` (`run` or `stream` when something is holding the host open). `ecp host status` never starts a host; when none is running it exits `4` with `ECP_HOST_UNAVAILABLE`.
+
+## Restart and stop
+
+```bash
+ecp host restart          # drain, then start a fresh host; reloads plugins and config
+ecp host restart --force  # don't wait for running runs
+ecp host stop
+ecp host stop --force
+```
+
+`ecp host reload` is an alias of `restart`.
+
+A restart **drains** first: the host stops accepting new runs (clients get `ECP_HOST_RESTARTING` and retry automatically), waits up to 30 seconds for active runs, and marks anything still running as `interrupted`. Resume those with `ecp execute --resume <runId>`.
+
+Installing, linking, updating, or removing a plugin restarts the host automatically, within a second or two. When the very next command needs the change, run `ecp host stop` first: it returns once the host has exited, and the next command starts a fresh one. (`ecp host restart` returns as soon as the restart is requested.)
+
+## Logs
+
+```bash
+ecp host logs                 # last 50 lines of the host log
+ecp host logs --lines 200
+ecp host logs --supervisor    # the supervisor's log
+```
+
+Logs live in `$ECP_HOME/logs/` (`host.log`, `supervisor.log`, and `relay.log` for MCP), rotated at 5 MB.
+
+## Run without a background host
+
+For scripts and CI, you can run an operation in-process: the CLI builds the same host in memory, runs the one command, and exits.
+
+```bash
+ecp execute flow.ecp.json --no-start-host
+export ECP_NO_START_HOST=1    # for every command
+```
+
+A healthy host that is already running is still reused. In-process mode pays the startup cost on every command, so prefer the background host for interactive work.
+
+## `ECP_HOME`
+
+Everything the host stores lives under `ECP_HOME`, by default `~/.ecp`: `host.json`, logs, plugins, saved executions and configs, runs, and editor schemas. Point it elsewhere to keep separate setups apart, for example per project or in tests:
+
+```bash
+export ECP_HOME="$PWD/.ecp"
+```
+
+Each `ECP_HOME` has its own host, port, token, plugins, and store. Deleting `host.json` or the whole directory while a host is running stops that host within about two seconds.
+
+See [Run records](/reference/run-records#ecp_home-layout) for the full layout.
+
+## Environment variables
+
+| Variable | Effect |
+| -------- | ------ |
+| `ECP_HOME` | Data directory. Default `~/.ecp`. |
+| `ECP_HOST_IDLE_MINUTES` | Idle shutdown in minutes; `0` never. Default `15`. |
+| `ECP_NO_START_HOST` | `1` or `true`: don't auto-start a background host. |
+| `ECP_SECRET_<KEY>` | Secret value fallback for CI and containers. |
+| `NO_COLOR` | Disable colored output. |
+
+## The HTTP API
+
+The host's API is for local clients, including your own scripts. Read the port and token from `$ECP_HOME/host.json`:
+
+```bash
+PORT=$(jq .port ~/.ecp/host.json)
+TOKEN=$(jq -r .token ~/.ecp/host.json)
+curl -s -X POST "http://127.0.0.1:$PORT/v1/retrieve" \
+  -H "Authorization: Bearer $TOKEN" -H "Content-Type: application/json" \
+  -d '{"type": "capability", "query": "csv"}'
+```
+
+See [Operations](/reference/operations#http-api) for every route.
+
+## Next steps
+
+- [Connect over MCP](/guides/mcp)
+- [The App](/guides/app)
+- [Architecture](/learn/architecture)

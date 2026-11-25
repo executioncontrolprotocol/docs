@@ -1,44 +1,89 @@
 ---
 title: "Concepts"
-description: "Core ECP (Execution Control Protocol) objects: workflow, environment, extension, policy, plugin, run, and journal."
+description: "The objects you work with in ECP (Execution Control Protocol): executions, steps, state, capabilities, plugins, the host, configs, secrets, and runs."
 ---
 
-# Concepts
+This page defines the objects you work with in ECP (Execution Control Protocol) and how they relate. Each section links to the guide that covers it in depth.
 
-These are the objects you operate in ECP (Execution Control Protocol).
+## Execution
 
-## Workflow
+An **execution** is a JSON document describing a graph of work. Files use the `.ecp.json` extension and start with:
 
-A **workflow** is a portable execution graph. You author it as a `*.ecp.ts` file (Fluent TypeScript) or as JSON. The compiled manifest uses `schema: "@executioncontrolprotocol.workflow"` and `version: "1.0"`. It never contains secrets or host config.
+```json
+{ "schema": "@executioncontrolprotocol.execution", "version": "2.0", "steps": [ ... ] }
+```
 
-Bindings declared with `workflow(...).with([...])` compile into a separate **requirements** document (`schema: "@executioncontrolprotocol.requirements"`). Inference from `step("id")` fills missing rows.
+An execution can declare what it **accepts** (run input) and what it **returns** (the result), both as JSON Schemas. It never contains secrets, credentials, or host settings, so you can share it, commit it to git, and run it on another machine.
 
-## Environment
+You can run an execution from a file path or save it in the host's store with `ecp commit` and run it by id. See [Execution manifest](/guides/executions).
 
-An **environment** is a host plus the plugins and policies it loads. Node and browser are hosts. You compose with `environment(id).with([...])`. `--env <file>` on the CLI is an overlay, not a required pair. Omit it to use the process host (built-in Node plus installed plugins).
+## Nodes and steps
 
-## Extension
+The `steps` array holds **nodes**. Four kinds exist:
 
-An **extension** is a capability package: transforms, models, storage, formats. Definitions are plain data (`defineExtension(...)`). Bind with `extension(definition)`. `.supports(environmentId, range?)` restricts a definition to a host.
+| Node | Does |
+| ---- | ---- |
+| **Step** (default) | Calls one capability with an `input` and commits the output to state under `as` |
+| **Branch** | Runs the first arm whose `expr` returns `true`, or a default arm |
+| **Loop** | Repeats its body: `while` a condition holds, `for` a count, or `forEach` item of an array |
+| **Parallel** | Runs several lines of nodes at the same time |
 
-## Policy
+See [Control flow](/guides/control-flow).
 
-A **policy** is governance that runs around steps (budget, approval, state-control, registry-control). Bind with `policy(definition)`. Hosts can attach always-on policies.
+## State
+
+Each run has one JSON **state** object. Run input seeds it. A step reads from state with `$ref` bindings (`{ "$ref": "state.doc.title" }`) and writes its output to state under its `as` key. Commit modes (`create`, `replace`, `merge`, `append`) decide how a write combines with what is already there.
+
+Because data moves through state on the host, intermediate results never need to pass through a model.
+
+## Expressions
+
+An `expr` is a one-argument JavaScript function, such as `"(state) => state.items.length > 0"`. Expressions **control** the graph: they gate a step, pick a branch arm, or drive a loop. They never reshape data; [transform steps](/guides/transforms-and-scripts) do that. Expressions run in a QuickJS sandbox with no file, network, or process access.
+
+## Capability
+
+A **capability** is one typed operation: an id such as `@executioncontrolprotocol/core.parse-csv`, a summary for agents, an `accepts` schema for its input, and a `returns` schema for its output. Executions call capabilities by id in a step's `uses` field.
+
+Find capabilities with `ecp retrieve --type capability`. The host validates every call against the capability's schemas, before the run and again at run time.
 
 ## Plugin
 
-A **plugin** is the npm packaging of an extension or policy. Package name is `plugin-` plus the extension or policy name; the protocol **id** stays unchanged. Installing a plugin registers the definition and generates CLI commands (`ecp jsonata transform`, `ecp format-toon encode`).
+A **plugin** is an npm package that provides capabilities and nothing else. Its `ecp.manifest.json` and `ecp.schema.json` describe the capabilities, so the host can list and validate them without loading plugin code. Code loads the first time a capability is called.
 
-## Ecp
+The **core** plugin (`core.transform`, `core.parse-csv`) ships with the host. Install others with `ecp plugins install`. See [Plugins](/reference/plugins) and [Write a plugin](/guides/writing-a-plugin).
 
-`env.init()` returns an **Ecp** instance. Operational APIs live there: `run`, `validate`, `describe`, `search`, `invoke`, `encode`, `decode`, `patch`, `terminate`. They do not live on the environment builder.
+## Host
 
-## Run and journal
+The **host** is a local process that owns validation, running, storage, and loaded plugins. It listens on `127.0.0.1` only, with a random port and token. A small **supervisor** keeps it running, restarts it when plugins change, and stops it after 15 idle minutes.
 
-A **run** executes a workflow against an Ecp. The **journal** for that run lives at `.ecp/runs/<runId>/` (`schema: "@executioncontrolprotocol.run.journal"`, `journalVersion: 1`). Use `ecp runs list`, `show`, `resume`, and `rerun --from`.
+You rarely start it yourself: the first `ecp retrieve`, `execute`, `commit`, or `plugins` call starts it. See [Run the host](/guides/host) and [Architecture](/learn/architecture).
+
+## Config and secrets
+
+A **config** object holds settings for one plugin, such as a model name or a storage account. Its id is `<plugin-short>/<name>`, and a step picks one with `"config": "anthropic/default"` (or gets `<plugin>/default` automatically).
+
+Sensitive values are references: `{ "$secret": "anthropic.apiKey" }`. You store the value once with `ecp config secrets set`, and it lives in your OS keychain. Secret values never appear in executions, run records, or MCP traffic. See [Configs and secrets](/guides/configs-and-secrets).
+
+## Run
+
+A **run** is one run of an execution. It has an id (`run-20261124T192842Z-25a3ef`), a status (`running`, `completed`, `failed`, `cancelled`, or `interrupted`), the input, the result, and a record per step with its resolved input, output, timing, and error. Runs live under `$ECP_HOME/runs/<runId>/`.
+
+A run that fails is still a successful operation: you get the run back with `status: "failed"` and the step's error. A run interrupted by a host restart can be resumed. See [Run records](/reference/run-records).
+
+## The three operations
+
+Everything you do goes through three operations, identical on every surface:
+
+| Operation | Does |
+| --------- | ---- |
+| `retrieve` | Read capabilities, executions, configs, runs, plugins, formatters, and editor schemas |
+| `execute` | Validate or run an execution; resume or cancel a run |
+| `commit` | Create, update, or delete stored executions and configs |
+
+See [Operations](/reference/operations).
 
 ## Next steps
 
-- [Workflow files](/guides/workflow-files)
-- [Environments](/guides/environments)
-- [Journal](/reference/journal)
+- [Architecture](/learn/architecture)
+- [Execution manifest](/guides/executions)
+- [The agent loop](/guides/agent-loop)

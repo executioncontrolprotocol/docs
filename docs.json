@@ -2,6 +2,7 @@
   "$schema": "https://mintlify.com/docs.json",
   "theme": "mint",
   "name": "Execution Control Protocol",
+  "description": "ECP (Execution Control Protocol) is the deterministic delegation layer for agents: write a JSON execution, validate it, run it on a local host, and repair it from structured errors.",
   "colors": {
     "primary": "#39485A",
     "light": "#DAE2FD",
@@ -16,16 +17,43 @@
       "dark": "#0B1326"
     }
   },
+  "fonts": {
+    "heading": {
+      "family": "Hanken Grotesk",
+      "weight": 700
+    },
+    "body": {
+      "family": "Inter"
+    }
+  },
   "favicon": "/favicon.svg",
+  "logo": {
+    "light": "/logo/light.svg",
+    "dark": "/logo/dark.svg"
+  },
+  "navbar": {
+    "links": [
+      {
+        "label": "GitHub",
+        "href": "https://github.com/executioncontrolprotocol/executioncontrolprotocol"
+      }
+    ],
+    "primary": {
+      "type": "button",
+      "label": "Set up with an agent",
+      "href": "/getting-started/agents"
+    }
+  },
   "navigation": {
     "tabs": [
       {
-        "tab": "Guides",
+        "tab": "Documentation",
         "groups": [
           {
-            "group": "Getting started",
+            "group": "Get started",
             "pages": [
               "index",
+              "getting-started/agents",
               "getting-started/quickstart",
               "getting-started/build-from-source"
             ]
@@ -35,23 +63,42 @@
             "pages": [
               "learn/why-ecp",
               "learn/concepts",
+              "learn/architecture",
               "learn/relationship-to-mcp",
               "learn/security"
             ]
           },
           {
-            "group": "Build",
+            "group": "Write executions",
             "pages": [
               "guides/agent-loop",
-              "guides/workflow-files",
-              "guides/fluent-api",
-              "guides/environments",
-              "guides/writing-a-plugin",
-              "guides/policies",
-              "guides/files-and-media",
-              "guides/formats",
+              "guides/executions",
+              "guides/control-flow",
+              "guides/transforms-and-scripts",
+              "guides/files",
+              "guides/configs-and-secrets"
+            ]
+          },
+          {
+            "group": "Run ECP",
+            "pages": [
+              "guides/host",
               "guides/mcp",
               "guides/app"
+            ]
+          },
+          {
+            "group": "Extend",
+            "pages": [
+              "guides/writing-a-plugin"
+            ]
+          },
+          {
+            "group": "AI tools",
+            "pages": [
+              "ai-tools/claude-code",
+              "ai-tools/cursor",
+              "ai-tools/windsurf"
             ]
           },
           {
@@ -61,23 +108,21 @@
               "alternatives/ecp-vs-langchain",
               "alternatives/ecp-vs-openclaw"
             ]
-          },
-          {
-            "group": "AI tools",
-            "pages": [
-              "ai-tools/cursor",
-              "ai-tools/claude-code",
-              "ai-tools/windsurf"
-            ]
-          },
+          }
+        ]
+      },
+      {
+        "tab": "Reference",
+        "groups": [
           {
             "group": "Reference",
             "pages": [
               "reference/cli",
-              "reference/plugins",
+              "reference/operations",
+              "reference/execution-manifest",
               "reference/error-codes",
-              "reference/journal",
-              "reference/schemas",
+              "reference/run-records",
+              "reference/plugins",
               "reference/packages",
               "reference/changelog"
             ]
@@ -86,18 +131,40 @@
       }
     ]
   },
-  "logo": {
-    "light": "/logo/light.svg",
-    "dark": "/logo/dark.svg"
-  },
-  "navbar": {
-    "links": [
-      {
-        "label": "GitHub",
-        "href": "https://github.com/executioncontrolprotocol"
-      }
-    ]
-  },
+  "redirects": [
+    {
+      "source": "/guides/workflow-files",
+      "destination": "/guides/executions"
+    },
+    {
+      "source": "/guides/fluent-api",
+      "destination": "/guides/executions"
+    },
+    {
+      "source": "/guides/environments",
+      "destination": "/guides/configs-and-secrets"
+    },
+    {
+      "source": "/guides/policies",
+      "destination": "/learn/security"
+    },
+    {
+      "source": "/guides/files-and-media",
+      "destination": "/guides/files"
+    },
+    {
+      "source": "/guides/formats",
+      "destination": "/reference/operations"
+    },
+    {
+      "source": "/reference/journal",
+      "destination": "/reference/run-records"
+    },
+    {
+      "source": "/reference/schemas",
+      "destination": "/reference/execution-manifest"
+    }
+  ],
   "footer": {
     "socials": {
       "github": "https://github.com/executioncontrolprotocol"

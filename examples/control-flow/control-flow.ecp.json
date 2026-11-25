@@ -1,0 +1,297 @@
+{
+  "schema": "@executioncontrolprotocol.execution",
+  "version": "2.0",
+  "execution": {
+    "id": "control-flow-tour",
+    "accepts": {
+      "type": "object",
+      "properties": {
+        "count": {
+          "type": "integer",
+          "minimum": 0,
+          "default": 3
+        },
+        "urgent": {
+          "type": "boolean",
+          "default": false
+        }
+      }
+    }
+  },
+  "steps": [
+    {
+      "id": "start",
+      "uses": "@executioncontrolprotocol/core.transform",
+      "accepts": {
+        "type": "object",
+        "properties": {}
+      },
+      "returns": {
+        "type": "object",
+        "properties": {
+          "n": {
+            "type": "integer"
+          }
+        },
+        "required": [
+          "n"
+        ]
+      },
+      "script": {
+        "lang": "js",
+        "source": "return { n: 0 }"
+      },
+      "as": "counter"
+    },
+    {
+      "type": "loop",
+      "id": "count-up",
+      "expr": "(state) => state.counter.n < state.count",
+      "maxRounds": 100,
+      "steps": [
+        {
+          "id": "increment",
+          "uses": "@executioncontrolprotocol/core.transform",
+          "accepts": {
+            "type": "object",
+            "properties": {
+              "n": {
+                "type": "integer"
+              }
+            },
+            "required": [
+              "n"
+            ]
+          },
+          "returns": {
+            "type": "object",
+            "properties": {
+              "n": {
+                "type": "integer"
+              }
+            },
+            "required": [
+              "n"
+            ]
+          },
+          "input": {
+            "n": {
+              "$ref": "state.counter.n"
+            }
+          },
+          "script": {
+            "lang": "js",
+            "source": "return { n: input.n + 1 }"
+          },
+          "as": "counter",
+          "mode": "replace"
+        }
+      ]
+    },
+    {
+      "type": "loop",
+      "mode": "for",
+      "id": "ticks",
+      "ref": "state.count",
+      "as": "i",
+      "steps": [
+        {
+          "id": "tick",
+          "uses": "@executioncontrolprotocol/core.transform",
+          "accepts": {
+            "type": "object",
+            "properties": {
+              "i": {
+                "type": "integer"
+              }
+            },
+            "required": [
+              "i"
+            ]
+          },
+          "returns": {
+            "type": "object",
+            "properties": {
+              "label": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "label"
+            ]
+          },
+          "input": {
+            "i": {
+              "$ref": "state.i"
+            }
+          },
+          "script": {
+            "lang": "js",
+            "source": "return { label: `tick ${input.i}` }"
+          },
+          "as": "log",
+          "mode": "append"
+        }
+      ]
+    },
+    {
+      "type": "parallel",
+      "id": "prepare",
+      "branches": [
+        [
+          {
+            "id": "subject",
+            "uses": "@executioncontrolprotocol/core.transform",
+            "accepts": {
+              "type": "object",
+              "properties": {
+                "n": {
+                  "type": "integer"
+                }
+              },
+              "required": [
+                "n"
+              ]
+            },
+            "returns": {
+              "type": "object",
+              "properties": {
+                "text": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "text"
+              ]
+            },
+            "input": {
+              "n": {
+                "$ref": "state.counter.n"
+              }
+            },
+            "script": {
+              "lang": "js",
+              "source": "return { text: `Counted to ${input.n}` }"
+            },
+            "as": "subject"
+          }
+        ],
+        [
+          {
+            "id": "footer",
+            "uses": "@executioncontrolprotocol/core.transform",
+            "accepts": {
+              "type": "object",
+              "properties": {}
+            },
+            "returns": {
+              "type": "object",
+              "properties": {
+                "text": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "text"
+              ]
+            },
+            "script": {
+              "lang": "js",
+              "source": "return { text: 'Sent by ECP' }"
+            },
+            "as": "footer"
+          }
+        ]
+      ]
+    },
+    {
+      "type": "branch",
+      "id": "priority",
+      "branches": [
+        {
+          "label": "urgent",
+          "expr": "(state) => state.urgent === true",
+          "steps": [
+            {
+              "id": "flag-urgent",
+              "uses": "@executioncontrolprotocol/core.transform",
+              "accepts": {
+                "type": "object",
+                "properties": {
+                  "text": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "text"
+                ]
+              },
+              "returns": {
+                "type": "object",
+                "properties": {
+                  "text": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "text"
+                ]
+              },
+              "input": {
+                "text": {
+                  "$ref": "state.subject.text"
+                }
+              },
+              "script": {
+                "lang": "js",
+                "source": "return { text: `URGENT: ${input.text}` }"
+              },
+              "as": "headline"
+            }
+          ]
+        },
+        {
+          "label": "normal",
+          "steps": [
+            {
+              "id": "plain",
+              "uses": "@executioncontrolprotocol/core.transform",
+              "accepts": {
+                "type": "object",
+                "properties": {
+                  "text": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "text"
+                ]
+              },
+              "returns": {
+                "type": "object",
+                "properties": {
+                  "text": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "text"
+                ]
+              },
+              "input": {
+                "text": {
+                  "$ref": "state.subject.text"
+                }
+              },
+              "script": {
+                "lang": "js",
+                "source": "return { text: input.text }"
+              },
+              "as": "headline"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,137 @@
+---
+title: "Execution manifest reference"
+description: "Field-by-field reference for the ECP (Execution Control Protocol) execution manifest v2: document, step, branch, loop, and parallel nodes, markers, and naming rules."
+---
+
+The complete shape of an ECP (Execution Control Protocol) execution, version `2.0`. For explanations and examples, see [Execution manifest](/guides/executions) and [Control flow](/guides/control-flow). For editor autocomplete, point `$schema` at the path from `ecp retrieve --type schema`; that schema includes your installed capabilities.
+
+## Document
+
+| Field | Type | Required | Rule |
+| ----- | ---- | -------- | ---- |
+| `$schema` | string | no | Editor hint; ignored by the host |
+| `schema` | string | yes | `"@executioncontrolprotocol.execution"` |
+| `version` | string | yes | `"2.0"` |
+| `execution` | object | no | See below |
+| `steps` | Node[] | yes | At least one |
+
+Unknown properties are errors.
+
+### `execution`
+
+| Field | Type | Rule |
+| ----- | ---- | ---- |
+| `id` | string | `^[a-z0-9][a-z0-9-]{0,63}$`. Required to commit. |
+| `label` | string | Display name |
+| `description` | string | |
+| `accepts` | JSON Schema | `type: "object"` with `properties`. Property names become state keys; validates run input; `default`s apply. |
+| `returns` | JSON Schema | `type: "object"` with `properties`. Picks which state keys form the result. |
+
+## Node ids
+
+Every node has an `id` unique across the whole document: `^[A-Za-z][A-Za-z0-9_-]{0,63}$`.
+
+## Step
+
+A node with no `type`, or `"type": "step"`.
+
+| Field | Type | Required | Rule |
+| ----- | ---- | -------- | ---- |
+| `id` | string | yes | |
+| `uses` | string | yes | Capability id `@scope/plugin.capability`; must be installed |
+| `input` | object | no | Literals and markers; validated against `accepts` |
+| `as` | string | no | `^[A-Za-z_][A-Za-z0-9_]*$`; not an execution input name |
+| `mode` | string | no | `create` (default), `replace`, `merge`, `append`. Requires `as`. |
+| `expr` | string | no | Gate: `(state) => boolean` |
+| `config` | string | no | Config id `<plugin-short>/<name>`. Default `<plugin-short>/default` if it exists. |
+| `label` | string | no | Display only |
+| `persist` | boolean | no | `false` skips capturing output files into the run. Default `true`. |
+| `accepts` | JSON Schema | transforms | Step input schema (`type: "object"` with `properties`). Required on capabilities with a step-level contract (transforms); forbidden on others. |
+| `returns` | JSON Schema | transforms | Step output schema (`type: "object"` with `properties`). Same rule as `accepts`. |
+| `script` | object | script transforms | `{ "lang": "js", "source" \| "path", "ecmaVersion"? }`. Exactly one of `source` or `path`. No `params`. |
+| `expression` | string | expression transforms | For example a JSONata expression |
+
+## Branch
+
+| Field | Type | Required | Rule |
+| ----- | ---- | -------- | ---- |
+| `type` | `"branch"` | yes | |
+| `id` | string | yes | |
+| `branches` | Arm[] | yes | At least one |
+
+**Arm:** `{ "label"?: string, "expr"?: string, "steps": Node[] }`. Arms are tried in order; the first `true` runs. An arm without `expr` is the default; at most one, and it must be last.
+
+## Loop
+
+| Field | Modes | Rule |
+| ----- | ----- | ---- |
+| `type` | all | `"loop"` |
+| `id` | all | |
+| `mode` | all | `while` (default), `for`, `forEach` |
+| `ref` / `expr` | all | Exactly one. `ref` is a state path (`"state.rows"`); `expr` is a function. `while`: boolean, checked before each round. `for`: integer 0 to 1000, read once. `forEach`: array of up to 10,000 items, read once. |
+| `steps` | all | The body; at least one node |
+| `maxRounds` | `while` | Required, 1 to 1000 |
+| `as` | `for`, `forEach` | Required. The index (`for`) or item (`forEach`) key in state. `forEach` also sets `<as>Index`. |
+| `collect` | `forEach` | Required. State path read in each item's scope after the body. |
+| `into` | `forEach` | Required. State key for the collected results, in item order. |
+| `concurrency` | `forEach` | 1 to 32; default 1 |
+| `onError` | `forEach` | `"fail"` (default) or `"continue"` (failed items collect `null`; errors go to `<into>Errors`) |
+
+`create` inside a `while` or `for` body is an error; the body shares state with the run. A `forEach` body runs on a copy of state per item, so `create` is allowed there.
+
+## Parallel
+
+| Field | Type | Required | Rule |
+| ----- | ---- | -------- | ---- |
+| `type` | `"parallel"` | yes | |
+| `id` | string | yes | |
+| `branches` | Node[][] | yes | At least two lines, each with at least one node |
+| `maxConcurrency` | integer | no | 1 or more; default 4 |
+
+Lines may not read each other's outputs or write the same key.
+
+## Markers
+
+Markers are objects with a `$` key. They are allowed only in value positions: step `input`, `$script.params`, and config `values`. Node fields are always plain.
+
+| Marker | Shape | Resolves to | Allowed in |
+| ------ | ----- | ----------- | ---------- |
+| `$ref` | `{ "$ref": "state.<path>", "optional"?: true, "fallback"?: <json> }` | The value at the path. Missing and optional: the `fallback`, or the property is omitted (`null` inside arrays). | `input`, `$script.params` |
+| `$state` | `{ "$state": "<path>" }` | A handle for staged writes through `ctx.store` | `input` |
+| `$script` | `{ "$script": { "lang": "js", "source" \| "path", "params"?, "ecmaVersion"? } }` | A string: `const params = <JSON>;\n` plus the script. Never run by ECP. Only where `accepts` expects a string. | `input`, `$script.params` |
+| `$secret` | `{ "$secret": "<key>" }` | A secret value | Config objects only |
+| `$env` | `{ "$env": "<NAME>" }` | A host environment variable | Config objects only |
+
+**Paths:** `state` followed by segments separated by `.`. A segment is a property name (`[A-Za-z_$][A-Za-z0-9_$-]*`) or an array index (`[0-9]+`), as in `state.doc.layers.0.name`. `$state` paths omit the `state.` prefix.
+
+## Expressions
+
+- One JavaScript arrow or `function` expression with at most one parameter; no `async`, no generators.
+- Syntax checked at validation (ES2022).
+- Control positions must return a boolean.
+- Limits: 50 ms, 32 MB memory, 1 MB result. No host objects.
+
+## Smallest valid execution
+
+```json
+{
+  "schema": "@executioncontrolprotocol.execution",
+  "version": "2.0",
+  "steps": [
+    {
+      "id": "hello",
+      "uses": "@executioncontrolprotocol/core.transform",
+      "accepts": { "type": "object", "properties": {} },
+      "returns": { "type": "object", "properties": { "message": { "type": "string" } } },
+      "script": { "lang": "js", "source": "return { message: 'hi' }" },
+      "as": "hello"
+    }
+  ]
+}
+```
+
+## Next steps
+
+- [Execution manifest guide](/guides/executions)
+- [Operations](/reference/operations)
+- [Error codes](/reference/error-codes)
