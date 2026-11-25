@@ -3,7 +3,7 @@ title: "Build from source"
 description: "Clone the ECP (Execution Control Protocol) monorepo, build the CLI, host, and plugins, and link a local ecp binary."
 ---
 
-Build ECP (Execution Control Protocol) from source when you want the latest `development` code, or when you are changing the CLI, the host, or a plugin. Everything else in these docs works the same with a source build.
+Build ECP (Execution Control Protocol) from source when you are changing the CLI, the host, or a plugin, or want unreleased changes. The default branch, `development`, is ahead of the latest release; check out `main` for the released code these docs describe.
 
 ## Prerequisites
 
@@ -36,7 +36,7 @@ Without linking, run the CLI directly with `node packages/cli/bin/ecp.js`.
 
 ## Install plugins from the checkout
 
-Optional first-party plugins live under [`plugins/`](https://github.com/executioncontrolprotocol/executioncontrolprotocol/tree/development/plugins). Link one to use it without publishing:
+Optional first-party plugins live under [`plugins/`](https://github.com/executioncontrolprotocol/executioncontrolprotocol/tree/main/plugins). Link one to use it without publishing:
 
 ```bash
 ecp plugins link plugins/plugin-test --no-install
@@ -47,7 +47,7 @@ ecp retrieve --type capability --query echo
 
 ## Run the examples
 
-The repository's [`examples/`](https://github.com/executioncontrolprotocol/executioncontrolprotocol/tree/development/examples) folder holds ready-to-run executions:
+The repository's [`examples/`](https://github.com/executioncontrolprotocol/executioncontrolprotocol/tree/main/examples) folder holds ready-to-run executions:
 
 ```bash
 ecp execute examples/echo/echo.ecp.json

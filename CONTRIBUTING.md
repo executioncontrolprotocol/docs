@@ -39,7 +39,7 @@ This file is the guide for **previewing and validating this documentation site**
 - **No emojis**: do not use emoji characters in docs
 - **Install path**: `npm install -g @executioncontrolprotocol/cli`; [build from source](/getting-started/build-from-source) is the alternative.
 - **Authoring surface**: JSON executions (`*.ecp.json`, version `2.0`). Removed concepts are listed in `AGENTS.md`; never document them as current.
-- **Verify examples**: every JSON example must pass `ecp execute <file> --validate` against current ECP `development`.
+- **Verify examples**: every JSON example must pass `ecp execute <file> --validate` against the latest ECP release (`main` in the ECP repo).
 - **Plugins**: link to the GitHub plugins folder; don't document vendor-specific capabilities.
 - **Use active voice**: “Run the command” not “The command should be run”
 - **Address the reader directly**: use “you”

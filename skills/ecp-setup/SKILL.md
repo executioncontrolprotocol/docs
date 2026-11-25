@@ -63,7 +63,7 @@ npm install -g @executioncontrolprotocol/cli
 ecp --version
 ```
 
-`ecp --version` must show 0.60.0 or later. If npm installed an older version, the release isn't published yet: build from source instead:
+`ecp --version` must show 0.60.0 or later. If it shows an older version, run `npm install -g @executioncontrolprotocol/cli@latest`. To work from unreleased source instead:
 
 ```bash
 git clone https://github.com/executioncontrolprotocol/executioncontrolprotocol.git

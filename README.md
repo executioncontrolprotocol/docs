@@ -4,7 +4,7 @@ This repository contains the documentation site for **ECP (Execution Control Pro
 
 **Live site:** https://executioncontrolprotocol.io/
 
-Mintlify publishes `main`. The content documents the realigned ECP (JSON executions, the local host, `retrieve` / `execute` / `commit`) as of ECP `development`.
+Mintlify publishes `main`. The content documents the realigned ECP (JSON executions, the local host, `retrieve` / `execute` / `commit`) as of the latest ECP release (`main` in the ECP repo).
 
 ## What’s in here
 

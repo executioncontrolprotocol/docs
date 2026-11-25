@@ -161,7 +161,7 @@ A step uses `<plugin>/default` automatically, or `"config": "<plugin>/<name>"`. 
 
 ## Plugins
 
-`ecp plugins` lists what is installed. The core plugin (`core.transform`, `core.parse-csv`) is bundled. Install others with `ecp plugins install <short-name or npm package>`, then `ecp host stop` so your next command starts a fresh host that has them (the running host reloads in the background, and a command sent too soon can still fail with `ECP_PLUGINS_MISSING`). A missing first-party plugin fails validation with `ECP_PLUGINS_MISSING` and the exact install command. First-party plugins: https://github.com/executioncontrolprotocol/executioncontrolprotocol/tree/development/plugins
+`ecp plugins` lists what is installed. The core plugin (`core.transform`, `core.parse-csv`) is bundled. Install others with `ecp plugins install <short-name or npm package>`, then `ecp host stop` so your next command starts a fresh host that has them (the running host reloads in the background, and a command sent too soon can still fail with `ECP_PLUGINS_MISSING`). A missing first-party plugin fails validation with `ECP_PLUGINS_MISSING` and the exact install command. First-party plugins: https://github.com/executioncontrolprotocol/executioncontrolprotocol/tree/main/plugins
 
 ## Host, MCP, App
 

@@ -7,7 +7,7 @@ An execution is a JSON document that describes a graph of work for ECP (Executio
 
 ## The document
 
-```json
+```jsonc
 {
   "$schema": "file:///home/you/.ecp/schema/execution.schema.json",
   "schema": "@executioncontrolprotocol.execution",
@@ -19,7 +19,7 @@ An execution is a JSON document that describes a graph of work for ECP (Executio
     "accepts": { "type": "object", "properties": { "file": { "type": "object" } }, "required": ["file"] },
     "returns": { "type": "object", "properties": { "report": { "type": "object" } } }
   },
-  "steps": []
+  "steps": [ /* nodes */ ]
 }
 ```
 
